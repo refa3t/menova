@@ -1,0 +1,15 @@
+name: menova_workspace
+publish_to: none
+environment:
+  sdk: ^3.9.0
+workspace:
+  - apps/storefront
+  - apps/reception
+  - packages/core
+  - packages/product_builder
+  - packages/pricing
+  - packages/animation
+  - packages/category_definitions
+  - tools
+dev_dependencies:
+  lints: ^6.0.0

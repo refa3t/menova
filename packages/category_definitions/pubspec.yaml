@@ -1,0 +1,13 @@
+name: category_definitions
+description: "Loader and validator for static category definitions."
+publish_to: none
+version: 0.1.0
+environment:
+  sdk: ^3.9.0
+resolution: workspace
+dependencies:
+  core:
+    path: ../core
+dev_dependencies:
+  test: ^1.25.0
+  lints: ^6.0.0

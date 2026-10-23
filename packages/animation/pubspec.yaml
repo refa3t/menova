@@ -1,0 +1,16 @@
+name: animation
+description: "Animation engine: display only. Depends on core only."
+publish_to: none
+version: 0.1.0
+environment:
+  sdk: ^3.9.0
+resolution: workspace
+dependencies:
+  flutter:
+    sdk: flutter
+  core:
+    path: ../core
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

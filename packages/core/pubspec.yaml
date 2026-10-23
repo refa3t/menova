@@ -1,0 +1,11 @@
+name: core
+description: "Shared integration contracts and value types. Depends on nothing."
+publish_to: none
+version: 0.1.0
+environment:
+  sdk: ^3.9.0
+resolution: workspace
+dependencies:
+dev_dependencies:
+  test: ^1.25.0
+  lints: ^6.0.0
