@@ -290,7 +290,7 @@ extraQty_i = max(0, selectedQty_i − defaultQty_i)
 | الحالة | ID | المهمة | المخرج / معيار الإنجاز | الحجم | Deps |
 | --- | --- | --- | --- | --- | --- |
 | [x] | P1-A01 | مشروع Flutter Web (Clean Architecture، Riverpod، GoRouter) بالهيكل في قسم 3، وجهتان: المتجر ولوحة الاستقبال، منشور على الاستضافة التجريبية. ثبّت الأوامر في قسم 3 | مشروع يعمل على البيئة التجريبية. ✔ Dart pub workspace، منشور على الرابطين أعلاه | M | P0-09 |
-| [ ] | P1-A02 | نماذج البيانات: تعريف الكاتيجوري الثابت وProduct وProductIngredient وIngredient وAsset وOptionGroup وSizeOption وOrder وOrderItem مع JSON | نماذج بالاختبارات | M | P0-01 |
+| [x] | P1-A02 | نماذج البيانات: تعريف الكاتيجوري الثابت وProduct وProductIngredient وIngredient وAsset وOptionGroup وSizeOption وOrder وOrderItem مع JSON | نماذج بالاختبارات. ✔ في `packages/core` (المال بالقرش int). Order/OrderItem نُقلا إلى P1-A08 لاعتمادهما على Selection/PriceBreakdown. دلالة `maxQty` (إجمالي أم فوق الافتراضي) تنتظر OWNER_INPUTS #8 | M | P0-01 |
 | [ ] | P1-A03 | سكربت seed من JSON إلى Firestore يتحقق من المخطط ويرفض أي أصل ناقص | بيانات البيتزا كاملة في التجريبي | M | P1-A02, P0-02..04 |
 | [ ] | P1-A04 | قواعد أمان Firestore: قراءة المنيو للجميع، منع كتابة الطلبات والأسعار، أدوار الاستقبال والمطبخ | قواعد منشورة + اختبارها بالـ emulator | M | P1-A01 |
 | [ ] | P1-A05 | تحميل المنيو وتخزينه مؤقتاً + Precache للصور | المنيو يظهر من الكاش عند ضعف الاتصال | M | P1-A03 |
