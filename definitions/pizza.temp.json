@@ -1,0 +1,12 @@
+{
+  "_note": "TEMP: placeholder values for development only. Replace from OWNER_INPUTS.md before gate A. Must never be seeded to production.",
+  "tempFields": [
+    "constraints.maxQty",
+    "sizes",
+    "optionGroups"
+  ],
+  "pendingNotes": [
+    "Only the regular dough exists (no other dough assets yet).",
+    "No cooked base asset yet (base.cookedAssetId)."
+  ]
+}

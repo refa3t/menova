@@ -1,0 +1,433 @@
+{
+  "temp": true,
+  "_note": "TEMP: placeholder values for development only. Replace from OWNER_INPUTS.md before gate A. Must never be seeded to production.",
+  "tempFields": [
+    "extraPrice"
+  ],
+  "ingredients": [
+    {
+      "id": "mozzarella",
+      "name": "موزاريلا",
+      "assetId": "ing_mozzarella",
+      "assetFiles": [
+        "ing_mozzarella_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "olive_black",
+      "name": "زيتون أسود",
+      "assetId": "ing_olive_black",
+      "assetFiles": [
+        "ing_olive_black_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "mushroom",
+      "name": "مشروم",
+      "assetId": "ing_mushroom",
+      "assetFiles": [
+        "ing_mushroom_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "bell_pepper_green",
+      "name": "فلفل أخضر",
+      "assetId": "ing_bell_pepper_green",
+      "assetFiles": [
+        "ing_bell_pepper_green_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "ham",
+      "name": "هام",
+      "assetId": "ing_ham",
+      "assetFiles": [
+        "ing_ham_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "chicken",
+      "name": "فراخ",
+      "assetId": "ing_chicken",
+      "assetFiles": [
+        "ing_chicken_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "onion",
+      "name": "بصل",
+      "assetId": "ing_onion",
+      "assetFiles": [
+        "ing_onion_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "pepperoni",
+      "name": "بيبروني",
+      "assetId": "ing_pepperoni",
+      "assetFiles": [
+        "ing_pepperoni_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "sausage",
+      "name": "سوسيس",
+      "assetId": "ing_sausage",
+      "assetFiles": [
+        "ing_sausage_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "tomato",
+      "name": "طماطم",
+      "assetId": "ing_tomato",
+      "assetFiles": [
+        "ing_tomato_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "corn",
+      "name": "ذرة",
+      "assetId": "ing_corn",
+      "assetFiles": [
+        "ing_corn_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "basil",
+      "name": "ريحان",
+      "assetId": "ing_basil",
+      "assetFiles": [
+        "ing_basil_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "oregano",
+      "name": "أوريجانو",
+      "assetId": "ing_oregano",
+      "assetFiles": [
+        "ing_oregano_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "cheddar",
+      "name": "شيدر",
+      "assetId": "ing_cheddar",
+      "assetFiles": [
+        "ing_cheddar_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "feta",
+      "name": "فيتا",
+      "assetId": "ing_feta",
+      "assetFiles": [
+        "ing_feta_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "parmesan",
+      "name": "بارميزان",
+      "assetId": "ing_parmesan",
+      "assetFiles": [
+        "ing_parmesan_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "bacon",
+      "name": "بيكون",
+      "assetId": "ing_bacon",
+      "assetFiles": [
+        "ing_bacon_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "ground_beef",
+      "name": "لحمة مفرومة",
+      "assetId": "ing_ground_beef",
+      "assetFiles": [
+        "ing_ground_beef_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "bell_pepper_red",
+      "name": "فلفل أحمر",
+      "assetId": "ing_bell_pepper_red",
+      "assetFiles": [
+        "ing_bell_pepper_red_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "red_onion",
+      "name": "بصل أحمر",
+      "assetId": "ing_red_onion",
+      "assetFiles": [
+        "ing_red_onion_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "cherry_tomato",
+      "name": "طماطم كرزية",
+      "assetId": "ing_cherry_tomato",
+      "assetFiles": [
+        "ing_cherry_tomato_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "garlic",
+      "name": "ثوم",
+      "assetId": "ing_garlic",
+      "assetFiles": [
+        "ing_garlic_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "parsley",
+      "name": "بقدونس",
+      "assetId": "ing_parsley",
+      "assetFiles": [
+        "ing_parsley_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "roumi",
+      "name": "رومي",
+      "assetId": "ing_roumi",
+      "assetFiles": [
+        "ing_roumi_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "tuna",
+      "name": "تونة",
+      "assetId": "ing_tuna",
+      "assetFiles": [
+        "ing_tuna_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "olive_green",
+      "name": "زيتون أخضر",
+      "assetId": "ing_olive_green",
+      "assetFiles": [
+        "ing_olive_green_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "pineapple",
+      "name": "أناناس",
+      "assetId": "ing_pineapple",
+      "assetFiles": [
+        "ing_pineapple_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "jalapeno",
+      "name": "هالبينو",
+      "assetId": "ing_jalapeno",
+      "assetFiles": [
+        "ing_jalapeno_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "artichoke",
+      "name": "خرشوف",
+      "assetId": "ing_artichoke",
+      "assetFiles": [
+        "ing_artichoke_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "blue_cheese",
+      "name": "جبنة زرقاء",
+      "assetId": "ing_blue_cheese",
+      "assetFiles": [
+        "ing_blue_cheese_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "salami_spicy",
+      "name": "سلامي حار",
+      "assetId": "ing_salami_spicy",
+      "assetFiles": [
+        "ing_salami_spicy_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "basterma",
+      "name": "بسطرمة",
+      "assetId": "ing_basterma",
+      "assetFiles": [
+        "ing_basterma_01.webp",
+        "ing_basterma_02.webp",
+        "ing_basterma_03.webp",
+        "ing_basterma_04.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "mortadella",
+      "name": "مرتديلا",
+      "assetId": "ing_mortadella",
+      "assetFiles": [
+        "ing_mortadella_01.webp",
+        "ing_mortadella_02.webp",
+        "ing_mortadella_03.webp",
+        "ing_mortadella_04.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "shrimp",
+      "name": "جمبري",
+      "assetId": "ing_shrimp",
+      "assetFiles": [
+        "ing_shrimp_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "calamari",
+      "name": "حلقات حبار",
+      "assetId": "ing_calamari",
+      "assetFiles": [
+        "ing_calamari_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "anchovy",
+      "name": "أنشوجة",
+      "assetId": "ing_anchovy",
+      "assetFiles": [
+        "ing_anchovy_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "chili_red",
+      "name": "فلفل حار أحمر",
+      "assetId": "ing_chili_red",
+      "assetFiles": [
+        "ing_chili_red_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "capers",
+      "name": "كبر",
+      "assetId": "ing_capers",
+      "assetFiles": [
+        "ing_capers_01.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    }
+  ]
+}

@@ -1,0 +1,1356 @@
+{
+  "temp": true,
+  "_note": "TEMP: placeholder values for development only. Replace from OWNER_INPUTS.md before gate A. Must never be seeded to production.",
+  "tempFields": [
+    "basePrice",
+    "sizeDeltas",
+    "optionDeltas",
+    "defaults[].removable"
+  ],
+  "excluded": {
+    "quattro_stagioni": "Needs a quartered base (half-and-half, CLAUDE.md section 10 Q3). Not supported in phase 1."
+  },
+  "pendingNotes": [
+    "Non-tomato sauces (bbq, ranch, hot, pesto) need Drizzle placement (phase 2); shown on the tomato base until then.",
+    "Final product images (final_pizza_*) not delivered yet."
+  ],
+  "products": [
+    {
+      "id": "pizza_margherita",
+      "categoryId": "pizza",
+      "name": "مارجريتا",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_margherita",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "basil",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 0,
+      "sauce": "tomato"
+    },
+    {
+      "id": "pizza_marinara",
+      "categoryId": "pizza",
+      "name": "مارينارا",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_marinara",
+      "defaults": [
+        {
+          "ingredientId": "garlic",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "oregano",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 1,
+      "sauce": "tomato"
+    },
+    {
+      "id": "pizza_cheese",
+      "categoryId": "pizza",
+      "name": "جبنة",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_cheese",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 2,
+      "sauce": "tomato"
+    },
+    {
+      "id": "pizza_pepperoni",
+      "categoryId": "pizza",
+      "name": "بيبروني",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_pepperoni",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "pepperoni",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 3,
+      "sauce": "tomato"
+    },
+    {
+      "id": "pizza_quattro_formaggi",
+      "categoryId": "pizza",
+      "name": "أربعة أجبان",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_quattro_formaggi",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "blue_cheese",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "parmesan",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "cheddar",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 4,
+      "sauce": "tomato"
+    },
+    {
+      "id": "pizza_egyptian_mixed_cheese",
+      "categoryId": "pizza",
+      "name": "مشكل جبن",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_egyptian_mixed_cheese",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "cheddar",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "roumi",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "feta",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 5,
+      "sauce": "tomato"
+    },
+    {
+      "id": "pizza_capricciosa",
+      "categoryId": "pizza",
+      "name": "كابريتشوزا",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_capricciosa",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "ham",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "mushroom",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "artichoke",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "olive_black",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 6,
+      "sauce": "tomato"
+    },
+    {
+      "id": "pizza_diavola",
+      "categoryId": "pizza",
+      "name": "ديافولا",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_diavola",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "salami_spicy",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "chili_red",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 7,
+      "sauce": "tomato"
+    },
+    {
+      "id": "pizza_ham_mushroom",
+      "categoryId": "pizza",
+      "name": "هام ومشروم",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_ham_mushroom",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "ham",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "mushroom",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 8,
+      "sauce": "tomato"
+    },
+    {
+      "id": "pizza_napoletana",
+      "categoryId": "pizza",
+      "name": "نابوليتانا",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_napoletana",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "anchovy",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "capers",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "olive_black",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "oregano",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 9,
+      "sauce": "tomato"
+    },
+    {
+      "id": "pizza_veggie",
+      "categoryId": "pizza",
+      "name": "خضار",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_veggie",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "bell_pepper_green",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "bell_pepper_red",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "mushroom",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "onion",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "tomato",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "olive_black",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "corn",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 10,
+      "sauce": "tomato"
+    },
+    {
+      "id": "pizza_hawaiian",
+      "categoryId": "pizza",
+      "name": "هاواي",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_hawaiian",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "ham",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "pineapple",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 11,
+      "sauce": "tomato"
+    },
+    {
+      "id": "pizza_bbq_chicken",
+      "categoryId": "pizza",
+      "name": "فراخ باربكيو",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_bbq_chicken",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "chicken",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "red_onion",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 12,
+      "sauce": "bbq"
+    },
+    {
+      "id": "pizza_chicken_ranch",
+      "categoryId": "pizza",
+      "name": "فراخ رانش",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_chicken_ranch",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "chicken",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "bacon",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "cherry_tomato",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 13,
+      "sauce": "ranch"
+    },
+    {
+      "id": "pizza_chicken",
+      "categoryId": "pizza",
+      "name": "فراخ",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_chicken",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "chicken",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "bell_pepper_green",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "mushroom",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "olive_black",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 14,
+      "sauce": "tomato"
+    },
+    {
+      "id": "pizza_chicken_fajita",
+      "categoryId": "pizza",
+      "name": "فراخ فاهيتا",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_chicken_fajita",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "chicken",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "bell_pepper_green",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "bell_pepper_red",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "onion",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 15,
+      "sauce": "tomato"
+    },
+    {
+      "id": "pizza_supreme",
+      "categoryId": "pizza",
+      "name": "سوبريم",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_supreme",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "pepperoni",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "sausage",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "bell_pepper_green",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "onion",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "mushroom",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "olive_black",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 16,
+      "sauce": "tomato"
+    },
+    {
+      "id": "pizza_meat_lovers",
+      "categoryId": "pizza",
+      "name": "ميت لافرز",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_meat_lovers",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "pepperoni",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "sausage",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "ham",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "bacon",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "ground_beef",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 17,
+      "sauce": "tomato"
+    },
+    {
+      "id": "pizza_sausage",
+      "categoryId": "pizza",
+      "name": "سوسيس",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_sausage",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "sausage",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 18,
+      "sauce": "tomato"
+    },
+    {
+      "id": "pizza_mushroom",
+      "categoryId": "pizza",
+      "name": "مشروم",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_mushroom",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "mushroom",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "parsley",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 19,
+      "sauce": "tomato"
+    },
+    {
+      "id": "pizza_tuna",
+      "categoryId": "pizza",
+      "name": "تونة",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_tuna",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "tuna",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "onion",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "olive_black",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "corn",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 20,
+      "sauce": "tomato"
+    },
+    {
+      "id": "pizza_seafood",
+      "categoryId": "pizza",
+      "name": "مأكولات بحرية",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_seafood",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "shrimp",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "calamari",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "garlic",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "parsley",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 21,
+      "sauce": "tomato"
+    },
+    {
+      "id": "pizza_mexican",
+      "categoryId": "pizza",
+      "name": "مكسيكانا",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_mexican",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "ground_beef",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "jalapeno",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "onion",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "bell_pepper_green",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "corn",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 22,
+      "sauce": "hot"
+    },
+    {
+      "id": "pizza_greek",
+      "categoryId": "pizza",
+      "name": "يوناني",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_greek",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "feta",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "olive_black",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "tomato",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "red_onion",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "oregano",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 23,
+      "sauce": "tomato"
+    },
+    {
+      "id": "pizza_pesto_chicken",
+      "categoryId": "pizza",
+      "name": "فراخ بيستو",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_pesto_chicken",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "chicken",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "cherry_tomato",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "parmesan",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 24,
+      "sauce": "pesto"
+    },
+    {
+      "id": "pizza_basterma",
+      "categoryId": "pizza",
+      "name": "بسطرمة",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_basterma",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "basterma",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "bell_pepper_green",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "tomato",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 25,
+      "sauce": "tomato"
+    },
+    {
+      "id": "pizza_mortadella",
+      "categoryId": "pizza",
+      "name": "مرتديلا",
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_pizza_mortadella",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "mortadella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "olive_green",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "s": 0,
+        "m": 0,
+        "l": 0
+      },
+      "optionDeltas": {
+        "regular": 0
+      },
+      "displayOrder": 26,
+      "sauce": "tomato"
+    }
+  ]
+}

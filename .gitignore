@@ -5,3 +5,5 @@
 build/
 node_modules/
 *.log
+assets_src/_raw/
+__pycache__/
