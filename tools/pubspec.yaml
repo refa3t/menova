@@ -1,0 +1,7 @@
+name: menova_tools
+publish_to: none
+environment:
+  sdk: ^3.0.0
+dependencies:
+  http: ^1.2.0
+  image: ^4.1.0

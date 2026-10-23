@@ -1,0 +1,7 @@
+.env
+.env.*
+!.env.example
+.dart_tool/
+build/
+node_modules/
+*.log
