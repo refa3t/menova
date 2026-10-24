@@ -240,9 +240,17 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
       return a == null ? const [] : [a.secureUrl, ...a.variants];
     }
 
+    // Everything that can be drawn (the canvas needs any selected piece).
     final available = [
       for (final id in def.allowedIngredientIds)
         if (menu.ingredients[id] case final i? when urlsFor(i).isNotEmpty) i,
+    ];
+    // The grid offers this product's own ingredients only (owner request),
+    // plus anything already selected, e.g. an extra on an edited cart line.
+    final productIds = {for (final d in state.product.defaults) d.ingredientId};
+    final gridItems = [
+      for (final i in available)
+        if (productIds.contains(i.id) || state.qtyOf(i.id) > 0) i,
     ];
 
     void report(BuilderRejection? r) {
@@ -317,7 +325,7 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
       const SizedBox(height: 8),
       IngredientGrid(
         items: [
-          for (final i in available)
+          for (final i in gridItems)
             IngredientTileData(
               id: i.id,
               name: i.name,
