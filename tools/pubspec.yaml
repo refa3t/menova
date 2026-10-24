@@ -8,3 +8,5 @@ dependencies:
     path: ../packages/core
   http: ^1.2.0
   image: ^4.1.0
+dev_dependencies:
+  test: ^1.25.0

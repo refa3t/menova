@@ -1,0 +1,38 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  dart:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - name: Engine boundaries (P1-A09)
+        working-directory: tools
+        run: dart test test/engine_boundaries_test.dart
+      - name: Bundled definitions up to date
+        working-directory: tools
+        run: dart run bin/gen_definitions.dart --check
+      - name: core tests
+        working-directory: packages/core
+        run: dart test
+      - name: category_definitions tests
+        working-directory: packages/category_definitions
+        run: dart test
+      - name: product_builder tests
+        working-directory: packages/product_builder
+        run: flutter test
+      - name: storefront tests
+        working-directory: apps/storefront
+        run: flutter test
+      - name: reception tests
+        working-directory: apps/reception
+        run: flutter test
