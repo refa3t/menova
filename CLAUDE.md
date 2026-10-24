@@ -78,7 +78,7 @@ tools/                   # سكربتات seed والتحقق
 **قاعدة التبعيات:** `product_builder` و`pricing` و`animation` تعتمد على `core` فقط. التطبيقات هي التي تركّبها. أي استيراد بينها يفشل البناء (P1-A09).
 
 **أوامر (تُملأ في P1-A01 وتُحدَّث هنا):**
-`flutter pub get` (من الجذر، Dart workspace) · `flutter analyze` (من الجذر) · `flutter test` (داخل كل app/package) · `dart run tools/bin/cloudinary_upload_test.dart` (من `tools/`) · `flutter build web --release` (داخل كل app) · `firebase deploy --only hosting` (هدفان: storefront وreception) · `dart pub global run flutterfire_cli:flutterfire configure` · `python tools/process_assets.py` (قص الصور الخام) · `dart run bin/upload_assets.dart pizza` (من `tools/`، رفع لـ Cloudinary) · `dart run bin/seed.dart pizza --products seed/pizza_trial.json --allow-missing-final-images` (من `tools/`، أضف `--dry-run` للتحقق فقط) · `dart run bin/gen_definitions.dart` (من `tools/`، بعد أي تعديل في `definitions/`) · `dart test test/engine_boundaries_test.dart` (من `tools/`) · `cd firestore_tests && npm test` (اختبارات القواعد على الـ emulator، JDK 21) · `firebase deploy --only firestore:rules` · `cd functions && npm test` (بعد D-INFRA-01) · `firebase emulators:start`
+`flutter pub get` (من الجذر، Dart workspace) · `flutter analyze` (من الجذر) · `flutter test` (داخل كل app/package) · `dart run tools/bin/cloudinary_upload_test.dart` (من `tools/`) · `flutter build web --release` (داخل كل app) · `firebase deploy --only hosting` (هدفان: storefront وreception) · `dart pub global run flutterfire_cli:flutterfire configure` · `python tools/process_assets.py` (قص الصور الخام) · `dart run bin/upload_assets.dart pizza` (من `tools/`، رفع لـ Cloudinary) · `dart run bin/seed.dart pizza --products seed/pizza_trial.json --allow-missing-final-images` (من `tools/`، أضف `--dry-run` للتحقق فقط) · `dart run bin/gen_definitions.dart` (من `tools/`، بعد أي تعديل في `definitions/`) · `dart test test/engine_boundaries_test.dart` (من `tools/`) · `dart run bin/set_staff_role.dart <email> <reception|kitchen|none>` (من `tools/`) · `cd firestore_tests && npm test` (اختبارات القواعد على الـ emulator، JDK 21) · `firebase deploy --only firestore:rules` · `cd functions && npm test` (بعد D-INFRA-01) · `firebase emulators:start`
 > على Windows: أضف `%APPDATA%
 pm` للـ PATH لتشغيل `firebase`.
 
@@ -362,7 +362,7 @@ extraQty_i = max(0, selectedQty_i − defaultQty_i)
 
 | الحالة | ID | المهمة | المخرج | الحجم | Deps |
 | --- | --- | --- | --- | --- | --- |
-| [ ] | P1-F01 | موقع لوحة الاستقبال المنفصل وتسجيل دخول الموظف (مستخدم يرى شاشة الطلبات فقط) | لوحة بدخول وصلاحية | M | P1-A04 |
+| [~] | P1-F01 | موقع لوحة الاستقبال المنفصل وتسجيل دخول الموظف (مستخدم يرى شاشة الطلبات فقط) | لوحة بدخول وصلاحية. ~ دخول بالبريد وكلمة المرور، وتوجيه حسب custom claim `role` (reception/kitchen) وإلا «ليس لديك صلاحية»، منشور على `menova-reception.web.app`. أداة `tools/bin/set_staff_role.dart` لمنح الدور. **ينتظر تفعيل مزوّد Email/Password وإنشاء حسابات الموظفين (OWNER)** | M | P1-A04 |
 | [ ] | P1-F02 | قائمة الطلبات الجديدة لحظياً مع تنبيه صوتي | طلب جديد يظهر وينبّه | M | P1-F01, P1-E05 |
 | [ ] | P1-F03 | بطاقة الطلب: الحجم والعجينة والأصلي والمضاف، **والمحذوف بصيغة «بدون X» بلون مميز**، والملاحظات وبيانات الاستلام | بطاقة مطابقة للتصميم (FR-OR-03) | M | P1-F02 |
 | [ ] | P1-F04 | تغيير حالة الطلب عبر Function (تتحقق من الدور والانتقال) وانعكاسها على العميل لحظياً، والإلغاء بسبب مسجل | دورة حالة تعمل | M | P1-F03 |
