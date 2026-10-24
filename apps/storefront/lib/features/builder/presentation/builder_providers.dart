@@ -50,5 +50,7 @@ class BuilderController extends Notifier<BuilderState> {
   BuilderRejection? selectOption(String groupId, String choiceId) =>
       _apply(state.selectOption(groupId, choiceId));
 
+  void setNotes(String notes) => state = state.setNotes(notes);
+
   void reset() => state = state.reset();
 }

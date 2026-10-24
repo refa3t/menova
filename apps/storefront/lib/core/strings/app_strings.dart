@@ -10,6 +10,10 @@ abstract final class AppStrings {
   static const productNotFound = 'المنتج غير متاح';
   static const maxQtyReached = 'وصلت للحد الأقصى لهذا المكوّن';
   static const reset = 'إعادة الضبط';
+  static const ingredients = 'المكونات';
+  static const quantity = 'الكمية';
+  static const notes = 'ملاحظات';
+  static const notesHint = 'مثال: بدون بصل زيادة، تسوية زيادة';
   static const notRemovable = 'هذا المكوّن أساسي ولا يمكن إزالته';
   static const unavailable = 'هذا المكوّن غير متوفر حالياً';
   static const notAllowed = 'هذا الاختيار غير متاح لهذا المنتج';

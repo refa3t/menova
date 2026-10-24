@@ -7,6 +7,9 @@ import '../../../core/strings/app_strings.dart';
 import '../../menu/domain/menu.dart';
 import '../../menu/presentation/menu_providers.dart';
 import 'builder_providers.dart';
+import 'widgets/choice_selectors.dart';
+import 'widgets/ingredient_grid.dart';
+import 'widgets/notes_field.dart';
 
 /// The orchestrator screen: wires the builder engine to the UI. Generic over
 /// any category; everything comes from the definition and menu data.
@@ -137,51 +140,50 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
         state.product.name,
         style: Theme.of(context).textTheme.headlineSmall,
       ),
-      if (def.sizes.isNotEmpty) ...[
+      const SizedBox(height: 16),
+      SizeSelector(
+        sizes: def.sizes,
+        selectedId: state.selection.sizeId,
+        onSelected: (id) => report(controller.selectSize(id)),
+      ),
+      for (final g in def.optionGroups) ...[
         const SizedBox(height: 16),
-        Wrap(
-          spacing: 8,
-          children: [
-            for (final s in def.sizes)
-              ChoiceChip(
-                label: Text(s.name),
-                selected: s.id == state.selection.sizeId,
-                onSelected: (_) => report(controller.selectSize(s.id)),
-              ),
-          ],
+        OptionGroupSelector(
+          group: g,
+          selectedId: state.selection.options[g.id],
+          onSelected: (id) => report(controller.selectOption(g.id, id)),
         ),
       ],
-      for (final g in def.optionGroups)
-        if (g.choices.length > 1) ...[
-          const SizedBox(height: 16),
-          Text(g.name, style: Theme.of(context).textTheme.titleSmall),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: [
-              for (final c in g.choices)
-                ChoiceChip(
-                  label: Text(c.name),
-                  selected: state.selection.options[g.id] == c.id,
-                  onSelected: (_) =>
-                      report(controller.selectOption(g.id, c.id)),
-                ),
-            ],
-          ),
-        ],
-      const SizedBox(height: 16),
-      for (final i in available)
-        _IngredientRow(
-          name: i.name,
-          imageUrl: urlsFor(i).first,
-          qty: state.qtyOf(i.id),
-          canRemove: state.canRemove(i.id),
-          onAdd: () => report(controller.add(i.id)),
-          onRemove: () => report(controller.remove(i.id)),
-        ),
+      const SizedBox(height: 20),
+      Text(
+        AppStrings.ingredients,
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
       const SizedBox(height: 8),
+      IngredientGrid(
+        items: [
+          for (final i in available)
+            IngredientTileData(
+              id: i.id,
+              name: i.name,
+              imageUrl: urlsFor(i).first,
+              qty: state.qtyOf(i.id),
+              defaultQty: state.defaultQtyOf(i.id),
+              canRemove: state.canRemove(i.id),
+            ),
+        ],
+        onAdd: (id) => report(controller.add(id)),
+        onRemove: (id) => report(controller.remove(id)),
+      ),
+      const SizedBox(height: 16),
+      NotesField(
+        initial: state.selection.notes,
+        onChanged: controller.setNotes,
+      ),
+      const SizedBox(height: 12),
       OutlinedButton(
         onPressed: state.isModified ? controller.reset : null,
+        style: OutlinedButton.styleFrom(minimumSize: const Size(44, 44)),
         child: const Text(AppStrings.reset),
       ),
     ];
@@ -218,82 +220,6 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
           ],
         );
       },
-    );
-  }
-}
-
-class _IngredientRow extends StatelessWidget {
-  const _IngredientRow({
-    required this.name,
-    required this.imageUrl,
-    required this.qty,
-    required this.canRemove,
-    required this.onAdd,
-    required this.onRemove,
-  });
-
-  final String name;
-  final String imageUrl;
-  final int qty;
-  final bool canRemove;
-  final VoidCallback onAdd;
-  final VoidCallback onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: SizedBox.square(dimension: 40, child: Image.network(imageUrl)),
-      title: Text(name),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _QtyButton(
-            label: '−',
-            semantics: AppStrings.remove,
-            onPressed: canRemove ? onRemove : null,
-          ),
-          SizedBox(
-            width: 32,
-            child: Text(
-              '$qty',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-          ),
-          _QtyButton(label: '+', semantics: AppStrings.add, onPressed: onAdd),
-        ],
-      ),
-    );
-  }
-}
-
-class _QtyButton extends StatelessWidget {
-  const _QtyButton({
-    required this.label,
-    required this.semantics,
-    required this.onPressed,
-  });
-
-  final String label;
-  final String semantics;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: semantics,
-      button: true,
-      child: FilledButton.tonal(
-        onPressed: onPressed,
-        style: FilledButton.styleFrom(
-          minimumSize: const Size(44, 44),
-          padding: EdgeInsets.zero,
-          shape: const CircleBorder(),
-          textStyle: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
-        ),
-        child: Text(label),
-      ),
     );
   }
 }
