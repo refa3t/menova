@@ -64,7 +64,11 @@ class ProductCard extends ConsumerWidget {
             children: [
               Expanded(
                 child: finalImage != null
-                    ? Image.network(finalImage, fit: BoxFit.contain)
+                    ? Image.network(
+                        finalImage,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                      )
                     : ProductPreview(
                         menu: menu,
                         definition: category.definition,

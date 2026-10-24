@@ -100,6 +100,14 @@ class _BuilderCanvasState extends State<BuilderCanvas> {
                     child: Image.network(
                       widget.baseImageUrl,
                       fit: BoxFit.contain,
+                      // A missing base never breaks the screen; toppings
+                      // still show on a plain disc.
+                      errorBuilder: (_, _, _) => const DecoratedBox(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color(0xFFE9C9A0),
+                        ),
+                      ),
                     ),
                   ),
                 ),

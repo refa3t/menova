@@ -68,7 +68,9 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    final add = find.text('${AppStrings.addToCart} · ${AppStrings.price(10000)}');
+    final add = find.text(
+      '${AppStrings.addToCart} · ${AppStrings.price(10000)}',
+    );
     await tester.tap(add);
     await tester.pump();
     expect(container.read(cartProvider).lines, hasLength(1));
