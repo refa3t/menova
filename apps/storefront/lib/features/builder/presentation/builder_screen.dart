@@ -7,6 +7,8 @@ import '../../../core/strings/app_strings.dart';
 import '../../menu/domain/menu.dart';
 import '../../menu/presentation/menu_providers.dart';
 import 'builder_providers.dart';
+import 'price_providers.dart';
+import 'widgets/add_bar.dart';
 import 'widgets/choice_selectors.dart';
 import 'widgets/ingredient_grid.dart';
 import 'widgets/notes_field.dart';
@@ -23,14 +25,20 @@ class BuilderScreen extends ConsumerWidget {
     final menu = ref.watch(menuProvider);
     return Scaffold(
       appBar: AppBar(),
+      bottomNavigationBar: menu.hasValue && _exists(menu.requireValue)
+          ? Consumer(
+              builder: (context, ref, _) => AddBar(
+                total: ref.watch(priceProvider(productId))?.total,
+                // Adding to the cart lands with P1-E01.
+                onAdd: null,
+              ),
+            )
+          : null,
       body: menu.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => const Center(child: Text(AppStrings.menuLoadError)),
         data: (menu) {
-          final exists = menu.categories.any(
-            (c) => c.products.any((p) => p.id == productId),
-          );
-          if (!exists) {
+          if (!_exists(menu)) {
             return const Center(child: Text(AppStrings.productNotFound));
           }
           return _BuilderBody(menu: menu, productId: productId);
@@ -38,6 +46,11 @@ class BuilderScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+extension on BuilderScreen {
+  bool _exists(Menu menu) =>
+      menu.categories.any((c) => c.products.any((p) => p.id == productId));
 }
 
 class _BuilderBody extends ConsumerStatefulWidget {

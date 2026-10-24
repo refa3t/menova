@@ -29,11 +29,13 @@ abstract final class AppStrings {
       'تطوير ${DeveloperInfo.nameAr} · ${DeveloperInfo.phone}';
 
   /// Display-only formatting of an amount in piasters as EGP.
-  static String priceFrom(int piasters) {
+  static String price(int piasters) {
     final pounds = piasters / 100;
     final text = pounds == pounds.roundToDouble()
         ? pounds.toStringAsFixed(0)
         : pounds.toStringAsFixed(2);
-    return 'يبدأ من $text ج.م';
+    return '$text ج.م';
   }
+
+  static String priceFrom(int piasters) => 'يبدأ من ${price(piasters)}';
 }
