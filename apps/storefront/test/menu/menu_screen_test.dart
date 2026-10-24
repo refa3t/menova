@@ -2,6 +2,8 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:storefront/features/cart/presentation/cart_providers.dart';
 import 'package:storefront/core/strings/app_strings.dart';
 import 'package:storefront/features/menu/domain/menu.dart';
 import 'package:storefront/features/menu/presentation/menu_providers.dart';
@@ -9,14 +11,24 @@ import 'package:storefront/features/menu/presentation/menu_screen.dart';
 
 import 'menu_test.dart' show def, product;
 
+late SharedPreferences prefs;
+
 Widget app(Future<Menu> Function() load) => ProviderScope(
-  overrides: [menuProvider.overrideWith((ref) => load())],
+  overrides: [
+    menuProvider.overrideWith((ref) => load()),
+    sharedPreferencesProvider.overrideWithValue(prefs),
+  ],
   child: const MaterialApp(
     home: Directionality(textDirection: TextDirection.rtl, child: MenuScreen()),
   ),
 );
 
 void main() {
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    prefs = await SharedPreferences.getInstance();
+  });
+
   testWidgets('shows category chip and product cards with price', (
     tester,
   ) async {

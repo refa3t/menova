@@ -1,6 +1,7 @@
 import 'package:core/core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:storefront/features/cart/domain/cart.dart';
 import 'package:storefront/features/cart/domain/cart_line_view.dart';
 import 'package:storefront/features/cart/presentation/cart_providers.dart';
@@ -66,8 +67,33 @@ Selection sel(Map<String, int> q) => Selection(
 );
 
 void main() {
-  test('add is one atomic step and replace keeps the same line', () {
-    final c = ProviderContainer();
+  Future<ProviderContainer> container() async {
+    final prefs = await SharedPreferences.getInstance();
+    return ProviderContainer(
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+    );
+  }
+
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  test('cart survives a reload (P1-E03)', () async {
+    final first = await container();
+    first.read(cartProvider.notifier).add(sel({'cheese': 1}), qty: 2);
+    first.dispose();
+    final second = await container();
+    addTearDown(second.dispose);
+    expect(second.read(cartProvider).itemCount, 2);
+  });
+
+  test('a corrupt saved cart yields an empty cart', () async {
+    SharedPreferences.setMockInitialValues({'cart.v1': '{not json'});
+    final c = await container();
+    addTearDown(c.dispose);
+    expect(c.read(cartProvider).lines, isEmpty);
+  });
+
+  test('add is one atomic step and replace keeps the same line', () async {
+    final c = await container();
     addTearDown(c.dispose);
     final cart = c.read(cartProvider.notifier);
     final id = cart.add(sel({'cheese': 1, 'olive': 1}));
