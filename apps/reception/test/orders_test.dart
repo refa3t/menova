@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:reception/core/strings/app_strings.dart';
 import 'package:reception/features/orders/domain/order_alerts.dart';
+import 'package:reception/features/orders/presentation/kitchen_ticket.dart';
 import 'package:reception/features/orders/presentation/order_card.dart';
 
 // TEMP fixtures, not owner data.
@@ -85,4 +86,25 @@ void main() {
       expect(find.text(AppStrings.price(11500)), findsOneWidget);
     },
   );
+
+  testWidgets('kitchen ticket shows items, "without" lines and the credit', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: KitchenTicket(
+              order: order('req-12345678', OrderStatus.newOrder),
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(find.text('#12345678'), findsOneWidget);
+    expect(find.text('1 × TEMP pizza'), findsOneWidget);
+    expect(find.text('${AppStrings.without} زيتون'), findsOneWidget);
+    expect(find.text('+ فلفل'), findsOneWidget);
+    expect(find.text(AppStrings.credit), findsOneWidget);
+  });
 }

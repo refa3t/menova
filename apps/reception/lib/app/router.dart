@@ -8,6 +8,7 @@ import '../features/auth/domain/staff_access.dart';
 import '../features/auth/presentation/auth_providers.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/orders/presentation/orders_screen.dart';
+import '../features/orders/presentation/ticket_screen.dart';
 
 /// Staff see the orders screen only; everyone else is sent to sign in or
 /// told they have no access (P1-F01).
@@ -27,11 +28,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       return switch (access) {
         StaffAccess.signedOut => at == '/login' ? null : '/login',
         StaffAccess.denied => at == '/denied' ? null : '/denied',
-        StaffAccess.granted => at == '/' ? null : '/',
+        StaffAccess.granted =>
+          at == '/' || at.startsWith('/ticket/') ? null : '/',
       };
     },
     routes: [
       GoRoute(path: '/', builder: (context, state) => const OrdersScreen()),
+      GoRoute(
+        path: '/ticket/:id',
+        builder: (context, state) =>
+            TicketScreen(orderId: state.pathParameters['id']!),
+      ),
       GoRoute(
         path: '/splash',
         builder: (context, state) =>

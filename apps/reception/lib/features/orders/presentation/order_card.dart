@@ -1,5 +1,6 @@
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/strings/app_strings.dart';
 
@@ -41,6 +42,11 @@ class OrderCard extends StatelessWidget {
                 _Chip(AppStrings.orderStatus(order.status)),
                 const SizedBox(width: 6),
                 _Chip(AppStrings.paymentStatus(order.paymentStatus)),
+                IconButton(
+                  tooltip: AppStrings.print,
+                  onPressed: () => context.push('/ticket/${order.id}'),
+                  icon: const Icon(Icons.print_outlined),
+                ),
               ],
             ),
             const SizedBox(height: 4),

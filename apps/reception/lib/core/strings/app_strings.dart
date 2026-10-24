@@ -52,6 +52,11 @@ abstract final class AppStrings {
     PaymentStatus.refunded => 'مسترد',
   };
 
+  static const printTicket = 'تذكرة المطبخ';
+  static const print = 'طباعة';
+  static const printAgain = 'طباعة مرة أخرى';
+  static const orderNotFound = 'الطلب غير موجود';
+
   static const noAccess = 'ليس لديك صلاحية لدخول لوحة الطلبات';
   static const credit =
       'تطوير ${DeveloperInfo.nameAr} · ${DeveloperInfo.email} · ${DeveloperInfo.phone}';
