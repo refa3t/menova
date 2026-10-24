@@ -57,6 +57,33 @@ abstract final class AppStrings {
   static const printAgain = 'طباعة مرة أخرى';
   static const orderNotFound = 'الطلب غير موجود';
 
+  static const priceUnverifiable =
+      'تعذّر التحقق من السعر: منتج أو اختيار لم يعد معروفاً. راجع الطلب';
+  static String priceMismatch(int computed) =>
+      'السعر لا يطابق الحساب: المحسوب ${price(computed)}. راجع قبل القبول';
+
+  static const actionFailed = 'تعذّر تنفيذ الإجراء، حاول مرة أخرى';
+  static const cancelOrder = 'إلغاء الطلب';
+  static const cancelReason = 'سبب الإلغاء';
+  static const confirmCancel = 'تأكيد الإلغاء';
+  static const back = 'رجوع';
+
+  static String actionFor(OrderStatus s) => switch (s) {
+    OrderStatus.accepted => 'قبول',
+    OrderStatus.preparing => 'بدء التحضير',
+    OrderStatus.ready => 'جاهز',
+    OrderStatus.outForDelivery => 'خرج للتوصيل',
+    OrderStatus.completed => 'تم التسليم',
+    OrderStatus.cancelled => 'إلغاء',
+    OrderStatus.newOrder => 'جديد',
+  };
+
+  static String markPayment(PaymentStatus p) => switch (p) {
+    PaymentStatus.paid => 'تم الدفع',
+    PaymentStatus.refunded => 'استرداد',
+    PaymentStatus.unpaid => 'غير مدفوع',
+  };
+
   static const noAccess = 'ليس لديك صلاحية لدخول لوحة الطلبات';
   static const credit =
       'تطوير ${DeveloperInfo.nameAr} · ${DeveloperInfo.email} · ${DeveloperInfo.phone}';

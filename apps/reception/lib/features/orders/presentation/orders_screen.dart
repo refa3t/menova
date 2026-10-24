@@ -5,7 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/strings/app_strings.dart';
+import '../data/pricing_data_provider.dart';
 import '../domain/order_alerts.dart';
+import '../domain/order_verification.dart';
+import 'order_action_bar.dart';
 import 'new_order_sound.dart';
 import 'order_card.dart';
 
@@ -51,6 +54,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
       if (_soundOn) playNewOrderSound();
     });
     final orders = ref.watch(activeOrdersProvider);
+    final pricing = ref.watch(pricingDataProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -80,7 +84,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                 padding: const EdgeInsets.all(16),
                 gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                   maxCrossAxisExtent: 460,
-                  mainAxisExtent: 420,
+                  mainAxisExtent: 520,
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
                 ),
@@ -91,6 +95,10 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                     child: OrderCard(
                       order: list[i],
                       highlight: _highlight.contains(list[i].id),
+                      verification: pricing == null
+                          ? null
+                          : verifyOrder(list[i], pricing),
+                      actions: OrderActionBar(order: list[i]),
                     ),
                   ),
                 ),

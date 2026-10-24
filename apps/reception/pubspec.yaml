@@ -17,6 +17,10 @@ dependencies:
   cloud_firestore: ^6.0.0
   core:
     path: ../../packages/core
+  pricing:
+    path: ../../packages/pricing
+  category_definitions:
+    path: ../../packages/category_definitions
   firebase_auth: ^6.0.0
 dev_dependencies:
   flutter_test:

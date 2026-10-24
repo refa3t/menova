@@ -3,12 +3,25 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/strings/app_strings.dart';
+import '../domain/order_verification.dart';
 
 /// Kitchen order card (P1-F03, FR-OR-03): size and options, kept defaults,
 /// added extras, and removed defaults as "بدون X" in a distinct colour, plus
 /// notes and pickup or delivery details. Reads only frozen order data.
 class OrderCard extends StatelessWidget {
-  const OrderCard({super.key, required this.order, this.highlight = false});
+  const OrderCard({
+    super.key,
+    required this.order,
+    this.highlight = false,
+    this.verification,
+    this.actions,
+  });
+
+  /// Re-pricing result (amended SEC-02); null while prices load.
+  final OrderVerification? verification;
+
+  /// Status and payment actions (P1-F04, P1-F05).
+  final Widget? actions;
 
   final Order order;
 
@@ -22,7 +35,9 @@ class OrderCard extends StatelessWidget {
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: highlight
+        side: verification?.matches == false
+            ? BorderSide(color: theme.colorScheme.error, width: 3)
+            : highlight
             ? BorderSide(color: theme.colorScheme.primary, width: 3)
             : BorderSide.none,
       ),
@@ -49,6 +64,21 @@ class OrderCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (verification case final v? when !v.matches)
+              Container(
+                margin: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.all(8),
+                color: theme.colorScheme.errorContainer,
+                child: Text(
+                  v.computedTotal == null
+                      ? AppStrings.priceUnverifiable
+                      : AppStrings.priceMismatch(v.computedTotal!),
+                  style: TextStyle(
+                    color: theme.colorScheme.onErrorContainer,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
             const SizedBox(height: 4),
             Text(
               '${AppStrings.fulfillment(c.fulfillment)} · ${c.name} · ${c.phone}',
@@ -74,6 +104,7 @@ class OrderCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (actions != null) ...[const Divider(height: 24), actions!],
           ],
         ),
       ),
