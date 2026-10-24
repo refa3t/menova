@@ -164,17 +164,20 @@ def main() -> None:
         }],
         # ANIMATIONS.md 7 + OVEN.md 4 (proposed values, TEMP until G06).
         'animation': [
-            {'step': 'Oven', 'weight': 50, 'params': {
+            # Durations requested by the owner (longer oven); weights match.
+            {'step': 'Oven', 'weight': 2200, 'params': {
+                'durationMs': 2200, 'saturation': 1.45,
                 'images': {
                     'hearth': 'oven_hearth', 'fireBack': 'oven_fire_back',
                     'fireFront': 'oven_fire_front', 'embers': 'oven_embers',
                     'steam': 'oven_steam', 'rim': 'oven_rim',
                 },
                 'scrimMaxPct': 35, 'vignetteMaxPct': 45, 'shrinkTo': 0.9,
-                'warmTintMaxPct': 18, 'flashPeakPct': 35,
+                'flashPeakPct': 35,
             }},
-            {'step': 'Swap', 'weight': 12, 'params': {}},
-            {'step': 'FlyToCart', 'weight': 38, 'params': {
+            {'step': 'Swap', 'weight': 300, 'params': {'durationMs': 300}},
+            {'step': 'FlyToCart', 'weight': 900, 'params': {
+                'durationMs': 900,
                 'shrinkTo': 0.18, 'arcControlPct': 20, 'rotateDeg': -12,
             }},
         ],

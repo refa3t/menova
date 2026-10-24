@@ -26,9 +26,9 @@ class CartButton extends ConsumerWidget {
         key: ValueKey(count),
         tween: Tween(begin: count == 0 || reduceMotion ? 1 : 0, end: 1),
         // Starts after the fly-in lands (Oven + Swap + most of FlyToCart).
-        duration: Duration(milliseconds: reduceMotion ? 0 : 2070),
+        duration: Duration(milliseconds: reduceMotion ? 0 : 3470),
         builder: (context, t, child) {
-          const start = 1850 / 2070;
+          const start = 3250 / 3470;
           final k = t < start ? 0.0 : (t - start) / (1 - start);
           final scale =
               1 +

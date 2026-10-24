@@ -142,8 +142,10 @@
   "animation": [
     {
       "step": "Oven",
-      "weight": 50,
+      "weight": 2200,
       "params": {
+        "durationMs": 2200,
+        "saturation": 1.45,
         "images": {
           "hearth": "oven_hearth",
           "fireBack": "oven_fire_back",
@@ -155,19 +157,21 @@
         "scrimMaxPct": 35,
         "vignetteMaxPct": 45,
         "shrinkTo": 0.9,
-        "warmTintMaxPct": 18,
         "flashPeakPct": 35
       }
     },
     {
       "step": "Swap",
-      "weight": 12,
-      "params": {}
+      "weight": 300,
+      "params": {
+        "durationMs": 300
+      }
     },
     {
       "step": "FlyToCart",
-      "weight": 38,
+      "weight": 900,
       "params": {
+        "durationMs": 900,
         "shrinkTo": 0.18,
         "arcControlPct": 20,
         "rotateDeg": -12

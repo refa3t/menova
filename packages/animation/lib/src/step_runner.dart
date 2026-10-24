@@ -17,6 +17,16 @@ class PlannedStep {
   final double share;
 }
 
+/// Total duration of a sequence: the sum of each step's `durationMs`
+/// param, or [fallback] when the definition gives none.
+Duration sequenceDuration(StepSequence sequence, Duration fallback) {
+  final ms = sequence.steps.fold<num>(
+    0,
+    (a, s) => a + ((s.params['durationMs'] as num?) ?? 0),
+  );
+  return ms > 0 ? Duration(milliseconds: ms.round()) : fallback;
+}
+
 /// Plans which steps run and for how long. Reduced motion keeps only the
 /// listed steps and caps the total (ANIMATIONS.md 7: Swap then FlyToCart,
 /// ≤ 600ms). Unregistered steps are skipped, never fatal (ARC-05).

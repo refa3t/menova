@@ -22,7 +22,7 @@ class OvenStep implements AnimStep {
     final scrimMax = param('scrimMaxPct', 35) / 100;
     final vignetteMax = param('vignetteMaxPct', 45) / 100;
     final shrinkTo = param('shrinkTo', 0.9);
-    final tintMax = param('warmTintMaxPct', 18) / 100;
+    final saturation = param('saturation', 1.45);
     final flashPeak = param('flashPeakPct', 35) / 100;
 
     final rect = input.productRect;
@@ -50,7 +50,11 @@ class OvenStep implements AnimStep {
     final pizzaScale =
         1 - (1 - shrinkTo) * interval(t, 0.15, 0.85, Curves.easeInOut);
     final pizzaDrop = rect.height * 0.02 * interval(t, 0.15, 0.85);
-    final tint = interval(t, 0.3, 0.8) * tintMax;
+    // Cooking runs over most of the step so the change is visible.
+    final cook = interval(t, 0.15, 0.9, Curves.easeInOut);
+    final bubble = t > 0.35 && t < 0.95
+        ? (frame.elapsed.inMilliseconds % 1600) / 1600
+        : 0.0;
     final sizzle = t > 0.4 && t < 0.8
         ? sin(frame.elapsed.inMilliseconds / 1000 * 2 * pi * 24) * 0.6
         : 0.0;
@@ -123,8 +127,10 @@ class OvenStep implements AnimStep {
                   child: SizedBox(
                     width: rect.width,
                     height: rect.height,
-                    child: ColorFiltered(
-                      colorFilter: _warmFilter(tint),
+                    child: Cooked(
+                      amount: cook,
+                      saturation: saturation,
+                      bubble: bubble,
                       child: input.product,
                     ),
                   ),
@@ -178,18 +184,5 @@ class OvenStep implements AnimStep {
           ),
       ],
     );
-  }
-
-  /// Lerp from identity to a warm matrix (R×1.06, B×0.9) so transparent
-  /// edges are not tinted (OVEN.md 5).
-  static ColorFilter _warmFilter(double amount) {
-    final a = (amount / 0.18).clamp(0.0, 1.0);
-    final r = 1 + 0.06 * a, b = 1 - 0.10 * a, darken = 1 - 0.08 * a;
-    return ColorFilter.matrix([
-      r * darken, 0, 0, 0, 0, //
-      0, darken, 0, 0, 0, //
-      0, 0, b * darken, 0, 0, //
-      0, 0, 0, 1, 0, //
-    ]);
   }
 }

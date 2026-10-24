@@ -112,10 +112,11 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
             if (menu.assets[e.value] case final a?)
               '${e.key}': [a.secureUrl, ...a.variants],
     };
+    final sequence = StepSequence.fromDefinition(def);
     final plan = planSequence(
-      sequence: StepSequence.fromDefinition(def),
+      sequence: sequence,
       registry: animSteps,
-      total: const Duration(milliseconds: 2000),
+      total: sequenceDuration(sequence, const Duration(milliseconds: 2000)),
       reduceMotion: MediaQuery.of(context).disableAnimations,
     );
     if (plan.steps.isEmpty) return false;
