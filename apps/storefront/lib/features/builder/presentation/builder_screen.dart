@@ -78,7 +78,10 @@ extension on BuilderScreen {
           content: const Text(AppStrings.addedToCart),
           action: SnackBarAction(
             label: AppStrings.viewCart,
-            onPressed: () => context.push('/cart'),
+            onPressed: () {
+              ScaffoldMessenger.of(context).clearSnackBars();
+              context.push('/cart');
+            },
           ),
         ),
       );

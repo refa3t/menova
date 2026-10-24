@@ -10,6 +10,19 @@ abstract final class AppStrings {
   static const productNotFound = 'المنتج غير متاح';
   static const maxQtyReached = 'وصلت للحد الأقصى لهذا المكوّن';
   static const reset = 'إعادة الضبط';
+  static const name = 'الاسم';
+  static const fulfillment = 'طريقة الاستلام';
+  static const pickup = 'استلام من المطعم';
+  static const delivery = 'توصيل';
+  static const address = 'العنوان';
+  static const orderNotes = 'ملاحظات على الطلب';
+  static const paymentCash = 'الدفع نقداً عند الاستلام';
+  static const confirmOrder = 'تأكيد الطلب';
+  static const errorName = 'اكتب اسمك';
+  static const errorPhone = 'اكتب رقم موبايل مصري صحيح (11 رقم)';
+  static const errorAddress = 'اكتب عنوان التوصيل';
+  static const orderingUnavailable =
+      'إرسال الطلبات غير متاح بعد في النسخة التجريبية';
   static const update = 'تحديث';
   static const addedToCart = 'أُضيف إلى السلة';
   static const viewCart = 'عرض السلة';

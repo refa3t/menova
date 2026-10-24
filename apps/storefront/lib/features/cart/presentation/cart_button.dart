@@ -14,7 +14,11 @@ class CartButton extends ConsumerWidget {
     final count = ref.watch(cartProvider.select((c) => c.itemCount));
     return IconButton(
       tooltip: AppStrings.cart,
-      onPressed: () => context.push('/cart'),
+      onPressed: () {
+        // Snackbars from the previous screen must not cover the cart.
+        ScaffoldMessenger.of(context).clearSnackBars();
+        context.push('/cart');
+      },
       icon: Badge(
         isLabelVisible: count > 0,
         label: Text('$count'),
