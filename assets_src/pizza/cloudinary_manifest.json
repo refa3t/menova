@@ -1,0 +1,272 @@
+{
+  "base_pizza_regular_raw.webp": {
+    "publicId": "menova/assets/ygmoeo3tkc3mspzzcix9",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791221/menova/assets/ygmoeo3tkc3mspzzcix9.webp",
+    "version": 1792791221,
+    "bytes": 364806
+  },
+  "ing_anchovy_01.webp": {
+    "publicId": "menova/assets/dnafvfgulj5npyiyz0kd",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791222/menova/assets/dnafvfgulj5npyiyz0kd.webp",
+    "version": 1792791222,
+    "bytes": 16526
+  },
+  "ing_artichoke_01.webp": {
+    "publicId": "menova/assets/y2a8kabhtpy40gvcaaq4",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791223/menova/assets/y2a8kabhtpy40gvcaaq4.webp",
+    "version": 1792791223,
+    "bytes": 14020
+  },
+  "ing_bacon_01.webp": {
+    "publicId": "menova/assets/r4kfag4yifwjneynfngk",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791224/menova/assets/r4kfag4yifwjneynfngk.webp",
+    "version": 1792791224,
+    "bytes": 19712
+  },
+  "ing_basil_01.webp": {
+    "publicId": "menova/assets/gngffbhj81c9untxw3rl",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791225/menova/assets/gngffbhj81c9untxw3rl.webp",
+    "version": 1792791225,
+    "bytes": 15690
+  },
+  "ing_basterma_01.webp": {
+    "publicId": "menova/assets/iwoqfhlpeqo7j6txhogv",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791226/menova/assets/iwoqfhlpeqo7j6txhogv.webp",
+    "version": 1792791226,
+    "bytes": 21322
+  },
+  "ing_basterma_02.webp": {
+    "publicId": "menova/assets/xjgjcubem68ihkcs7aek",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791228/menova/assets/xjgjcubem68ihkcs7aek.webp",
+    "version": 1792791228,
+    "bytes": 20412
+  },
+  "ing_basterma_03.webp": {
+    "publicId": "menova/assets/u5pkhgh8pet8xswutj3s",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791229/menova/assets/u5pkhgh8pet8xswutj3s.webp",
+    "version": 1792791229,
+    "bytes": 23990
+  },
+  "ing_basterma_04.webp": {
+    "publicId": "menova/assets/ivefwnkekta4rfw7xwy0",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791230/menova/assets/ivefwnkekta4rfw7xwy0.webp",
+    "version": 1792791230,
+    "bytes": 19202
+  },
+  "ing_bell_pepper_green_01.webp": {
+    "publicId": "menova/assets/uiul2gqlto8u1vahnc1i",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791231/menova/assets/uiul2gqlto8u1vahnc1i.webp",
+    "version": 1792791231,
+    "bytes": 10120
+  },
+  "ing_bell_pepper_red_01.webp": {
+    "publicId": "menova/assets/m4yw3od9osi2f9keevv1",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791231/menova/assets/m4yw3od9osi2f9keevv1.webp",
+    "version": 1792791231,
+    "bytes": 9626
+  },
+  "ing_blue_cheese_01.webp": {
+    "publicId": "menova/assets/afozjcvp4cx8e8u9vvfk",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791235/menova/assets/afozjcvp4cx8e8u9vvfk.webp",
+    "version": 1792791235,
+    "bytes": 26020
+  },
+  "ing_calamari_01.webp": {
+    "publicId": "menova/assets/e4y2ucysiz58unb6wreu",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791236/menova/assets/e4y2ucysiz58unb6wreu.webp",
+    "version": 1792791236,
+    "bytes": 8166
+  },
+  "ing_capers_01.webp": {
+    "publicId": "menova/assets/vweiftka1g3pzsbrvjrb",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791238/menova/assets/vweiftka1g3pzsbrvjrb.webp",
+    "version": 1792791238,
+    "bytes": 9936
+  },
+  "ing_cheddar_01.webp": {
+    "publicId": "menova/assets/cnpy1otad9v3bjzmwold",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791239/menova/assets/cnpy1otad9v3bjzmwold.webp",
+    "version": 1792791239,
+    "bytes": 19478
+  },
+  "ing_cherry_tomato_01.webp": {
+    "publicId": "menova/assets/exdlgylnaw1d4pnyqiup",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791241/menova/assets/exdlgylnaw1d4pnyqiup.webp",
+    "version": 1792791241,
+    "bytes": 21738
+  },
+  "ing_chicken_01.webp": {
+    "publicId": "menova/assets/rfa25s8ibf8zbt39pjqx",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791242/menova/assets/rfa25s8ibf8zbt39pjqx.webp",
+    "version": 1792791242,
+    "bytes": 22406
+  },
+  "ing_chili_red_01.webp": {
+    "publicId": "menova/assets/cocfj1lzkhmdtrg8zlay",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791243/menova/assets/cocfj1lzkhmdtrg8zlay.webp",
+    "version": 1792791243,
+    "bytes": 11938
+  },
+  "ing_corn_01.webp": {
+    "publicId": "menova/assets/ri2xiwlyierlqlvib6yb",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791244/menova/assets/ri2xiwlyierlqlvib6yb.webp",
+    "version": 1792791244,
+    "bytes": 11280
+  },
+  "ing_feta_01.webp": {
+    "publicId": "menova/assets/jguf9kximcgdhzopkjul",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791245/menova/assets/jguf9kximcgdhzopkjul.webp",
+    "version": 1792791245,
+    "bytes": 24486
+  },
+  "ing_garlic_01.webp": {
+    "publicId": "menova/assets/g9ndniqycrf0mbigvjmy",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791246/menova/assets/g9ndniqycrf0mbigvjmy.webp",
+    "version": 1792791246,
+    "bytes": 5770
+  },
+  "ing_ground_beef_01.webp": {
+    "publicId": "menova/assets/rptkkrj40eisekysthpa",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791248/menova/assets/rptkkrj40eisekysthpa.webp",
+    "version": 1792791248,
+    "bytes": 28190
+  },
+  "ing_ham_01.webp": {
+    "publicId": "menova/assets/lwety3e1is63xjgvelae",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791249/menova/assets/lwety3e1is63xjgvelae.webp",
+    "version": 1792791249,
+    "bytes": 16740
+  },
+  "ing_jalapeno_01.webp": {
+    "publicId": "menova/assets/cbv9cjasphmdj105gcka",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791250/menova/assets/cbv9cjasphmdj105gcka.webp",
+    "version": 1792791250,
+    "bytes": 15314
+  },
+  "ing_mortadella_01.webp": {
+    "publicId": "menova/assets/df3dzz80rh891pbcurdt",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791251/menova/assets/df3dzz80rh891pbcurdt.webp",
+    "version": 1792791251,
+    "bytes": 16286
+  },
+  "ing_mortadella_02.webp": {
+    "publicId": "menova/assets/fjjdosdggsaxscil8lxt",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791252/menova/assets/fjjdosdggsaxscil8lxt.webp",
+    "version": 1792791252,
+    "bytes": 16372
+  },
+  "ing_mortadella_03.webp": {
+    "publicId": "menova/assets/ehfbxizkkopgdf0ssx51",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791253/menova/assets/ehfbxizkkopgdf0ssx51.webp",
+    "version": 1792791253,
+    "bytes": 15340
+  },
+  "ing_mortadella_04.webp": {
+    "publicId": "menova/assets/cfymjh0ox843rorftgdz",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791254/menova/assets/cfymjh0ox843rorftgdz.webp",
+    "version": 1792791254,
+    "bytes": 15538
+  },
+  "ing_mozzarella_01.webp": {
+    "publicId": "menova/assets/f5ajpvywxbctwjr9kokc",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791255/menova/assets/f5ajpvywxbctwjr9kokc.webp",
+    "version": 1792791255,
+    "bytes": 25884
+  },
+  "ing_mushroom_01.webp": {
+    "publicId": "menova/assets/strsw6i6s4ioq3inbslc",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791256/menova/assets/strsw6i6s4ioq3inbslc.webp",
+    "version": 1792791256,
+    "bytes": 12368
+  },
+  "ing_olive_black_01.webp": {
+    "publicId": "menova/assets/mb67pjmlupahhaeudbk3",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791257/menova/assets/mb67pjmlupahhaeudbk3.webp",
+    "version": 1792791257,
+    "bytes": 17952
+  },
+  "ing_olive_green_01.webp": {
+    "publicId": "menova/assets/lyrqxsxqsvul0xuaak7p",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791258/menova/assets/lyrqxsxqsvul0xuaak7p.webp",
+    "version": 1792791258,
+    "bytes": 13050
+  },
+  "ing_onion_01.webp": {
+    "publicId": "menova/assets/j9posyvnx2xtirlkieok",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791259/menova/assets/j9posyvnx2xtirlkieok.webp",
+    "version": 1792791259,
+    "bytes": 18906
+  },
+  "ing_oregano_01.webp": {
+    "publicId": "menova/assets/lclcja8ai6rf0fkvvow9",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791260/menova/assets/lclcja8ai6rf0fkvvow9.webp",
+    "version": 1792791260,
+    "bytes": 16548
+  },
+  "ing_parmesan_01.webp": {
+    "publicId": "menova/assets/rfrwct4nmnp1ofh4ftz7",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791261/menova/assets/rfrwct4nmnp1ofh4ftz7.webp",
+    "version": 1792791261,
+    "bytes": 13660
+  },
+  "ing_parsley_01.webp": {
+    "publicId": "menova/assets/ekl2p9tacdcehudcouxw",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791262/menova/assets/ekl2p9tacdcehudcouxw.webp",
+    "version": 1792791262,
+    "bytes": 17344
+  },
+  "ing_pepperoni_01.webp": {
+    "publicId": "menova/assets/rhbd6nmrdsdsvo8vidfb",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791264/menova/assets/rhbd6nmrdsdsvo8vidfb.webp",
+    "version": 1792791264,
+    "bytes": 26656
+  },
+  "ing_pineapple_01.webp": {
+    "publicId": "menova/assets/zd0eaoedc3cpokdp2znw",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791265/menova/assets/zd0eaoedc3cpokdp2znw.webp",
+    "version": 1792791265,
+    "bytes": 11274
+  },
+  "ing_red_onion_01.webp": {
+    "publicId": "menova/assets/sw0zzvs3xxk0yawfkuu1",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791266/menova/assets/sw0zzvs3xxk0yawfkuu1.webp",
+    "version": 1792791266,
+    "bytes": 16366
+  },
+  "ing_roumi_01.webp": {
+    "publicId": "menova/assets/ptg54pp9ka1cb90tfd5y",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791267/menova/assets/ptg54pp9ka1cb90tfd5y.webp",
+    "version": 1792791267,
+    "bytes": 17186
+  },
+  "ing_salami_spicy_01.webp": {
+    "publicId": "menova/assets/mv1q23ic8hrrtcg9fbgk",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791268/menova/assets/mv1q23ic8hrrtcg9fbgk.webp",
+    "version": 1792791268,
+    "bytes": 29292
+  },
+  "ing_sausage_01.webp": {
+    "publicId": "menova/assets/ekgszbh48vnwcx7jwikm",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791269/menova/assets/ekgszbh48vnwcx7jwikm.webp",
+    "version": 1792791269,
+    "bytes": 21788
+  },
+  "ing_shrimp_01.webp": {
+    "publicId": "menova/assets/d53fyh87r8m4vl0kwccc",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791270/menova/assets/d53fyh87r8m4vl0kwccc.webp",
+    "version": 1792791270,
+    "bytes": 16754
+  },
+  "ing_tomato_01.webp": {
+    "publicId": "menova/assets/e1elg78ihnmx6twsrhbd",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791271/menova/assets/e1elg78ihnmx6twsrhbd.webp",
+    "version": 1792791271,
+    "bytes": 21716
+  },
+  "ing_tuna_01.webp": {
+    "publicId": "menova/assets/jyuwzaewifazeymmsqke",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1792791272/menova/assets/jyuwzaewifazeymmsqke.webp",
+    "version": 1792791272,
+    "bytes": 22948
+  }
+}

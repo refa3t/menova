@@ -4,5 +4,7 @@ resolution: workspace
 environment:
   sdk: ^3.9.0
 dependencies:
+  core:
+    path: ../packages/core
   http: ^1.2.0
   image: ^4.1.0

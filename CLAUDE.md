@@ -78,7 +78,7 @@ tools/                   # سكربتات seed والتحقق
 **قاعدة التبعيات:** `product_builder` و`pricing` و`animation` تعتمد على `core` فقط. التطبيقات هي التي تركّبها. أي استيراد بينها يفشل البناء (P1-A09).
 
 **أوامر (تُملأ في P1-A01 وتُحدَّث هنا):**
-`flutter pub get` (من الجذر، Dart workspace) · `flutter analyze` (من الجذر) · `flutter test` (داخل كل app/package) · `dart run tools/bin/cloudinary_upload_test.dart` (من `tools/`) · `flutter build web --release` (داخل كل app) · `firebase deploy --only hosting` (هدفان: storefront وreception) · `dart pub global run flutterfire_cli:flutterfire configure` · `cd functions && npm test` (بعد D-INFRA-01) · `firebase emulators:start`
+`flutter pub get` (من الجذر، Dart workspace) · `flutter analyze` (من الجذر) · `flutter test` (داخل كل app/package) · `dart run tools/bin/cloudinary_upload_test.dart` (من `tools/`) · `flutter build web --release` (داخل كل app) · `firebase deploy --only hosting` (هدفان: storefront وreception) · `dart pub global run flutterfire_cli:flutterfire configure` · `python tools/process_assets.py` (قص الصور الخام) · `dart run bin/upload_assets.dart pizza` (من `tools/`، رفع لـ Cloudinary) · `dart run bin/seed.dart pizza --products seed/pizza_trial.json --allow-missing-final-images` (من `tools/`، أضف `--dry-run` للتحقق فقط) · `cd functions && npm test` (بعد D-INFRA-01) · `firebase emulators:start`
 > على Windows: أضف `%APPDATA%
 pm` للـ PATH لتشغيل `firebase`.
 
@@ -272,7 +272,7 @@ extraQty_i = max(0, selectedQty_i − defaultQty_i)
 | [x] | P0-09 | مشروع Firebase `menova-80602` **موجود** (Spark). تسجيل تطبيقي ويب (storefront وreception)، تشغيل `flutterfire configure`، وتحديد هل تُنشأ بيئة ثانية للإنتاج (مشروع منفصل)، وتحديد الاستضافة | تطبيقان مسجلان وملفا إعداد. ✔ storefront `web:1988f71d…` وreception `web:b45d3355…`، Hosting: `menova-80602.web.app` و`menova-reception.web.app`. بيئة إنتاج منفصلة: لم تُحسم (OWNER_INPUTS قرار 10) | DEV | S | — |
 | [ ] | P0-10 | اعتماد أجهزة الاختبار المتوسطة (هاتف وتابلت ومتصفح) | قائمة معتمدة (AC-14) | BOTH | S | — |
 | [ ] | P0-11 | كتابة معايير قبول البيتزا كحالات اختبار (عند / فعندما / فإن) مرتبطة بمتطلبات الـ BRD | ملف حالات اختبار | DEV | M | P0-02..04 |
-| [ ] | P0-12 | ضبط preset `menova` في Cloudinary (الصيغ، الحجم الأقصى، المجلد)، والتحقق من قبوله `public_id` و`folder` من العميل، وتجربة رفع واسترجاع `secure_url` و`public_id` (قسم 3.1) | preset مقيَّد واختبار رفع ناجح | DEV | S | — |
+| [x] | P0-12 | ضبط preset `menova` في Cloudinary (الصيغ، الحجم الأقصى، المجلد)، والتحقق من قبوله `public_id` و`folder` من العميل، وتجربة رفع واسترجاع `secure_url` و`public_id` (قسم 3.1) | preset مقيَّد واختبار رفع ناجح. ✔ الرفع ناجح ويرجع `public_id`/`secure_url`، والـ preset يقبل `public_id` و`folder` من العميل. **قيود الصيغ والحجم والمجلد غير مضبوطة بقرار المالك** (تُضبط قبل الإنتاج)، والتحقق من المواصفات يتم محلياً في `tools/process_assets.py` | DEV | S | — |
 | [ ] | P0-13 | حسم قرار D-INFRA-01 (Blaze) وتوثيقه في قسم 3.1 | قرار موثق | OWNER | S | — |
 
 **أسئلة تُحسم قبل البدء (راجع قسم 10):** العجينة، صورة المنتج المعدّل، نصف ونصف، الاسترداد، سعر الإضافة حسب الحجم، حد الكمية، الأحجام، الاستلام/التوصيل.
@@ -291,7 +291,7 @@ extraQty_i = max(0, selectedQty_i − defaultQty_i)
 | --- | --- | --- | --- | --- | --- |
 | [x] | P1-A01 | مشروع Flutter Web (Clean Architecture، Riverpod، GoRouter) بالهيكل في قسم 3، وجهتان: المتجر ولوحة الاستقبال، منشور على الاستضافة التجريبية. ثبّت الأوامر في قسم 3 | مشروع يعمل على البيئة التجريبية. ✔ Dart pub workspace، منشور على الرابطين أعلاه | M | P0-09 |
 | [x] | P1-A02 | نماذج البيانات: تعريف الكاتيجوري الثابت وProduct وProductIngredient وIngredient وAsset وOptionGroup وSizeOption وOrder وOrderItem مع JSON | نماذج بالاختبارات. ✔ في `packages/core` (المال بالقرش int). Order/OrderItem نُقلا إلى P1-A08 لاعتمادهما على Selection/PriceBreakdown. دلالة `maxQty` (إجمالي أم فوق الافتراضي) تنتظر OWNER_INPUTS #8 | M | P0-01 |
-| [ ] | P1-A03 | سكربت seed من JSON إلى Firestore يتحقق من المخطط ويرفض أي أصل ناقص | بيانات البيتزا كاملة في التجريبي | M | P1-A02, P0-02..04 |
+| [x] | P1-A03 | سكربت seed من JSON إلى Firestore يتحقق من المخطط ويرفض أي أصل ناقص | بيانات البيتزا كاملة في التجريبي. ✔ `tools/bin/seed.dart` يتحقق بنماذج core ويرفض أي أصل ناقص، ويكتب بحساب Firebase CLI (لا مفتاح على القرص). مكتوب الآن: 5 بيتزا تجريبية + 38 مكوّناً، كلها `temp: true` (أسعار TEMP، بلا صور نهائية) | M | P1-A02, P0-02..04 |
 | [ ] | P1-A04 | قواعد أمان Firestore: قراءة المنيو للجميع، منع كتابة الطلبات والأسعار، أدوار الاستقبال والمطبخ | قواعد منشورة + اختبارها بالـ emulator | M | P1-A01 |
 | [ ] | P1-A05 | تحميل المنيو وتخزينه مؤقتاً + Precache للصور | المنيو يظهر من الكاش عند ضعف الاتصال | M | P1-A03 |
 | [ ] | P1-A06 | شاشة المنيو: الكاتيجوري وكروت منتجات البيتزا بصورها النهائية | شاشتان بتصميم معتمد | M | P1-A05, P0-08 |
