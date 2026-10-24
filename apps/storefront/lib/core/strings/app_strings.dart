@@ -57,6 +57,43 @@ abstract final class AppStrings {
   };
 
   static String get appTitle => _t('Menova', 'منوفا');
+  static String get navHome => _t('Home', 'الرئيسية');
+  static String get navMenu => _t('Menu', 'المنيو');
+  static String get navAbout => _t('About', 'عن منوفا');
+  static String get navContact => _t('Contact', 'تواصل معنا');
+  static String get searchHint =>
+      _t('Search for your favorite pizza...', 'ابحث عن البيتزا المفضلة...');
+  static String get heroEyebrow =>
+      _t('FRESH INGREDIENTS  •  BETTER PIZZA', 'مكونات طازجة  •  بيتزا أفضل');
+  static String get heroTitle1 => _t('Real Pizza,', 'بيتزا حقيقية،');
+  static String get heroTitle2 => _t('Real Happiness', 'سعادة حقيقية');
+  static String get heroSubtitle => _t(
+    'Made with the freshest ingredients, just for you.',
+    'محضّرة بأطزج المكونات، خصيصاً لك.',
+  );
+  static String get orderNow => _t('Order Now', 'اطلب الآن');
+  static String get ourPizzas => _t('Our Pizzas', 'البيتزا');
+  static String get viewAll => _t('View All', 'عرض الكل');
+  static String get addToCart => _t('Add to Cart', 'أضف للسلة');
+  static String get backToMenu => _t('Back to Menu', 'العودة للمنيو');
+  static String get size => _t('Size', 'الحجم');
+  static String get noResults =>
+      _t('No pizzas match your search', 'لا توجد نتائج مطابقة');
+  static String get featureDelivery => _t('Fast Delivery', 'توصيل سريع');
+  static String get featureDeliverySub =>
+      _t('To your door in no time', 'لباب بيتك في أسرع وقت');
+  static String get featureFresh => _t('Fresh Ingredients', 'مكونات طازجة');
+  static String get featureFreshSub =>
+      _t('Only the best for you', 'الأفضل فقط لك');
+  static String get featurePayment => _t('Easy Payment', 'دفع سهل');
+  static String get featurePaymentSub =>
+      _t('Cash on delivery or pickup', 'نقداً عند الاستلام');
+  static String get featureSupport => _t('Friendly Support', 'دعم ودود');
+  static String get featureSupportSub =>
+      _t('We are always here for you', 'دائماً في خدمتك');
+  static String get notesPlaceholder =>
+      _t('Add any special requests...', 'أضف أي طلبات خاصة...');
+  static String plusPrice(int piasters) => '+ ${price(piasters)}';
   static String get menuEmpty =>
       _t('No categories available right now', 'لا توجد أقسام متاحة حالياً');
   static String get categoryEmpty => _t(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/strings/app_strings.dart';
+import '../../../../core/theme/app_theme.dart';
 
 /// Display state of one ingredient tile (P1-C03).
 enum IngredientTileState { none, included, extra }
@@ -14,6 +15,7 @@ class IngredientTileData {
     required this.qty,
     required this.defaultQty,
     required this.canRemove,
+    this.priceLabel,
   });
 
   final String id;
@@ -23,6 +25,9 @@ class IngredientTileData {
   final int defaultQty;
   final bool canRemove;
 
+  /// Price of one extra unit, e.g. "+ EGP 15".
+  final String? priceLabel;
+
   IngredientTileState get state => qty == 0
       ? IngredientTileState.none
       : qty > defaultQty
@@ -30,8 +35,8 @@ class IngredientTileData {
       : IngredientTileState.included;
 }
 
-/// Ingredient grid: tap a tile to add one; the − button removes one when
-/// allowed. Default ingredients show a check, extras a ring and counter.
+/// Topping cards (reference design): tap to add one; the − button removes
+/// one when allowed. Defaults show a check, extras a counter.
 class IngredientGrid extends StatelessWidget {
   const IngredientGrid({
     super.key,
@@ -46,21 +51,21 @@ class IngredientGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 124,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 0.78,
-      ),
-      itemCount: items.length,
-      itemBuilder: (context, i) => _Tile(
-        data: items[i],
-        onAdd: () => onAdd(items[i].id),
-        onRemove: () => onRemove(items[i].id),
-      ),
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: [
+        for (final item in items)
+          SizedBox(
+            width: 124,
+            height: 158,
+            child: _Tile(
+              data: item,
+              onAdd: () => onAdd(item.id),
+              onRemove: () => onRemove(item.id),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -78,23 +83,19 @@ class _Tile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final state = data.state;
-    final border = switch (state) {
-      IngredientTileState.none => BorderSide(color: scheme.outlineVariant),
-      IngredientTileState.included => BorderSide(color: scheme.primary),
-      IngredientTileState.extra => BorderSide(color: scheme.primary, width: 3),
-    };
+    final selected = state != IngredientTileState.none;
     return Semantics(
       button: true,
       label: '${data.name}، ${AppStrings.quantity} ${data.qty}',
       child: Material(
-        color: state == IngredientTileState.none
-            ? scheme.surface
-            : scheme.primaryContainer.withValues(alpha: 0.35),
+        color: AppColors.card,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: border,
+          borderRadius: BorderRadius.circular(AppRadii.panel),
+          side: BorderSide(
+            color: selected ? AppColors.primary : AppColors.border,
+            width: state == IngredientTileState.extra ? 2.5 : 1.5,
+          ),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -102,34 +103,52 @@ class _Tile extends StatelessWidget {
           child: Stack(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(8, 10, 8, 6),
+                padding: const EdgeInsets.fromLTRB(8, 14, 8, 10),
                 child: Column(
                   children: [
-                    Expanded(
+                    Container(
+                      width: 64,
+                      height: 64,
+                      padding: const EdgeInsets.all(6),
+                      decoration: const BoxDecoration(
+                        color: AppColors.surface,
+                        shape: BoxShape.circle,
+                      ),
                       child: Image.network(
                         data.imageUrl,
                         errorBuilder: (_, _, _) => const SizedBox.shrink(),
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const Spacer(),
                     Text(
                       data.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
+                    if (data.priceLabel != null)
+                      Text(
+                        data.priceLabel!,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.primary,
+                        ),
+                      ),
                   ],
                 ),
               ),
               PositionedDirectional(
-                top: 4,
-                start: 4,
+                top: 6,
+                end: 6,
                 child: _Badge(state: state, qty: data.qty),
               ),
               if (data.canRemove)
                 PositionedDirectional(
                   top: 0,
-                  end: 0,
+                  start: 0,
                   child: Semantics(
                     button: true,
                     label: '${AppStrings.remove} ${data.name}',
@@ -138,15 +157,15 @@ class _Tile extends StatelessWidget {
                       child: IconButton(
                         onPressed: onRemove,
                         padding: EdgeInsets.zero,
-                        icon: CircleAvatar(
-                          radius: 13,
-                          backgroundColor: scheme.surface,
+                        icon: const CircleAvatar(
+                          radius: 12,
+                          backgroundColor: AppColors.surface,
                           child: Text(
                             '−',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 16,
                               fontWeight: FontWeight.w700,
-                              color: scheme.primary,
+                              color: AppColors.primary,
                             ),
                           ),
                         ),
@@ -170,7 +189,6 @@ class _Badge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final text = switch (state) {
       IngredientTileState.none => null,
       IngredientTileState.included => '✓',
@@ -178,15 +196,17 @@ class _Badge extends StatelessWidget {
     };
     if (text == null) return const SizedBox.shrink();
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: scheme.primary,
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(AppRadii.pill),
       ),
       child: Text(
         text,
-        style: TextStyle(
-          color: scheme.onPrimary,
+        style: const TextStyle(
+          color: Colors.white,
           fontSize: 12,
           fontWeight: FontWeight.w700,
         ),

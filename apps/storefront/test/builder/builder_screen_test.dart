@@ -35,7 +35,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(
-      find.text('${AppStrings.add} · ${AppStrings.price(10000)}'),
+      find.text('${AppStrings.addToCart} · ${AppStrings.price(10000)}'),
       findsOneWidget,
     );
   });
@@ -68,7 +68,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    final add = find.text('${AppStrings.add} · ${AppStrings.price(10000)}');
+    final add = find.text('${AppStrings.addToCart} · ${AppStrings.price(10000)}');
     await tester.tap(add);
     await tester.pump();
     expect(container.read(cartProvider).lines, hasLength(1));

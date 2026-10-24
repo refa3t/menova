@@ -47,7 +47,7 @@ void main() {
     expect(find.text('A'), findsOneWidget);
     expect(find.text('p1'), findsOneWidget);
     expect(find.text('p2'), findsOneWidget);
-    expect(find.text(AppStrings.priceFrom(100)), findsNWidgets(2));
+    expect(find.text(AppStrings.price(100)), findsNWidgets(2));
   });
 
   testWidgets('shows retry on load error', (tester) async {

@@ -6,8 +6,9 @@ import 'package:go_router/go_router.dart';
 import 'package:product_builder/product_builder.dart';
 
 import '../../../core/strings/app_strings.dart';
-import '../../../core/widgets/language_button.dart';
-import '../../cart/presentation/cart_button.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/feature_strip.dart';
+import '../../../core/widgets/top_bar.dart';
 import '../../cart/presentation/cart_providers.dart';
 import '../../menu/domain/menu.dart';
 import '../../menu/presentation/menu_providers.dart';
@@ -150,18 +151,13 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
   Widget build(BuildContext context) {
     final menu = ref.watch(menuProvider);
     return Scaffold(
-      appBar: AppBar(
-        actions: [
-          const LanguageButton(),
-          CartButton(key: _cartKey),
-        ],
-      ),
+      appBar: TopBar(active: NavItem.menu, cartKey: _cartKey),
       bottomNavigationBar: menu.hasValue && _exists(menu.requireValue)
           ? Consumer(
               builder: (context, ref, _) => AddBar(
                 total: ref.watch(priceProvider(_key))?.total,
                 label: widget.lineId == null
-                    ? AppStrings.add
+                    ? AppStrings.addToCart
                     : AppStrings.update,
                 status: _status,
                 onAdd: _commit,
@@ -274,119 +270,222 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
         ..showSnackBar(SnackBar(content: Text(message)));
     }
 
-    final canvas = Padding(
-      padding: const EdgeInsets.all(16),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520),
-        child: BuilderCanvas(
-          key: widget.canvasKey,
-          baseImageUrl: base.secureUrl,
-          strategy: strategy,
-          placementParams: def.placement.params,
-          scale: state.sizeScale,
-          density: state.sizeDensity,
-          layers: [
-            for (final i in available)
-              CanvasLayer(
-                ingredientId: i.id,
-                imageUrls: urlsFor(i),
-                enterProfile:
-                    def.ingredientMotion[i.id]?.enter ?? defaultEnterProfile,
-                exitProfile:
-                    def.ingredientMotion[i.id]?.exit ?? defaultExitProfile,
-                qty: state.qtyOf(i.id),
-                layerOrder:
-                    def.layerOverrides[i.id] ??
-                    menu.assets[i.assetId]!.layerOrder,
-              ),
-          ],
+    final layers = [
+      for (final i in available)
+        CanvasLayer(
+          ingredientId: i.id,
+          imageUrls: urlsFor(i),
+          enterProfile:
+              def.ingredientMotion[i.id]?.enter ?? defaultEnterProfile,
+          exitProfile: def.ingredientMotion[i.id]?.exit ?? defaultExitProfile,
+          qty: state.qtyOf(i.id),
+          layerOrder:
+              def.layerOverrides[i.id] ?? menu.assets[i.assetId]!.layerOrder,
+        ),
+    ];
+    final canvas = Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadii.card),
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 560),
+          child: BuilderCanvas(
+            key: widget.canvasKey,
+            baseImageUrl: base.secureUrl,
+            strategy: strategy,
+            placementParams: def.placement.params,
+            scale: state.sizeScale,
+            density: state.sizeDensity,
+            layers: layers,
+          ),
         ),
       ),
     );
 
-    final controls = <Widget>[
-      Text(
-        AppStrings.localized(state.product.name, state.product.names),
-        style: Theme.of(context).textTheme.headlineSmall,
-      ),
-      const SizedBox(height: 16),
-      SizeSelector(
-        sizes: def.sizes,
-        selectedId: state.selection.sizeId,
-        onSelected: (id) => report(controller.selectSize(id)),
-      ),
-      for (final g in def.optionGroups) ...[
-        const SizedBox(height: 16),
-        OptionGroupSelector(
-          group: g,
-          selectedId: state.selection.options[g.id],
-          onSelected: (id) => report(controller.selectOption(g.id, id)),
-        ),
-      ],
-      const SizedBox(height: 20),
-      Text(
-        AppStrings.ingredients,
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
-      const SizedBox(height: 8),
-      IngredientGrid(
-        items: [
-          for (final i in gridItems)
-            IngredientTileData(
-              id: i.id,
-              name: AppStrings.localized(i.name, i.names),
-              imageUrl: urlsFor(i).first,
-              qty: state.qtyOf(i.id),
-              defaultQty: state.defaultQtyOf(i.id),
-              canRemove: state.canRemove(i.id),
-            ),
-        ],
-        onAdd: (id) => report(controller.add(id)),
-        onRemove: (id) => report(controller.remove(id)),
-      ),
-      const SizedBox(height: 16),
-      NotesField(
-        initial: state.selection.notes,
-        onChanged: controller.setNotes,
-      ),
-      const SizedBox(height: 12),
-      OutlinedButton(
-        onPressed: state.isModified ? controller.reset : null,
-        style: OutlinedButton.styleFrom(minimumSize: const Size(44, 44)),
-        child: Text(AppStrings.reset),
-      ),
-    ];
+    // Description from the product, or its ingredients when it has none.
+    final description = state.product.description.isNotEmpty
+        ? state.product.description
+        : [
+            for (final d in state.product.defaults)
+              if (menu.ingredients[d.ingredientId] case final i?)
+                AppStrings.localized(i.name, i.names),
+          ].join(' · ');
+    final price = ref.watch(priceProvider(widget.builderKey));
+    final sizeId = state.selection.sizeId;
 
-    return LayoutBuilder(
-      builder: (context, box) {
-        // Narrow screens scroll as one page so the controls are never
-        // squeezed out by the canvas.
-        if (box.maxWidth >= 840) {
-          return Row(
+    Widget section(IconData icon, String title, Widget child) => Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Expanded(flex: 3, child: Center(child: canvas)),
-              Expanded(
-                flex: 2,
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: controls,
+              Icon(icon, color: AppColors.primary, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
-          );
-        }
-        return ListView(
-          padding: const EdgeInsets.only(bottom: 24),
-          children: [
-            Center(child: canvas),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: controls,
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+
+    final details = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          AppStrings.localized(state.product.name, state.product.names),
+          style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w800),
+        ),
+        if (description.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Text(
+            description,
+            style: const TextStyle(fontSize: 16, color: AppColors.textMuted),
+          ),
+        ],
+        const SizedBox(height: 12),
+        if (price != null)
+          Text(
+            AppStrings.price(price.total),
+            style: const TextStyle(
+              fontSize: 30,
+              fontWeight: FontWeight.w800,
+              color: AppColors.primary,
+            ),
+          ),
+        if (def.sizes.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.only(top: 20),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              border: Border.all(color: AppColors.border),
+              borderRadius: BorderRadius.circular(AppRadii.panel),
+            ),
+            child: section(
+              Icons.local_pizza_outlined,
+              AppStrings.size,
+              SizeSelector(
+                sizes: def.sizes,
+                selectedId: sizeId,
+                onSelected: (id) => report(controller.selectSize(id)),
               ),
             ),
-          ],
+          ),
+        for (final g in def.optionGroups)
+          if (g.choices.length > 1)
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: OptionGroupSelector(
+                group: g,
+                selectedId: state.selection.options[g.id],
+                onSelected: (id) => report(controller.selectOption(g.id, id)),
+              ),
+            ),
+        section(
+          Icons.restaurant_menu,
+          AppStrings.ingredients,
+          IngredientGrid(
+            items: [
+              for (final i in gridItems)
+                IngredientTileData(
+                  id: i.id,
+                  name: AppStrings.localized(i.name, i.names),
+                  imageUrl: urlsFor(i).first,
+                  qty: state.qtyOf(i.id),
+                  defaultQty: state.defaultQtyOf(i.id),
+                  canRemove: state.canRemove(i.id),
+                  priceLabel: AppStrings.plusPrice(
+                    (i.extraPrice * i.multiplierFor(sizeId)).round(),
+                  ),
+                ),
+            ],
+            onAdd: (id) => report(controller.add(id)),
+            onRemove: (id) => report(controller.remove(id)),
+          ),
+        ),
+        section(
+          Icons.edit_note,
+          AppStrings.notes,
+          NotesField(
+            initial: state.selection.notes,
+            onChanged: controller.setNotes,
+          ),
+        ),
+        if (state.isModified)
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              onPressed: controller.reset,
+              icon: const Icon(Icons.restart_alt),
+              label: Text(AppStrings.reset),
+            ),
+          ),
+      ],
+    );
+
+    final back = Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: TextButton.icon(
+        onPressed: () => context.canPop() ? context.pop() : context.go('/'),
+        icon: const BackButtonIcon(),
+        label: Text(AppStrings.backToMenu),
+        style: TextButton.styleFrom(foregroundColor: AppColors.text),
+      ),
+    );
+
+    return LayoutBuilder(
+      builder: (context, box) {
+        final gutter = AppLayout.gutter(box.maxWidth);
+        final wide = box.maxWidth >= 900;
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(gutter, 12, gutter, 32),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: AppLayout.maxWidth),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  back,
+                  const SizedBox(height: 12),
+                  if (wide)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 11,
+                          child: Column(
+                            children: [
+                              canvas,
+                              const SizedBox(height: 24),
+                              const FeatureStrip(),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 48),
+                        Expanded(flex: 9, child: details),
+                      ],
+                    )
+                  else ...[
+                    canvas,
+                    const SizedBox(height: 20),
+                    details,
+                  ],
+                ],
+              ),
+            ),
+          ),
         );
       },
     );
