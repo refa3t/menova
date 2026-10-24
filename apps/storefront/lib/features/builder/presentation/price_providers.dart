@@ -8,11 +8,11 @@ import 'builder_providers.dart';
 /// The orchestrator links the builder's Selection to the pricing engine
 /// (ARC-03): neither engine knows the other. Null when the selection cannot
 /// be priced (the builder already prevents that in practice).
-final priceProvider = Provider.autoDispose.family<PriceBreakdown?, String>((
+final priceProvider = Provider.autoDispose.family<PriceBreakdown?, BuilderKey>((
   ref,
-  productId,
+  key,
 ) {
-  final state = ref.watch(builderProvider(productId));
+  final state = ref.watch(builderProvider(key));
   final menu = ref.watch(menuProvider).requireValue;
   try {
     return priceItem(

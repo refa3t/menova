@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/strings/app_strings.dart';
 import '../../../core/widgets/credit_footer.dart';
+import '../../cart/presentation/cart_button.dart';
 import '../domain/menu.dart';
 import 'menu_providers.dart';
 import 'product_preview.dart';
@@ -23,7 +24,10 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
   Widget build(BuildContext context) {
     final menu = ref.watch(menuProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.appTitle)),
+      appBar: AppBar(
+        title: const Text(AppStrings.appTitle),
+        actions: const [CartButton()],
+      ),
       bottomNavigationBar: const CreditFooter(),
       body: menu.when(
         loading: () => const Center(child: CircularProgressIndicator()),

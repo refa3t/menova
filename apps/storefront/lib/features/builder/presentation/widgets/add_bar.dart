@@ -5,7 +5,14 @@ import '../../../../core/strings/app_strings.dart';
 /// Bottom bar with the add button showing the live price (P1-D03). The
 /// amount counts smoothly to its new value; with reduced motion it jumps.
 class AddBar extends StatelessWidget {
-  const AddBar({super.key, required this.total, required this.onAdd});
+  const AddBar({
+    super.key,
+    required this.total,
+    required this.onAdd,
+    this.label = AppStrings.add,
+  });
+
+  final String label;
 
   /// Total in piasters, or null when the item cannot be priced.
   final int? total;
@@ -22,7 +29,7 @@ class AddBar extends StatelessWidget {
           onPressed: total == null ? null : onAdd,
           style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
           child: total == null
-              ? const Text(AppStrings.add)
+              ? Text(label)
               : TweenAnimationBuilder<double>(
                   tween: Tween(end: total!.toDouble()),
                   duration: reduceMotion
@@ -30,7 +37,7 @@ class AddBar extends StatelessWidget {
                       : const Duration(milliseconds: 350),
                   curve: Curves.easeOutCubic,
                   builder: (context, value, _) => Text(
-                    '${AppStrings.add} · ${AppStrings.price(value.round())}',
+                    '$label · ${AppStrings.price(value.round())}',
                     style: const TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,

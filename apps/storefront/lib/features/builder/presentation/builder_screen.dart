@@ -1,9 +1,12 @@
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:product_builder/product_builder.dart';
 
 import '../../../core/strings/app_strings.dart';
+import '../../cart/presentation/cart_button.dart';
+import '../../cart/presentation/cart_providers.dart';
 import '../../menu/domain/menu.dart';
 import '../../menu/presentation/menu_providers.dart';
 import 'builder_providers.dart';
@@ -16,21 +19,26 @@ import 'widgets/notes_field.dart';
 /// The orchestrator screen: wires the builder engine to the UI. Generic over
 /// any category; everything comes from the definition and menu data.
 class BuilderScreen extends ConsumerWidget {
-  const BuilderScreen({super.key, required this.productId});
+  const BuilderScreen({super.key, required this.productId, this.lineId});
 
   final String productId;
+
+  /// Cart line being edited, if any (AC-18).
+  final String? lineId;
+
+  BuilderKey get _key => (productId: productId, lineId: lineId);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final menu = ref.watch(menuProvider);
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(actions: const [CartButton()]),
       bottomNavigationBar: menu.hasValue && _exists(menu.requireValue)
           ? Consumer(
               builder: (context, ref, _) => AddBar(
-                total: ref.watch(priceProvider(productId))?.total,
-                // Adding to the cart lands with P1-E01.
-                onAdd: null,
+                total: ref.watch(priceProvider(_key))?.total,
+                label: lineId == null ? AppStrings.add : AppStrings.update,
+                onAdd: () => _commit(context, ref),
               ),
             )
           : null,
@@ -41,7 +49,7 @@ class BuilderScreen extends ConsumerWidget {
           if (!_exists(menu)) {
             return const Center(child: Text(AppStrings.productNotFound));
           }
-          return _BuilderBody(menu: menu, productId: productId);
+          return _BuilderBody(menu: menu, builderKey: _key);
         },
       ),
     );
@@ -51,13 +59,37 @@ class BuilderScreen extends ConsumerWidget {
 extension on BuilderScreen {
   bool _exists(Menu menu) =>
       menu.categories.any((c) => c.products.any((p) => p.id == productId));
+
+  /// Adds the item (or updates the edited line) in one atomic step
+  /// (ARC-07). The prepare animation (P1-G*) runs after this, never before.
+  void _commit(BuildContext context, WidgetRef ref) {
+    final selection = ref.read(builderProvider(_key)).selection;
+    final cart = ref.read(cartProvider.notifier);
+    if (lineId != null && ref.read(cartProvider).line(lineId!) != null) {
+      cart.replace(lineId!, selection);
+      context.pop();
+      return;
+    }
+    cart.add(selection);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: const Text(AppStrings.addedToCart),
+          action: SnackBarAction(
+            label: AppStrings.viewCart,
+            onPressed: () => context.push('/cart'),
+          ),
+        ),
+      );
+  }
 }
 
 class _BuilderBody extends ConsumerStatefulWidget {
-  const _BuilderBody({required this.menu, required this.productId});
+  const _BuilderBody({required this.menu, required this.builderKey});
 
   final Menu menu;
-  final String productId;
+  final BuilderKey builderKey;
 
   @override
   ConsumerState<_BuilderBody> createState() => _BuilderBodyState();
@@ -69,7 +101,7 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
     super.didChangeDependencies();
     // Precache every asset of the category when the product opens (5.6), so
     // added ingredients appear without a loading gap.
-    final def = ref.read(builderProvider(widget.productId)).definition;
+    final def = ref.read(builderProvider(widget.builderKey)).definition;
     final urls = <String>{
       for (final id in def.allowedIngredientIds)
         if (widget.menu.ingredients[id] case final i?)
@@ -89,9 +121,8 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
   @override
   Widget build(BuildContext context) {
     final menu = widget.menu;
-    final productId = widget.productId;
-    final state = ref.watch(builderProvider(productId));
-    final controller = ref.read(builderProvider(productId).notifier);
+    final state = ref.watch(builderProvider(widget.builderKey));
+    final controller = ref.read(builderProvider(widget.builderKey).notifier);
     final def = state.definition;
     final strategy = placementStrategies[def.placement.strategy];
     final base = menu.assets[state.activeBase.rawAssetId];

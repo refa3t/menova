@@ -4,23 +4,33 @@ import 'package:product_builder/product_builder.dart';
 
 import '../domain/menu.dart';
 
-/// A product drawn with its default ingredients (no interaction).
+/// A product drawn without interaction: its defaults, or a given selection
+/// (cart lines show what the customer actually built).
 class ProductPreview extends StatelessWidget {
   const ProductPreview({
     super.key,
     required this.menu,
     required this.definition,
     required this.product,
+    this.selection,
   });
 
   final Menu menu;
   final CategoryDefinition definition;
   final Product product;
+  final Selection? selection;
 
   @override
   Widget build(BuildContext context) {
     final strategy = placementStrategies[definition.placement.strategy];
-    final base = menu.assets[definition.base.rawAssetId];
+    final state = selection == null
+        ? BuilderState.open(definition: definition, product: product)
+        : BuilderState.restore(
+            definition: definition,
+            product: product,
+            selection: selection!,
+          );
+    final base = menu.assets[state.activeBase.rawAssetId];
     if (strategy == null || base == null) return const SizedBox.shrink();
     return IgnorePointer(
       child: BuilderCanvas(
@@ -28,15 +38,16 @@ class ProductPreview extends StatelessWidget {
         strategy: strategy,
         placementParams: definition.placement.params,
         layers: [
-          for (final d in product.defaults)
-            if (menu.ingredients[d.ingredientId] case final i?)
-              if (menu.assets[i.assetId] case final a?)
-                CanvasLayer(
-                  ingredientId: i.id,
-                  imageUrls: [a.secureUrl, ...a.variants],
-                  qty: d.qty,
-                  layerOrder: definition.layerOverrides[i.id] ?? a.layerOrder,
-                ),
+          for (final e in state.selection.ingredients.entries)
+            if (e.value > 0)
+              if (menu.ingredients[e.key] case final i?)
+                if (menu.assets[i.assetId] case final a?)
+                  CanvasLayer(
+                    ingredientId: i.id,
+                    imageUrls: [a.secureUrl, ...a.variants],
+                    qty: e.value,
+                    layerOrder: definition.layerOverrides[i.id] ?? a.layerOrder,
+                  ),
         ],
       ),
     );
