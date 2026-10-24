@@ -22,7 +22,13 @@ void main() {
       animationSteps: animationStepKeys,
       enterProfiles: enterProfiles.keys.toSet(),
       exitProfiles: exitProfiles.keys.toSet(),
-      assetIds: {for (final f in manifest.keys) f.split('.').first},
+      assetIds: {
+        for (final f in manifest.keys) f.split('.').first,
+        for (final f in read(
+          'assets_src/animation/cloudinary_manifest.json',
+        ).keys)
+          f.split('.').first.replaceFirst(RegExp(r'_\d+$'), ''),
+      },
       ingredientIds: {
         for (final i in ingredients['ingredients'] as List) i['id'] as String,
       },

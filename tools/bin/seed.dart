@@ -61,6 +61,35 @@ Future<void> main(List<String> args) async {
     allowedCategoryIds: [definition.id],
   ).toJson();
 
+  // Animation assets (e.g. oven layers). Files named <id>_<NN> are frames
+  // of one asset, kept in order as its variants.
+  final animFile = File('../assets_src/animation/cloudinary_manifest.json');
+  final animManifest = animFile.existsSync()
+      ? jsonDecode(animFile.readAsStringSync()) as Map<String, dynamic>
+      : <String, dynamic>{};
+  final groups = <String, List<String>>{};
+  for (final f in animManifest.keys.toList()..sort()) {
+    final stem = f.split('.').first;
+    final id = stem.replaceFirst(RegExp(r'_\d+$'), '');
+    (groups[id] ??= []).add(f);
+  }
+  for (final g in groups.entries) {
+    final entries = [
+      for (final f in g.value) animManifest[f] as Map<String, dynamic>,
+    ];
+    docs['assets/${g.key}'] = Asset(
+      id: g.key,
+      kind: 'animation',
+      name: g.key,
+      publicId: '${entries.first['publicId']}',
+      secureUrl: '${entries.first['secureUrl']}',
+      version: (entries.first['version'] as int?) ?? 0,
+      variants: [for (final e in entries.skip(1)) '${e['secureUrl']}'],
+      layerOrder: 0,
+      allowedCategoryIds: [definition.id],
+    ).toJson();
+  }
+
   // Ingredients and their assets.
   final ingredientIds = <String>{};
   for (final raw in ingredientsFile['ingredients'] as List) {
@@ -117,7 +146,10 @@ Future<void> main(List<String> args) async {
     docs['products/${product.id}'] = product.toJson();
   }
   // P1-A10: the definition itself must be valid against the catalog.
-  final assetIds = {for (final f in manifest.keys) f.split('.').first};
+  final assetIds = {
+    for (final f in manifest.keys) f.split('.').first,
+    ...groups.keys,
+  };
   for (final i in validateDefinition(
     definition,
     assetIds: assetIds,

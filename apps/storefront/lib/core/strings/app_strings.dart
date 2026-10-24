@@ -53,7 +53,8 @@ abstract final class AppStrings {
   static const orderingUnavailable =
       'إرسال الطلبات غير متاح بعد في النسخة التجريبية';
   static const update = 'تحديث';
-  static const addedToCart = 'أُضيف إلى السلة';
+  static const addedToCart = 'تمت الإضافة';
+  static const preparing = 'جارٍ التحضير...';
   static const viewCart = 'عرض السلة';
   static const cart = 'السلة';
   static const cartEmpty = 'السلة فارغة';

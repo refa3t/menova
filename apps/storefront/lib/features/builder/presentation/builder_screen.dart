@@ -1,3 +1,4 @@
+import 'package:animation/animation.dart';
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +10,7 @@ import '../../cart/presentation/cart_button.dart';
 import '../../cart/presentation/cart_providers.dart';
 import '../../menu/domain/menu.dart';
 import '../../menu/presentation/menu_providers.dart';
+import '../../menu/presentation/product_preview.dart';
 import 'builder_providers.dart';
 import 'price_providers.dart';
 import 'widgets/add_bar.dart';
@@ -16,9 +18,9 @@ import 'widgets/choice_selectors.dart';
 import 'widgets/ingredient_grid.dart';
 import 'widgets/notes_field.dart';
 
-/// The orchestrator screen: wires the builder engine to the UI. Generic over
-/// any category; everything comes from the definition and menu data.
-class BuilderScreen extends ConsumerWidget {
+/// The orchestrator screen: wires the builder, pricing and animation
+/// engines to the UI and the cart, with no category logic (ARC-03).
+class BuilderScreen extends ConsumerStatefulWidget {
   const BuilderScreen({super.key, required this.productId, this.lineId});
 
   final String productId;
@@ -26,19 +28,136 @@ class BuilderScreen extends ConsumerWidget {
   /// Cart line being edited, if any (AC-18).
   final String? lineId;
 
-  BuilderKey get _key => (productId: productId, lineId: lineId);
+  @override
+  ConsumerState<BuilderScreen> createState() => _BuilderScreenState();
+}
+
+class _BuilderScreenState extends ConsumerState<BuilderScreen> {
+  final _canvasKey = GlobalKey();
+  final _cartKey = GlobalKey();
+  OverlayEntry? _animation;
+  AddStatus _status = AddStatus.idle;
+
+  BuilderKey get _key => (productId: widget.productId, lineId: widget.lineId);
+
+  bool _exists(Menu menu) => menu.categories.any(
+    (c) => c.products.any((p) => p.id == widget.productId),
+  );
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void dispose() {
+    // Leaving mid-animation cancels it; the cart item is already committed.
+    _animation?.remove();
+    _animation = null;
+    super.dispose();
+  }
+
+  /// Adds the item (or updates the edited line) in one atomic step BEFORE
+  /// any animation (ARC-07). The button stays locked while the sequence
+  /// runs, so repeated taps add a single item (AC-16).
+  void _commit() {
+    if (_status != AddStatus.idle) return;
+    final state = ref.read(builderProvider(_key));
+    final cart = ref.read(cartProvider.notifier);
+    if (widget.lineId != null &&
+        ref.read(cartProvider).line(widget.lineId!) != null) {
+      cart.replace(widget.lineId!, state.selection);
+      context.pop();
+      return;
+    }
+    cart.add(state.selection);
+    setState(() => _status = AddStatus.busy);
+    if (!_playSequence(state)) _finish();
+  }
+
+  void _finish() {
+    if (!mounted) return;
+    setState(() => _status = AddStatus.done);
+    Future<void>.delayed(const Duration(milliseconds: 1200), () {
+      if (mounted) setState(() => _status = AddStatus.idle);
+    });
+  }
+
+  /// Runs the category's add-to-cart sequence over the screen. Display
+  /// only: a failure or cancellation never touches the cart (ARC-05).
+  bool _playSequence(BuilderState state) {
+    final overlay = Overlay.maybeOf(context);
+    final menu = ref.read(menuProvider).value;
+    final canvasBox =
+        _canvasKey.currentContext?.findRenderObject() as RenderBox?;
+    final overlayBox = overlay?.context.findRenderObject() as RenderBox?;
+    if (overlay == null ||
+        menu == null ||
+        canvasBox == null ||
+        overlayBox == null ||
+        !canvasBox.hasSize) {
+      return false;
+    }
+    Rect rectOf(RenderBox box) =>
+        box.localToGlobal(Offset.zero, ancestor: overlayBox) & box.size;
+    final cartBox = _cartKey.currentContext?.findRenderObject() as RenderBox?;
+    final def = state.definition;
+
+    // The customer's product exactly as built, frozen at the press.
+    final snapshot = ProductPreview(
+      menu: menu,
+      definition: def,
+      product: state.product,
+      selection: state.selection,
+    );
+    final images = <String, List<String>>{
+      for (final s in def.animation)
+        if (s.params['images'] case final Map roles)
+          for (final e in roles.entries)
+            if (menu.assets[e.value] case final a?)
+              '${e.key}': [a.secureUrl, ...a.variants],
+    };
+    final plan = planSequence(
+      sequence: StepSequence.fromDefinition(def),
+      registry: animSteps,
+      total: const Duration(milliseconds: 2000),
+      reduceMotion: MediaQuery.of(context).disableAnimations,
+    );
+    if (plan.steps.isEmpty) return false;
+    final entry = OverlayEntry(
+      builder: (_) => StepRunner(
+        steps: plan.steps,
+        total: plan.total,
+        input: AnimStepInput(
+          product: snapshot,
+          productRect: rectOf(canvasBox),
+          cartTarget: cartBox == null ? null : rectOf(cartBox).center,
+          images: images,
+          reduceMotion: MediaQuery.of(context).disableAnimations,
+        ),
+        onEvent: (e) {
+          if (e == AnimEvent.completed) {
+            _animation?.remove();
+            _animation = null;
+            _finish();
+          }
+        },
+      ),
+    );
+    _animation = entry;
+    overlay.insert(entry);
+    return true;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final menu = ref.watch(menuProvider);
     return Scaffold(
-      appBar: AppBar(actions: const [CartButton()]),
+      appBar: AppBar(actions: [CartButton(key: _cartKey)]),
       bottomNavigationBar: menu.hasValue && _exists(menu.requireValue)
           ? Consumer(
               builder: (context, ref, _) => AddBar(
                 total: ref.watch(priceProvider(_key))?.total,
-                label: lineId == null ? AppStrings.add : AppStrings.update,
-                onAdd: () => _commit(context, ref),
+                label: widget.lineId == null
+                    ? AppStrings.add
+                    : AppStrings.update,
+                status: _status,
+                onAdd: _commit,
               ),
             )
           : null,
@@ -49,50 +168,29 @@ class BuilderScreen extends ConsumerWidget {
           if (!_exists(menu)) {
             return const Center(child: Text(AppStrings.productNotFound));
           }
-          return _BuilderBody(menu: menu, builderKey: _key);
+          return _BuilderBody(
+            menu: menu,
+            builderKey: _key,
+            canvasKey: _canvasKey,
+          );
         },
       ),
     );
   }
 }
 
-extension on BuilderScreen {
-  bool _exists(Menu menu) =>
-      menu.categories.any((c) => c.products.any((p) => p.id == productId));
-
-  /// Adds the item (or updates the edited line) in one atomic step
-  /// (ARC-07). The prepare animation (P1-G*) runs after this, never before.
-  void _commit(BuildContext context, WidgetRef ref) {
-    final selection = ref.read(builderProvider(_key)).selection;
-    final cart = ref.read(cartProvider.notifier);
-    if (lineId != null && ref.read(cartProvider).line(lineId!) != null) {
-      cart.replace(lineId!, selection);
-      context.pop();
-      return;
-    }
-    cart.add(selection);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: const Text(AppStrings.addedToCart),
-          action: SnackBarAction(
-            label: AppStrings.viewCart,
-            onPressed: () {
-              ScaffoldMessenger.of(context).clearSnackBars();
-              context.push('/cart');
-            },
-          ),
-        ),
-      );
-  }
-}
-
 class _BuilderBody extends ConsumerStatefulWidget {
-  const _BuilderBody({required this.menu, required this.builderKey});
+  const _BuilderBody({
+    required this.menu,
+    required this.builderKey,
+    required this.canvasKey,
+  });
 
   final Menu menu;
   final BuilderKey builderKey;
+
+  /// Marks the canvas so the orchestrator can start the animation from it.
+  final GlobalKey canvasKey;
 
   @override
   ConsumerState<_BuilderBody> createState() => _BuilderBodyState();
@@ -113,8 +211,11 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
             ...a.variants,
           ],
       for (final a in widget.menu.assets.values)
-        if (a.kind == 'base' && a.allowedCategoryIds.contains(def.id))
+        if ((a.kind == 'base' || a.kind == 'animation') &&
+            a.allowedCategoryIds.contains(def.id)) ...[
           a.secureUrl,
+          ...a.variants,
+        ],
     };
     for (final url in urls) {
       precacheImage(NetworkImage(url), context, onError: (_, _) {});
@@ -163,6 +264,7 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520),
         child: BuilderCanvas(
+          key: widget.canvasKey,
           baseImageUrl: base.secureUrl,
           strategy: strategy,
           placementParams: def.placement.params,

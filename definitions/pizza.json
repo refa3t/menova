@@ -142,18 +142,36 @@
   "animation": [
     {
       "step": "Oven",
-      "weight": 3,
-      "params": {}
+      "weight": 50,
+      "params": {
+        "images": {
+          "hearth": "oven_hearth",
+          "fireBack": "oven_fire_back",
+          "fireFront": "oven_fire_front",
+          "embers": "oven_embers",
+          "steam": "oven_steam",
+          "rim": "oven_rim"
+        },
+        "scrimMaxPct": 35,
+        "vignetteMaxPct": 45,
+        "shrinkTo": 0.9,
+        "warmTintMaxPct": 18,
+        "flashPeakPct": 35
+      }
     },
     {
       "step": "Swap",
-      "weight": 1,
+      "weight": 12,
       "params": {}
     },
     {
       "step": "FlyToCart",
-      "weight": 1,
-      "params": {}
+      "weight": 38,
+      "params": {
+        "shrinkTo": 0.18,
+        "arcControlPct": 20,
+        "rotateDeg": -12
+      }
     }
   ],
   "ingredientMotion": {

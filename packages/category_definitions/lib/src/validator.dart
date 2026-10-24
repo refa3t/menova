@@ -58,6 +58,17 @@ List<DefinitionIssue> validateDefinition(
       issue('animation[$i].step', 'unregistered "${s.step}"');
     }
     if (s.weight <= 0) issue('animation[$i].weight', 'must be > 0');
+    final images = s.params['images'];
+    if (assetIds != null && images is Map) {
+      for (final e in images.entries) {
+        if (!assetIds.contains(e.value)) {
+          issue(
+            'animation[$i].params.images.${e.key}',
+            'unknown asset "${e.value}"',
+          );
+        }
+      }
+    }
   }
 
   // Ingredients.

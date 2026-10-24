@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/strings/app_strings.dart';
 
+/// Add button states (ANIMATIONS.md 6, P1-G05).
+enum AddStatus { idle, busy, done }
+
 /// Bottom bar with the add button showing the live price (P1-D03). The
 /// amount counts smoothly to its new value; with reduced motion it jumps.
 class AddBar extends StatelessWidget {
@@ -10,9 +13,11 @@ class AddBar extends StatelessWidget {
     required this.total,
     required this.onAdd,
     this.label = AppStrings.add,
+    this.status = AddStatus.idle,
   });
 
   final String label;
+  final AddStatus status;
 
   /// Total in piasters, or null when the item cannot be priced.
   final int? total;
@@ -25,26 +30,52 @@ class AddBar extends StatelessWidget {
       top: false,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-        child: FilledButton(
-          onPressed: total == null ? null : onAdd,
-          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-          child: total == null
-              ? Text(label)
-              : TweenAnimationBuilder<double>(
-                  tween: Tween(end: total!.toDouble()),
-                  duration: reduceMotion
-                      ? Duration.zero
-                      : const Duration(milliseconds: 350),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, _) => Text(
-                    '$label · ${AppStrings.price(value.round())}',
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      fontFeatures: [FontFeature.tabularFigures()],
+        child: AnimatedSwitcher(
+          duration: Duration(milliseconds: reduceMotion ? 0 : 150),
+          child: switch (status) {
+            AddStatus.busy => FilledButton(
+              key: const ValueKey('busy'),
+              onPressed: null,
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(52),
+              ),
+              child: const Text(AppStrings.preparing),
+            ),
+            AddStatus.done => FilledButton(
+              key: const ValueKey('done'),
+              onPressed: null,
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(52),
+                disabledBackgroundColor: const Color(0xFF2E7D32),
+                disabledForegroundColor: Colors.white,
+              ),
+              child: const Text('${AppStrings.addedToCart} ✓'),
+            ),
+            AddStatus.idle => FilledButton(
+              key: const ValueKey('idle'),
+              onPressed: total == null ? null : onAdd,
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(52),
+              ),
+              child: total == null
+                  ? Text(label)
+                  : TweenAnimationBuilder<double>(
+                      tween: Tween(end: total!.toDouble()),
+                      duration: reduceMotion
+                          ? Duration.zero
+                          : const Duration(milliseconds: 350),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, _) => Text(
+                        '$label · ${AppStrings.price(value.round())}',
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                      ),
                     ),
-                  ),
-                ),
+            ),
+          },
         ),
       ),
     );

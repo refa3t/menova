@@ -5,7 +5,8 @@
     "sizes",
     "optionGroups",
     "placement.params",
-    "ingredientMotion"
+    "ingredientMotion",
+    "animation"
   ],
   "pendingNotes": [
     "Only the regular dough exists (no other dough assets yet).",

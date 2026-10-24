@@ -162,10 +162,21 @@ def main() -> None:
             'id': 'dough', 'name': 'العجينة', 'defaultChoiceId': 'regular',
             'choices': [{'id': 'regular', 'name': 'عادية'}],
         }],
+        # ANIMATIONS.md 7 + OVEN.md 4 (proposed values, TEMP until G06).
         'animation': [
-            {'step': 'Oven', 'weight': 3, 'params': {}},
-            {'step': 'Swap', 'weight': 1, 'params': {}},
-            {'step': 'FlyToCart', 'weight': 1, 'params': {}},
+            {'step': 'Oven', 'weight': 50, 'params': {
+                'images': {
+                    'hearth': 'oven_hearth', 'fireBack': 'oven_fire_back',
+                    'fireFront': 'oven_fire_front', 'embers': 'oven_embers',
+                    'steam': 'oven_steam', 'rim': 'oven_rim',
+                },
+                'scrimMaxPct': 35, 'vignetteMaxPct': 45, 'shrinkTo': 0.9,
+                'warmTintMaxPct': 18, 'flashPeakPct': 35,
+            }},
+            {'step': 'Swap', 'weight': 12, 'params': {}},
+            {'step': 'FlyToCart', 'weight': 38, 'params': {
+                'shrinkTo': 0.18, 'arcControlPct': 20, 'rotateDeg': -12,
+            }},
         ],
         'ingredientMotion': {
             k: {'enter': v[0], 'exit': v[1]} for k, v in MOTION.items()
@@ -181,7 +192,7 @@ def main() -> None:
     dump('definitions/pizza.temp.json', {
         '_note': TEMP_NOTE,
         'tempFields': ['constraints.maxQty', 'sizes', 'optionGroups',
-                       'placement.params', 'ingredientMotion'],
+                       'placement.params', 'ingredientMotion', 'animation'],
         'pendingNotes': [
             'Only the regular dough exists (no other dough assets yet).',
             'No cooked base asset yet (base.cookedAssetId).',
