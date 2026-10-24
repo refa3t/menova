@@ -2,4 +2,5 @@
 library;
 
 export 'src/builder_canvas.dart';
+export 'src/builder_state.dart';
 export 'src/placement.dart';

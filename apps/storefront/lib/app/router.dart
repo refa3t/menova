@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/about/presentation/about_screen.dart';
-import '../features/builder/presentation/builder_prototype_screen.dart';
+import '../features/builder/presentation/builder_screen.dart';
 import '../features/menu/presentation/menu_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -13,7 +13,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/product/:id',
         builder: (context, state) =>
-            BuilderPrototypeScreen(productId: state.pathParameters['id']!),
+            BuilderScreen(productId: state.pathParameters['id']!),
       ),
     ],
   );

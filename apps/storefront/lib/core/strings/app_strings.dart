@@ -10,6 +10,9 @@ abstract final class AppStrings {
   static const productNotFound = 'المنتج غير متاح';
   static const maxQtyReached = 'وصلت للحد الأقصى لهذا المكوّن';
   static const reset = 'إعادة الضبط';
+  static const notRemovable = 'هذا المكوّن أساسي ولا يمكن إزالته';
+  static const unavailable = 'هذا المكوّن غير متوفر حالياً';
+  static const notAllowed = 'هذا الاختيار غير متاح لهذا المنتج';
   static const add = 'إضافة';
   static const remove = 'إزالة';
   static const about = 'عن التطبيق';
