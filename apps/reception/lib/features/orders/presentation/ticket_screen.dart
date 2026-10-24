@@ -27,7 +27,10 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     if (order != null && !_printed) {
       _printed = true;
       // Give images and fonts a moment, then print.
-      Future<void>.delayed(const Duration(milliseconds: 400), web.window.print);
+      Future<void>.delayed(
+        const Duration(milliseconds: 400),
+        () => web.window.print(),
+      );
     }
     return Scaffold(
       backgroundColor: Colors.white,
@@ -35,7 +38,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
         title: const Text(AppStrings.printTicket),
         actions: [
           TextButton(
-            onPressed: order == null ? null : web.window.print,
+            onPressed: order == null ? null : () => web.window.print(),
             child: const Text(AppStrings.printAgain),
           ),
         ],
