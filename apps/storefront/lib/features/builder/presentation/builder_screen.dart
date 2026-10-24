@@ -49,11 +49,10 @@ class _BuilderBody extends ConsumerWidget {
     final controller = ref.read(builderProvider(productId).notifier);
     final def = state.definition;
     final strategy = placementStrategies[def.placement.strategy];
-    final base = menu.assets[def.base.rawAssetId];
+    final base = menu.assets[state.activeBase.rawAssetId];
     if (strategy == null || base == null) {
       return const Center(child: Text(AppStrings.productNotFound));
     }
-    final size = def.sizes.where((s) => s.id == state.selection.sizeId);
 
     List<String> urlsFor(Ingredient i) {
       final a = menu.assets[i.assetId];
@@ -88,7 +87,7 @@ class _BuilderBody extends ConsumerWidget {
           baseImageUrl: base.secureUrl,
           strategy: strategy,
           placementParams: def.placement.params,
-          scale: size.isEmpty ? 1 : size.first.scale,
+          scale: state.sizeScale,
           layers: [
             for (final i in available)
               CanvasLayer(
@@ -123,6 +122,24 @@ class _BuilderBody extends ConsumerWidget {
           ],
         ),
       ],
+      for (final g in def.optionGroups)
+        if (g.choices.length > 1) ...[
+          const SizedBox(height: 16),
+          Text(g.name, style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final c in g.choices)
+                ChoiceChip(
+                  label: Text(c.name),
+                  selected: state.selection.options[g.id] == c.id,
+                  onSelected: (_) =>
+                      report(controller.selectOption(g.id, c.id)),
+                ),
+            ],
+          ),
+        ],
       const SizedBox(height: 16),
       for (final i in available)
         _IngredientRow(

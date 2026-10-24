@@ -101,6 +101,26 @@ class BuilderState {
 
   bool canAdd(String ingredientId) => _check(ingredientId, 1) == null;
 
+  /// The base to draw: the category base, replaced by the base of any
+  /// chosen option that defines one (e.g. a different dough).
+  BaseSpec get activeBase {
+    for (final g in definition.optionGroups) {
+      final chosen = selection.options[g.id];
+      for (final c in g.choices) {
+        if (c.id == chosen && c.base != null) return c.base!;
+      }
+    }
+    return definition.base;
+  }
+
+  /// Visual scale of the selected size (1 when the category has no sizes).
+  double get sizeScale {
+    for (final s in definition.sizes) {
+      if (s.id == selection.sizeId) return s.scale;
+    }
+    return 1;
+  }
+
   Map<String, int> get extras => selection.extras(product.defaults);
 
   List<String> get removed => selection.removed(product.defaults);

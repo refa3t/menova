@@ -22,7 +22,11 @@ const def = CategoryDefinition(
       defaultChoiceId: 'regular',
       choices: [
         OptionChoice(id: 'regular', name: 'R'),
-        OptionChoice(id: 'thin', name: 'T'),
+        OptionChoice(
+          id: 'thin',
+          name: 'T',
+          base: BaseSpec(shape: 'circle', rawAssetId: 'base_thin'),
+        ),
       ],
     ),
   ],
@@ -119,5 +123,12 @@ void main() {
       selection: saved,
     );
     expect(s.qtyOf('pepper'), 1);
+  });
+
+  test('chosen option base replaces the category base; size sets scale', () {
+    expect(open().activeBase.rawAssetId, 'base');
+    final thin = open().selectOption('dough', 'thin').state;
+    expect(thin.activeBase.rawAssetId, 'base_thin');
+    expect(open().sizeScale, 1);
   });
 }
