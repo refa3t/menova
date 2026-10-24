@@ -4,6 +4,8 @@ resolution: workspace
 environment:
   sdk: ^3.9.0
 dependencies:
+  category_definitions:
+    path: ../packages/category_definitions
   core:
     path: ../packages/core
   http: ^1.2.0

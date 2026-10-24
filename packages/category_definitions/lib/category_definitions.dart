@@ -1,4 +1,5 @@
-/// Loader for static category definitions bundled from `definitions/`.
+/// Loader and validator for static category definitions bundled from
+/// `definitions/`.
 library;
 
 import 'dart:convert';
@@ -6,11 +7,17 @@ import 'dart:convert';
 import 'package:core/core.dart';
 
 import 'src/generated/bundled_definitions.g.dart';
+import 'src/validator.dart';
 
-/// Parses every bundled definition. A definition that fails to parse is
-/// skipped and reported, so an invalid category never shows (fail-closed).
-/// Full semantic validation is added in P1-A10.
-DefinitionLoadResult loadBundledDefinitions() {
+export 'src/validator.dart';
+
+/// Parses and validates every bundled definition. A definition that fails
+/// to parse or validate is skipped and reported, so an invalid category never
+/// shows (fail-closed). Pass the engines' registry keys from the app.
+DefinitionLoadResult loadBundledDefinitions({
+  Set<String>? placementStrategies,
+  Set<String>? animationSteps,
+}) {
   final valid = <String, CategoryDefinition>{};
   final rejected = <String, String>{};
   for (final e in bundledDefinitionSources.entries) {
@@ -18,7 +25,16 @@ DefinitionLoadResult loadBundledDefinitions() {
       final d = CategoryDefinition.fromJson(
         jsonDecode(e.value) as Map<String, dynamic>,
       );
-      valid[d.id] = d;
+      final issues = validateDefinition(
+        d,
+        placementStrategies: placementStrategies,
+        animationSteps: animationSteps,
+      );
+      if (issues.isEmpty) {
+        valid[d.id] = d;
+      } else {
+        rejected[e.key] = issues.join('; ');
+      }
     } on Object catch (err) {
       rejected[e.key] = '$err';
     }

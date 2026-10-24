@@ -11,6 +11,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:category_definitions/category_definitions.dart';
 import 'package:core/core.dart';
 import 'package:http/http.dart' as http;
 
@@ -21,14 +22,17 @@ const stagingProjectId = 'menova-80602';
 Future<void> main(List<String> args) async {
   if (args.isEmpty) _usage();
   final category = args.first;
-  final productsPath = _flagValue(args, '--products') ??
-      'seed/${category}_products.json';
+  final productsPath =
+      _flagValue(args, '--products') ?? 'seed/${category}_products.json';
   final allowMissingFinal = args.contains('--allow-missing-final-images');
   final dryRun = args.contains('--dry-run');
 
   final definition = CategoryDefinition.fromJson(
-      _readJson('../definitions/$category.json'));
-  final manifest = _readJson('../assets_src/$category/cloudinary_manifest.json');
+    _readJson('../definitions/$category.json'),
+  );
+  final manifest = _readJson(
+    '../assets_src/$category/cloudinary_manifest.json',
+  );
   final ingredientsFile = _readJson('seed/${category}_ingredients.json');
   final productsFile = _readJson(productsPath);
   final isTemp =
@@ -112,9 +116,20 @@ Future<void> main(List<String> args) async {
     }
     docs['products/${product.id}'] = product.toJson();
   }
+  // P1-A10: the definition itself must be valid against the catalog.
+  final assetIds = {for (final f in manifest.keys) f.split('.').first};
+  for (final i in validateDefinition(
+    definition,
+    assetIds: assetIds,
+    ingredientIds: ingredientIds,
+  )) {
+    errors.add('definition: $i');
+  }
   if (missingFinal.isNotEmpty && !allowMissingFinal) {
-    errors.add('missing final product images for: ${missingFinal.join(', ')} '
-        '(pass --allow-missing-final-images for TEMP staging data)');
+    errors.add(
+      'missing final product images for: ${missingFinal.join(', ')} '
+      '(pass --allow-missing-final-images for TEMP staging data)',
+    );
   }
 
   docs['categoryContent/${definition.id}'] = CategoryContent(
@@ -136,9 +151,11 @@ Future<void> main(List<String> args) async {
     }
   }
 
-  print('${docs.length} documents validated'
-      '${isTemp ? ' (TEMP data, staging only)' : ''}'
-      '${missingFinal.isEmpty ? '' : ', ${missingFinal.length} without final image'}');
+  print(
+    '${docs.length} documents validated'
+    '${isTemp ? ' (TEMP data, staging only)' : ''}'
+    '${missingFinal.isEmpty ? '' : ', ${missingFinal.length} without final image'}',
+  );
   if (dryRun) return;
 
   final token = (await Process.run('node', ['firebase_token.js']));
@@ -195,23 +212,21 @@ Future<void> _batchWrite(
 
 /// Encodes a JSON value as a Firestore REST `Value`.
 Map<String, Object?> _value(Object? v) => switch (v) {
-      null => {'nullValue': null},
-      bool b => {'booleanValue': b},
-      int n => {'integerValue': '$n'},
-      double d => {'doubleValue': d},
-      String s => {'stringValue': s},
-      List l => {
-          'arrayValue': {'values': l.map(_value).toList()},
-        },
-      Map m => {
-          'mapValue': {
-            'fields': {
-              for (final e in m.entries) '${e.key}': _value(e.value),
-            },
-          },
-        },
-      _ => throw ArgumentError('Unsupported value: $v'),
-    };
+  null => {'nullValue': null},
+  bool b => {'booleanValue': b},
+  int n => {'integerValue': '$n'},
+  double d => {'doubleValue': d},
+  String s => {'stringValue': s},
+  List l => {
+    'arrayValue': {'values': l.map(_value).toList()},
+  },
+  Map m => {
+    'mapValue': {
+      'fields': {for (final e in m.entries) '${e.key}': _value(e.value)},
+    },
+  },
+  _ => throw ArgumentError('Unsupported value: $v'),
+};
 
 Map<String, dynamic> _readJson(String path) =>
     jsonDecode(File(path).readAsStringSync()) as Map<String, dynamic>;
@@ -222,7 +237,9 @@ String? _flagValue(List<String> args, String flag) {
 }
 
 Never _usage() {
-  stderr.writeln('usage: dart run bin/seed.dart <category> '
-      '[--products <file>] [--allow-missing-final-images] [--dry-run]');
+  stderr.writeln(
+    'usage: dart run bin/seed.dart <category> '
+    '[--products <file>] [--allow-missing-final-images] [--dry-run]',
+  );
   exit(64);
 }

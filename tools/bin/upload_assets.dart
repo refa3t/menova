@@ -24,24 +24,28 @@ Future<void> main(List<String> args) async {
       ? (jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>)
       : <String, dynamic>{};
 
-  final files = root
-      .listSync(recursive: true)
-      .whereType<File>()
-      .where((f) => f.path.endsWith('.webp') || f.path.endsWith('.png'))
-      .toList()
-    ..sort((a, b) => a.path.compareTo(b.path));
+  final files =
+      root
+          .listSync(recursive: true)
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.webp') || f.path.endsWith('.png'))
+          .toList()
+        ..sort((a, b) => a.path.compareTo(b.path));
 
   var uploaded = 0;
   for (final f in files) {
     final name = f.uri.pathSegments.last;
     if (manifest.containsKey(name)) continue;
-    final req = http.MultipartRequest(
-      'POST',
-      Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload'),
-    )
-      ..fields['upload_preset'] = preset
-      ..fields['folder'] = folder
-      ..files.add(await http.MultipartFile.fromPath('file', f.path));
+    final req =
+        http.MultipartRequest(
+            'POST',
+            Uri.parse(
+              'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
+            ),
+          )
+          ..fields['upload_preset'] = preset
+          ..fields['folder'] = folder
+          ..files.add(await http.MultipartFile.fromPath('file', f.path));
     final res = await http.Response.fromStream(await req.send());
     final body = jsonDecode(res.body) as Map<String, dynamic>;
     if (res.statusCode != 200) {
@@ -57,7 +61,8 @@ Future<void> main(List<String> args) async {
     };
     // Save after each upload so a failure never loses recorded results.
     manifestFile.writeAsStringSync(
-        const JsonEncoder.withIndent('  ').convert(manifest));
+      const JsonEncoder.withIndent('  ').convert(manifest),
+    );
     uploaded++;
     print('OK   $name -> ${body['secure_url']}');
   }

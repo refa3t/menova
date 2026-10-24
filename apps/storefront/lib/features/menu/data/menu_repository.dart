@@ -1,6 +1,8 @@
+import 'package:animation/animation.dart';
 import 'package:category_definitions/category_definitions.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:core/core.dart';
+import 'package:product_builder/product_builder.dart';
 
 import '../domain/menu.dart';
 
@@ -24,7 +26,10 @@ class MenuRepository {
     ) => [for (final d in s.docs) f(d.data())];
 
     return Menu.assemble(
-      definitions: loadBundledDefinitions().definitions,
+      definitions: loadBundledDefinitions(
+        placementStrategies: placementStrategies.keys.toSet(),
+        animationSteps: animationStepKeys,
+      ).definitions,
       contents: parse(results[0], CategoryContent.fromJson),
       products: parse(results[1], Product.fromJson),
       ingredients: parse(results[2], Ingredient.fromJson),

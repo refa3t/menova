@@ -15,13 +15,16 @@ Future<Map<String, dynamic>> upload(
   String filename, {
   Map<String, String> extra = const {},
 }) async {
-  final req = http.MultipartRequest(
-    'POST',
-    Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload'),
-  )
-    ..fields['upload_preset'] = preset
-    ..fields.addAll(extra)
-    ..files.add(http.MultipartFile.fromBytes('file', bytes, filename: filename));
+  final req =
+      http.MultipartRequest(
+          'POST',
+          Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload'),
+        )
+        ..fields['upload_preset'] = preset
+        ..fields.addAll(extra)
+        ..files.add(
+          http.MultipartFile.fromBytes('file', bytes, filename: filename),
+        );
   final res = await http.Response.fromStream(await req.send());
   final body = jsonDecode(res.body) as Map<String, dynamic>;
   return {'status': res.statusCode, ...body};
@@ -53,7 +56,11 @@ Future<void> main() async {
   check(
     'PNG accepted, returns secure_url + public_id',
     a['status'] == 200 && a['secure_url'] != null && a['public_id'] != null,
-    {'public_id': a['public_id'], 'secure_url': a['secure_url'], 'err': a['error']},
+    {
+      'public_id': a['public_id'],
+      'secure_url': a['secure_url'],
+      'err': a['error'],
+    },
   );
   check(
     'asset_folder is $expectedFolder',
@@ -63,18 +70,25 @@ Future<void> main() async {
 
   final id = 'probe_${DateTime.now().millisecondsSinceEpoch}';
   final b = await upload(smallPng(), 'probe.png', extra: {'public_id': id});
-  print('INFO  client public_id honored? ${b['public_id'] == id} -> ${b['public_id'] ?? b['error']}');
+  print(
+    'INFO  client public_id honored? ${b['public_id'] == id} -> ${b['public_id'] ?? b['error']}',
+  );
 
   final c = await upload(smallPng(), 'probe.png', extra: {'folder': 'other'});
-  print('INFO  client folder override -> asset_folder=${c['asset_folder']} public_id=${c['public_id'] ?? c['error']}');
+  print(
+    'INFO  client folder override -> asset_folder=${c['asset_folder']} public_id=${c['public_id'] ?? c['error']}',
+  );
 
   final d = await upload(jpg(), 'probe.jpg');
   check('JPG rejected', d['status'] != 200, d['error'] ?? d['public_id']);
 
   final big = bigPng();
   final e = await upload(big, 'big.png');
-  check('PNG over 500KB (${big.length ~/ 1024}KB) rejected', e['status'] != 200,
-      e['error'] ?? e['public_id']);
+  check(
+    'PNG over 500KB (${big.length ~/ 1024}KB) rejected',
+    e['status'] != 200,
+    e['error'] ?? e['public_id'],
+  );
 
   print(failures == 0 ? '\nALL CHECKS PASSED' : '\n$failures CHECK(S) FAILED');
 }

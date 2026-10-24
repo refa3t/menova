@@ -6,7 +6,14 @@ import 'package:test/test.dart';
 const engines = ['product_builder', 'pricing', 'animation'];
 
 /// Packages each engine may depend on besides SDK packages.
-const allowed = {'core', 'flutter', 'flutter_test', 'flutter_lints', 'test', 'lints'};
+const allowed = {
+  'core',
+  'flutter',
+  'flutter_test',
+  'flutter_lints',
+  'test',
+  'lints',
+};
 
 void main() {
   for (final engine in engines) {
@@ -15,13 +22,16 @@ void main() {
 
       test('pubspec depends on no other engine', () {
         final pubspec = File('${dir.path}/pubspec.yaml').readAsStringSync();
-        final deps = RegExp(r'^  ([a-z_]+):', multiLine: true)
-            .allMatches(pubspec)
-            .map((m) => m.group(1)!)
-            .toSet();
+        final deps = RegExp(
+          r'^  ([a-z_]+):',
+          multiLine: true,
+        ).allMatches(pubspec).map((m) => m.group(1)!).toSet();
         expect(deps.intersection(engines.toSet()..remove(engine)), isEmpty);
-        expect(deps.difference({...allowed, 'sdk', 'path'}), isEmpty,
-            reason: 'unexpected dependencies in $engine');
+        expect(
+          deps.difference({...allowed, 'sdk', 'path'}),
+          isEmpty,
+          reason: 'unexpected dependencies in $engine',
+        );
       });
 
       test('source imports no other engine', () {
@@ -42,12 +52,16 @@ void main() {
   test('pricing is pure Dart (no Flutter)', () {
     final pubspec = File('../packages/pricing/pubspec.yaml').readAsStringSync();
     expect(pubspec.contains('flutter'), isFalse);
-    for (final f in Directory('../packages/pricing')
-        .listSync(recursive: true)
-        .whereType<File>()
-        .where((f) => f.path.endsWith('.dart'))) {
-      expect(f.readAsStringSync().contains('package:flutter/'), isFalse,
-          reason: f.path);
+    for (final f
+        in Directory('../packages/pricing')
+            .listSync(recursive: true)
+            .whereType<File>()
+            .where((f) => f.path.endsWith('.dart'))) {
+      expect(
+        f.readAsStringSync().contains('package:flutter/'),
+        isFalse,
+        reason: f.path,
+      );
     }
   });
 }
