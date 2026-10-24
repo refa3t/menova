@@ -2,6 +2,35 @@ import 'package:core/core.dart';
 
 /// All user-facing Arabic strings live here (no scattered literals).
 abstract final class AppStrings {
+  static const orderTitle = 'طلبك';
+  static const orderReference = 'رقم الطلب';
+  static const orderStatusLabel = 'حالة الطلب';
+  static const paymentStatusLabel = 'حالة الدفع';
+  static const orderCancelled = 'تم إلغاء الطلب';
+  static const orderNotFound = 'الطلب غير موجود';
+  static const orderLoadError = 'تعذّر تحميل الطلب';
+
+  /// Short human reference shown to the guest and the kitchen.
+  static String shortReference(String id) => id.length <= 8
+      ? id.toUpperCase()
+      : id.substring(id.length - 8).toUpperCase();
+
+  static String orderStatus(OrderStatus s) => switch (s) {
+    OrderStatus.newOrder => 'تم استلام الطلب',
+    OrderStatus.accepted => 'تم قبول الطلب',
+    OrderStatus.preparing => 'جارٍ التحضير',
+    OrderStatus.ready => 'جاهز',
+    OrderStatus.outForDelivery => 'في الطريق إليك',
+    OrderStatus.completed => 'تم التسليم',
+    OrderStatus.cancelled => 'ملغي',
+  };
+
+  static String paymentStatus(PaymentStatus s) => switch (s) {
+    PaymentStatus.unpaid => 'لم يُدفع',
+    PaymentStatus.paid => 'مدفوع',
+    PaymentStatus.refunded => 'مسترد',
+  };
+
   static const appTitle = 'منوفا';
   static const menuEmpty = 'لا توجد أقسام متاحة حالياً';
   static const categoryEmpty = 'لا توجد منتجات في هذا القسم حالياً';
