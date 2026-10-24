@@ -128,6 +128,20 @@ void main() {
     expect(order.toJson()['status'], 'out_for_delivery');
   });
 
+  test('OrderItem derives added, removed and kept from frozen defaults', () {
+    const it = OrderItem(
+      lineId: 'l',
+      selection: selection,
+      price: price,
+      productName: 'TEMP',
+      defaultQty: {'cheese': 2, 'olive': 1},
+    );
+    expect(it.extras, {'cheese': 1, 'pepper': 1});
+    expect(it.removed, ['olive']);
+    expect(it.kept, {'cheese': 2});
+    expect(OrderItem.fromJson(viaString(it.toJson())), it);
+  });
+
   test('unknown enum values are rejected', () {
     expect(() => OrderStatus.fromWire('lost'), throwsFormatException);
   });

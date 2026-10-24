@@ -14,6 +14,7 @@ class OrderItem {
     this.sizeName,
     this.optionNames = const {},
     this.ingredientNames = const {},
+    this.defaultQty = const {},
   });
 
   /// Stable id of the cart line (editing a line keeps it).
@@ -29,7 +30,33 @@ class OrderItem {
   /// Name per ingredient id, for every ingredient shown on the ticket.
   final Map<String, String> ingredientNames;
 
+  /// Frozen default quantity per ingredient at order time, so the kitchen
+  /// sees exactly what was added and removed even if the product changes.
+  final Map<String, int> defaultQty;
+
   int get qty => price.itemQty;
+
+  /// Quantity above the default per ingredient.
+  Map<String, int> get extras => {
+    for (final e in selection.ingredients.entries)
+      if (e.value > (defaultQty[e.key] ?? 0))
+        e.key: e.value - (defaultQty[e.key] ?? 0),
+  };
+
+  /// Defaults fully removed ("بدون X").
+  List<String> get removed => [
+    for (final e in defaultQty.entries)
+      if (selection.qtyOf(e.key) == 0) e.key,
+  ];
+
+  /// Defaults kept (up to their default quantity).
+  Map<String, int> get kept => {
+    for (final e in defaultQty.entries)
+      if (selection.qtyOf(e.key) > 0)
+        e.key: selection.qtyOf(e.key) < e.value
+            ? selection.qtyOf(e.key)
+            : e.value,
+  };
 
   factory OrderItem.fromJson(Json j) => OrderItem(
     lineId: req(j, 'lineId'),
@@ -39,6 +66,7 @@ class OrderItem {
     sizeName: opt(j, 'sizeName'),
     optionNames: mapOf(j, 'optionNames', (v) => v as String),
     ingredientNames: mapOf(j, 'ingredientNames', (v) => v as String),
+    defaultQty: mapOf(j, 'defaultQty', toInt),
   );
 
   Json toJson() => {
@@ -49,6 +77,7 @@ class OrderItem {
     if (sizeName != null) 'sizeName': sizeName,
     'optionNames': optionNames,
     'ingredientNames': ingredientNames,
+    'defaultQty': defaultQty,
   };
 
   @override
@@ -60,7 +89,8 @@ class OrderItem {
       other.productName == productName &&
       other.sizeName == sizeName &&
       mapEq(other.optionNames, optionNames) &&
-      mapEq(other.ingredientNames, ingredientNames);
+      mapEq(other.ingredientNames, ingredientNames) &&
+      mapEq(other.defaultQty, defaultQty);
 
   @override
   int get hashCode => Object.hash(
@@ -71,6 +101,7 @@ class OrderItem {
     sizeName,
     mapHash(optionNames),
     mapHash(ingredientNames),
+    mapHash(defaultQty),
   );
 }
 
