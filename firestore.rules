@@ -1,7 +1,49 @@
 rules_version = '2';
-// Locked by default. Real rules land in P1-A04.
+
+// P1-A04. Clients never write: menu data is seeded by tools/seed (IAM) and,
+// later, by admin Cloud Functions; orders are created by createOrder only
+// (SEC-01). Staff roles come from Auth custom claims set server-side.
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    function isStaff() {
+      return request.auth != null
+          && request.auth.token.role in ['reception', 'kitchen'];
+    }
+
+    // Public menu (CLAUDE.md 5.4).
+    match /categoryContent/{categoryId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /ingredients/{ingredientId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /assets/{assetId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Orders: staff read all; a guest reads only the order created for their
+    // (anonymous) auth uid. Nobody writes from a client.
+    match /orders/{orderId} {
+      allow read: if isStaff()
+          || (request.auth != null
+              && resource.data.customerUid == request.auth.uid);
+      allow write: if false;
+
+      match /{sub=**} {
+        allow read: if isStaff();
+        allow write: if false;
+      }
+    }
+
+    // Everything else is closed.
     match /{document=**} {
       allow read, write: if false;
     }
