@@ -3,12 +3,15 @@ import 'dart:convert';
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/strings/app_strings.dart';
 import '../../cart/domain/cart_line_view.dart';
 import '../../cart/presentation/cart_providers.dart';
 import '../../menu/presentation/menu_providers.dart';
 import '../domain/guest_form.dart';
+import '../domain/order_builder.dart';
+import 'checkout_controller.dart';
 
 /// Guest checkout (P1-E04). The guest's details are kept on their device.
 class CheckoutScreen extends ConsumerStatefulWidget {
@@ -66,19 +69,91 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         .setString(_guestKey, jsonEncode(g.toJson()));
   }
 
+  GuestCustomer _customer() => GuestCustomer(
+    name: _name.text.trim(),
+    phone: GuestValidation.normalizePhone(_phone.text),
+    fulfillment: _fulfillment,
+    address: _fulfillment == Fulfillment.delivery ? _address.text.trim() : null,
+  );
+
   void _confirm() {
     if (!_form.currentState!.validate()) return;
     _saveGuest();
-    // Sending goes through createOrder (P1-E05), blocked by D-INFRA-01.
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        const SnackBar(content: Text(AppStrings.orderingUnavailable)),
-      );
+    ref
+        .read(checkoutProvider.notifier)
+        .confirm(customer: _customer(), notes: _notes.text.trim());
+  }
+
+  void _onState(CheckoutState? _, CheckoutState next) {
+    switch (next) {
+      case CheckoutDone(:final orderId):
+        context.go('/order/$orderId');
+      case CheckoutPriceChanged(:final diffs):
+        _showDiffs(diffs);
+      case CheckoutConflict():
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(content: Text(AppStrings.orderConflict)),
+          );
+        ref.read(checkoutProvider.notifier).dismiss();
+      default:
+        break;
+    }
+  }
+
+  Future<void> _showDiffs(List<PriceDiff> diffs) async {
+    final accepted = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text(AppStrings.pricesChanged),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(AppStrings.pricesChangedBody),
+            const SizedBox(height: 12),
+            for (final d in diffs)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text(
+                  d.current == null
+                      ? '${d.productName}: ${AppStrings.noLongerAvailable}'
+                      : '${d.productName}: '
+                            '${d.shown == null ? '—' : AppStrings.price(d.shown!)}'
+                            ' ← ${AppStrings.price(d.current!)}',
+                ),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text(AppStrings.backToCart),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(AppStrings.acceptNewPrices),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return;
+    final controller = ref.read(checkoutProvider.notifier);
+    if (accepted == true) {
+      controller.acceptCorrections();
+    } else {
+      controller.dismiss();
+      if (mounted) context.go('/cart');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(checkoutProvider, _onState);
+    final checkout = ref.watch(checkoutProvider);
+    final sending = checkout is CheckoutSending;
     final cart = ref.watch(cartProvider);
     final menu = ref.watch(menuProvider).value;
     final subtotal = menu == null
@@ -186,12 +261,31 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         top: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-          child: FilledButton(
-            onPressed: cart.lines.isEmpty ? null : _confirm,
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(52),
-            ),
-            child: const Text(AppStrings.confirmOrder),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (checkout is CheckoutPending)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    AppStrings.pendingSend,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              FilledButton(
+                onPressed: cart.lines.isEmpty || sending ? null : _confirm,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(52),
+                ),
+                child: Text(switch (checkout) {
+                  CheckoutSending(checking: true) => AppStrings.checkingOrder,
+                  CheckoutSending() => AppStrings.sendingOrder,
+                  CheckoutPending() => AppStrings.retrySend,
+                  _ => AppStrings.confirmOrder,
+                }),
+              ),
+            ],
           ),
         ),
       ),

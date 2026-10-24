@@ -1,8 +1,9 @@
 rules_version = '2';
 
-// P1-A04. Clients never write: menu data is seeded by tools/seed (IAM) and,
-// later, by admin Cloud Functions; orders are created by createOrder only
-// (SEC-01). Staff roles come from Auth custom claims set server-side.
+// D-INFRA-01 = B (Spark, no server). Menu data is written only by tools/seed
+// (IAM). Guests create their own order once (create only) and never edit it;
+// staff change status and payment under strict checks. Prices are verified
+// by the reception app with the same pricing library (amended SEC-02).
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -29,17 +30,94 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Orders: staff read all; a guest reads only the order created for their
-    // (anonymous) auth uid. Nobody writes from a client.
     match /orders/{orderId} {
+      function orderKeys() {
+        return ['id', 'requestId', 'payloadHash', 'customerUid', 'customer',
+                'items', 'status', 'paymentStatus', 'paymentMethod',
+                'deliveryFee', 'total', 'definitionVersions', 'rulesVersion',
+                'createdAt', 'notes', 'history', 'serverCreatedAt'];
+      }
+
+      function validCustomer(c) {
+        return c is map
+            && c.keys().hasOnly(['name', 'phone', 'fulfillment', 'address'])
+            && c.name is string && c.name.size() >= 2 && c.name.size() <= 60
+            && c.phone is string && c.phone.matches('^01[0125][0-9]{8}$')
+            && c.fulfillment in ['pickup', 'delivery']
+            && (c.fulfillment == 'pickup'
+                || (c.address is string && c.address.size() >= 5
+                    && c.address.size() <= 300));
+      }
+
+      // A guest creates their own order once, in its initial state.
+      function validNewOrder(d) {
+        return d.keys().hasOnly(orderKeys())
+            && d.keys().hasAll(orderKeys())
+            && d.id == orderId
+            && d.requestId == orderId
+            && d.customerUid == request.auth.uid
+            && d.payloadHash is string && d.payloadHash.size() == 64
+            && validCustomer(d.customer)
+            && d.items is list && d.items.size() >= 1 && d.items.size() <= 30
+            && d.status == 'new'
+            && d.paymentStatus == 'unpaid'
+            && d.paymentMethod == 'cash'
+            && d.deliveryFee is int && d.deliveryFee >= 0
+            && d.total is int && d.total >= 0
+            && d.definitionVersions is map
+            && d.rulesVersion is int
+            && d.createdAt is string
+            && d.notes is string && d.notes.size() <= 300
+            && d.history is list && d.history.size() == 0
+            && d.serverCreatedAt == request.time;
+      }
+
+      // Order lifecycle (CLAUDE.md 5.3). Cancel only before preparing.
+      function allowedTransition(from, to) {
+        return (from == 'new' && to in ['accepted', 'cancelled'])
+            || (from == 'accepted' && to in ['preparing', 'cancelled'])
+            || (from == 'preparing' && to == 'ready')
+            || (from == 'ready' && to in ['out_for_delivery', 'completed'])
+            || (from == 'out_for_delivery' && to == 'completed');
+      }
+
+      // Staff change exactly one of status / paymentStatus and append one
+      // history entry recording who did it (and why, for a cancel).
+      function validStaffUpdate(before, after) {
+        let changed = after.diff(before).affectedKeys();
+        let last = after.history[after.history.size() - 1];
+        return changed.hasOnly(['status', 'paymentStatus', 'history'])
+            && after.history.size() == before.history.size() + 1
+            && last.by == request.auth.uid
+            && last.at is string
+            && (
+              (changed.hasAll(['status']) && !changed.hasAny(['paymentStatus'])
+                && last.field == 'status' && last.value == after.status
+                && allowedTransition(before.status, after.status)
+                && (after.status != 'cancelled'
+                    || (last.reason is string && last.reason.size() >= 2)))
+              ||
+              (changed.hasAll(['paymentStatus']) && !changed.hasAny(['status'])
+                && last.field == 'paymentStatus'
+                && last.value == after.paymentStatus
+                && after.paymentStatus in ['unpaid', 'paid', 'refunded'])
+            );
+      }
+
+      allow create: if request.auth != null
+          && validNewOrder(request.resource.data);
+      // A guest may also probe an id that does not exist yet (reveals nothing),
+      // so the order transaction can check for an existing request first.
+      allow get: if request.auth != null && resource == null;
       allow read: if isStaff()
           || (request.auth != null
               && resource.data.customerUid == request.auth.uid);
-      allow write: if false;
+      allow update: if isStaff()
+          && validStaffUpdate(resource.data, request.resource.data);
+      allow delete: if false;
 
       match /{sub=**} {
-        allow read: if isStaff();
-        allow write: if false;
+        allow read, write: if false;
       }
     }
 

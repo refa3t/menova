@@ -50,8 +50,18 @@ abstract final class AppStrings {
   static const errorName = 'اكتب اسمك';
   static const errorPhone = 'اكتب رقم موبايل مصري صحيح (11 رقم)';
   static const errorAddress = 'اكتب عنوان التوصيل';
-  static const orderingUnavailable =
-      'إرسال الطلبات غير متاح بعد في النسخة التجريبية';
+  static const sendingOrder = 'جارٍ إرسال الطلب...';
+  static const checkingOrder = 'جارٍ التأكد من الطلب...';
+  static const pendingSend =
+      'بانتظار الإرسال: لم يتأكد وصول الطلب. أعد المحاولة، ولن يتكرر الطلب';
+  static const retrySend = 'إعادة المحاولة';
+  static const orderConflict = 'تعذّر تأكيد الطلب، حاول مرة أخرى';
+  static const pricesChanged = 'تغيّرت بعض الأسعار';
+  static const pricesChangedBody =
+      'تغيّرت أسعار أو توفر بعض البنود منذ فتحت السلة:';
+  static const noLongerAvailable = 'لم يعد متاحاً';
+  static const acceptNewPrices = 'موافق على الأسعار الجديدة';
+  static const backToCart = 'العودة للسلة';
   static const update = 'تحديث';
   static const addedToCart = 'تمت الإضافة';
   static const preparing = 'جارٍ التحضير...';

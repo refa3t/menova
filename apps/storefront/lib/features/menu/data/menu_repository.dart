@@ -13,12 +13,17 @@ class MenuRepository {
 
   final FirebaseFirestore _db;
 
-  Future<Menu> load() async {
+  /// Loads the menu. [fromServer] skips the cache (used to re-price the
+  /// cart right before an order is sent).
+  Future<Menu> load({bool fromServer = false}) async {
+    final options = GetOptions(
+      source: fromServer ? Source.server : Source.serverAndCache,
+    );
     final results = await Future.wait([
-      _db.collection('categoryContent').get(),
-      _db.collection('products').get(),
-      _db.collection('ingredients').get(),
-      _db.collection('assets').get(),
+      _db.collection('categoryContent').get(options),
+      _db.collection('products').get(options),
+      _db.collection('ingredients').get(options),
+      _db.collection('assets').get(options),
     ]);
     List<T> parse<T>(
       QuerySnapshot<Map<String, dynamic>> s,
