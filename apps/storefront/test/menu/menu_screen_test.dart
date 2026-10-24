@@ -10,18 +10,16 @@ import 'package:storefront/features/menu/presentation/menu_screen.dart';
 import 'menu_test.dart' show def, product;
 
 Widget app(Future<Menu> Function() load) => ProviderScope(
-      overrides: [menuProvider.overrideWith((ref) => load())],
-      child: const MaterialApp(
-        home: Directionality(
-          textDirection: TextDirection.rtl,
-          child: MenuScreen(),
-        ),
-      ),
-    );
+  overrides: [menuProvider.overrideWith((ref) => load())],
+  child: const MaterialApp(
+    home: Directionality(textDirection: TextDirection.rtl, child: MenuScreen()),
+  ),
+);
 
 void main() {
-  testWidgets('shows category chip and product cards with price',
-      (tester) async {
+  testWidgets('shows category chip and product cards with price', (
+    tester,
+  ) async {
     final menu = Menu.assemble(
       definitions: {'cat_a': def},
       contents: const [

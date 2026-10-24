@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/strings/app_strings.dart';
 import '../domain/menu.dart';
 import 'menu_providers.dart';
+import 'product_preview.dart';
 import 'product_card.dart';
 
 class MenuScreen extends ConsumerStatefulWidget {
@@ -24,7 +25,8 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
       appBar: AppBar(title: const Text(AppStrings.appTitle)),
       body: menu.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => _ErrorView(onRetry: () => ref.invalidate(menuProvider)),
+        error: (_, _) =>
+            _ErrorView(onRetry: () => ref.invalidate(menuProvider)),
         data: (menu) {
           if (!identical(_precached, menu)) {
             _precached = menu;
@@ -45,7 +47,9 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                 selectedId: selected.definition.id,
                 onSelected: (id) => setState(() => _selectedCategoryId = id),
               ),
-              Expanded(child: _ProductGrid(menu: menu, category: selected)),
+              Expanded(
+                child: _ProductGrid(menu: menu, category: selected),
+              ),
             ],
           );
         },
@@ -113,6 +117,14 @@ class _ProductGrid extends StatelessWidget {
         return ProductCard(
           product: p,
           imageUrl: menu.cardImageUrl(p, category.definition),
+          // Until final product images exist, draw the defaults on the base.
+          preview: menu.assets.containsKey(p.imageAssetId)
+              ? null
+              : ProductPreview(
+                  menu: menu,
+                  definition: category.definition,
+                  product: p,
+                ),
         );
       },
     );

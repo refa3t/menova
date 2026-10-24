@@ -5,6 +5,11 @@ abstract final class AppStrings {
   static const categoryEmpty = 'لا توجد منتجات في هذا القسم حالياً';
   static const menuLoadError = 'تعذّر تحميل المنيو';
   static const retry = 'إعادة المحاولة';
+  static const productNotFound = 'المنتج غير متاح';
+  static const maxQtyReached = 'وصلت للحد الأقصى لهذا المكوّن';
+  static const reset = 'إعادة الضبط';
+  static const add = 'إضافة';
+  static const remove = 'إزالة';
 
   /// Display-only formatting of an amount in piasters as EGP.
   static String priceFrom(int piasters) {

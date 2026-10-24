@@ -5,9 +5,14 @@ import 'package:reception/features/home/presentation/home_screen.dart';
 
 void main() {
   testWidgets('home screen renders heading', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: Directionality(textDirection: TextDirection.rtl, child: HomeScreen()),
-    ));
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Directionality(
+          textDirection: TextDirection.rtl,
+          child: HomeScreen(),
+        ),
+      ),
+    );
     expect(find.text(AppStrings.homeHeading), findsOneWidget);
   });
 }

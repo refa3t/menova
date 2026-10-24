@@ -48,7 +48,20 @@
   ],
   "placement": {
     "strategy": "scatter",
-    "params": {}
+    "params": {
+      "pieceSize": 0.13,
+      "piecesPerUnit": 9,
+      "radius": 0.74,
+      "minGap": 0.16,
+      "piecesPerUnit:mozzarella": 22,
+      "pieceSize:mozzarella": 0.2,
+      "minGap:mozzarella": 0.12,
+      "radius:mozzarella": 0.72,
+      "piecesPerUnit:cheddar": 22,
+      "pieceSize:cheddar": 0.2,
+      "minGap:cheddar": 0.12,
+      "radius:cheddar": 0.72
+    }
   },
   "constraints": {
     "maxQty": 2

@@ -111,7 +111,13 @@ def main() -> None:
         'name': 'بيتزا',
         'base': {'shape': 'circle', 'rawAssetId': 'base_pizza_regular_raw'},
         'allowedIngredientIds': [k for k, _ in INGREDIENTS],
-        'placement': {'strategy': 'scatter', 'params': {}},
+        # TEMP: calibrated during the P1-B00 drawing prototype.
+        'placement': {'strategy': 'scatter', 'params': {
+            'pieceSize': 0.13, 'piecesPerUnit': 9, 'radius': 0.74, 'minGap': 0.16,
+            # Spread cheeses cover the base instead of sitting as clumps.
+            **{f'{k}:{ing}': v for ing in ('mozzarella', 'cheddar')
+               for k, v in (('piecesPerUnit', 22), ('pieceSize', 0.2),
+                            ('minGap', 0.12), ('radius', 0.72))}}},
         'constraints': {'maxQty': 2},
         'sizes': [
             {'id': 's', 'name': 'صغير', 'scale': 0.8},
@@ -137,7 +143,8 @@ def main() -> None:
     # Sidecar: the definition schema stays strict, TEMP status lives here.
     dump('definitions/pizza.temp.json', {
         '_note': TEMP_NOTE,
-        'tempFields': ['constraints.maxQty', 'sizes', 'optionGroups'],
+        'tempFields': ['constraints.maxQty', 'sizes', 'optionGroups',
+                       'placement.params'],
         'pendingNotes': [
             'Only the regular dough exists (no other dough assets yet).',
             'No cooked base asset yet (base.cookedAssetId).',

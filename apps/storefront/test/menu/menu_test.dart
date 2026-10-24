@@ -17,29 +17,33 @@ const def = CategoryDefinition(
   assetSpecs: {},
 );
 
-Product product(String id, {int order = 0, bool available = true, String cat = 'cat_a'}) =>
-    Product(
-      id: id,
-      categoryId: cat,
-      name: id,
-      description: '',
-      basePrice: 100,
-      imageAssetId: 'final_$id',
-      defaults: const [],
-      isAvailable: available,
-      displayOrder: order,
-    );
+Product product(
+  String id, {
+  int order = 0,
+  bool available = true,
+  String cat = 'cat_a',
+}) => Product(
+  id: id,
+  categoryId: cat,
+  name: id,
+  description: '',
+  basePrice: 100,
+  imageAssetId: 'final_$id',
+  defaults: const [],
+  isAvailable: available,
+  displayOrder: order,
+);
 
 Asset asset(String id) => Asset(
-      id: id,
-      kind: 'k',
-      name: id,
-      publicId: id,
-      secureUrl: 'https://x/$id',
-      version: 1,
-      layerOrder: 0,
-      allowedCategoryIds: const ['cat_a'],
-    );
+  id: id,
+  kind: 'k',
+  name: id,
+  publicId: id,
+  secureUrl: 'https://x/$id',
+  version: 1,
+  layerOrder: 0,
+  allowedCategoryIds: const ['cat_a'],
+);
 
 void main() {
   test('categories without a definition or hidden never show', () {
@@ -47,7 +51,11 @@ void main() {
       definitions: {'cat_a': def},
       contents: const [
         CategoryContent(categoryId: 'cat_a', isVisible: true, displayOrder: 0),
-        CategoryContent(categoryId: 'unknown', isVisible: true, displayOrder: 1),
+        CategoryContent(
+          categoryId: 'unknown',
+          isVisible: true,
+          displayOrder: 1,
+        ),
       ],
       products: [product('p1')],
       ingredients: const [],

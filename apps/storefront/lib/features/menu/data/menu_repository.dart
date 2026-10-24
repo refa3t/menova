@@ -18,9 +18,10 @@ class MenuRepository {
       _db.collection('ingredients').get(),
       _db.collection('assets').get(),
     ]);
-    List<T> parse<T>(QuerySnapshot<Map<String, dynamic>> s,
-            T Function(Map<String, dynamic>) f) =>
-        [for (final d in s.docs) f(d.data())];
+    List<T> parse<T>(
+      QuerySnapshot<Map<String, dynamic>> s,
+      T Function(Map<String, dynamic>) f,
+    ) => [for (final d in s.docs) f(d.data())];
 
     return Menu.assemble(
       definitions: loadBundledDefinitions().definitions,

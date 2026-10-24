@@ -41,20 +41,22 @@ class Menu {
     required List<Ingredient> ingredients,
     required List<Asset> assets,
   }) {
-    final visible = contents
-        .where((c) => c.isVisible && definitions.containsKey(c.categoryId))
-        .toList()
-      ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+    final visible =
+        contents
+            .where((c) => c.isVisible && definitions.containsKey(c.categoryId))
+            .toList()
+          ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
     return Menu(
       categories: [
         for (final c in visible)
           MenuCategory(
             definition: definitions[c.categoryId]!,
             content: c,
-            products: products
-                .where((p) => p.categoryId == c.categoryId && p.isAvailable)
-                .toList()
-              ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder)),
+            products:
+                products
+                    .where((p) => p.categoryId == c.categoryId && p.isAvailable)
+                    .toList()
+                  ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder)),
           ),
       ],
       ingredients: {for (final i in ingredients) i.id: i},

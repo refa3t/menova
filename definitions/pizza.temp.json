@@ -3,7 +3,8 @@
   "tempFields": [
     "constraints.maxQty",
     "sizes",
-    "optionGroups"
+    "optionGroups",
+    "placement.params"
   ],
   "pendingNotes": [
     "Only the regular dough exists (no other dough assets yet).",
