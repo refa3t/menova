@@ -81,6 +81,38 @@ PRODUCTS = [
     ('mortadella', 'مرتديلا', 'tomato', ['mozzarella', 'mortadella', 'olive_green']),
 ]
 
+# Motion per ingredient: (enter, exit, pieces per unit). ANIMATIONS.md 4.
+# Proposed values, calibrated against the approved reference (AC-11/12).
+MOTION = {
+    'mozzarella': ('shower', 'dissolve', 14), 'cheddar': ('shower', 'dissolve', 14),
+    'roumi': ('shower', 'dissolve', 14), 'feta': ('shower', 'dissolve', 12),
+    'blue_cheese': ('shower', 'dissolve', 10), 'parmesan': ('sprinkle', 'dissolve', 20),
+    'pepperoni': ('drop', 'liftFade', 10), 'salami_spicy': ('drop', 'liftFade', 10),
+    'ham': ('drop', 'liftFade', 9), 'sausage': ('drop', 'liftFade', 9),
+    'bacon': ('drop', 'liftFade', 10), 'ground_beef': ('shower', 'dissolve', 24),
+    'chicken': ('toss', 'liftFade', 12), 'basterma': ('drop', 'liftFade', 9),
+    'mortadella': ('drop', 'liftFade', 9), 'tuna': ('shower', 'dissolve', 14),
+    'shrimp': ('toss', 'liftFade', 6), 'calamari': ('toss', 'liftFade', 10),
+    'anchovy': ('toss', 'liftFade', 8), 'bell_pepper_green': ('drop', 'liftFade', 10),
+    'bell_pepper_red': ('drop', 'liftFade', 10), 'mushroom': ('drop', 'liftFade', 12),
+    'onion': ('drop', 'liftFade', 14), 'red_onion': ('drop', 'liftFade', 14),
+    'tomato': ('drop', 'liftFade', 8), 'cherry_tomato': ('drop', 'liftFade', 10),
+    'olive_black': ('drop', 'liftFade', 14), 'olive_green': ('drop', 'liftFade', 14),
+    'corn': ('sprinkle', 'dissolve', 30), 'pineapple': ('drop', 'liftFade', 10),
+    'jalapeno': ('drop', 'liftFade', 14), 'chili_red': ('drop', 'liftFade', 12),
+    'artichoke': ('toss', 'liftFade', 8), 'capers': ('sprinkle', 'dissolve', 14),
+    'garlic': ('drop', 'liftFade', 14), 'basil': ('float', 'liftFade', 8),
+    'oregano': ('sprinkle', 'dissolve', 18), 'parsley': ('sprinkle', 'dissolve', 18),
+}
+
+# Smaller pieces for dense scatter (crumbs, kernels, herbs); spread cheeses
+# stay larger so they read as a covering layer.
+PIECE_SIZE = {
+    'mozzarella': 0.2, 'cheddar': 0.2, 'roumi': 0.12, 'ground_beef': 0.09,
+    'corn': 0.08, 'oregano': 0.09, 'parsley': 0.09, 'parmesan': 0.1,
+    'capers': 0.09,
+}
+
 # Trial subset used for development/testing (seeded first in P1-A03).
 TRIAL_PRODUCT_IDS = ['margherita', 'pepperoni', 'veggie', 'chicken', 'supreme']
 
@@ -99,6 +131,7 @@ def dump(path: str, data) -> None:
 
 def main() -> None:
     keys = {k for k, _ in INGREDIENTS}
+    assert set(MOTION) == keys, set(MOTION) ^ keys
     for pid, _, _, defaults in PRODUCTS:
         unknown = set(defaults) - keys
         assert not unknown, f'{pid}: unknown ingredients {unknown}'
@@ -114,14 +147,15 @@ def main() -> None:
         # TEMP: calibrated during the P1-B00 drawing prototype.
         'placement': {'strategy': 'scatter', 'params': {
             'pieceSize': 0.13, 'piecesPerUnit': 9, 'radius': 0.74, 'minGap': 0.16,
-            # Spread cheeses cover the base instead of sitting as clumps.
-            **{f'{k}:{ing}': v for ing in ('mozzarella', 'cheddar')
-               for k, v in (('piecesPerUnit', 22), ('pieceSize', 0.2),
-                            ('minGap', 0.12), ('radius', 0.72))}}},
+            **{f'piecesPerUnit:{k}': v[2] for k, v in MOTION.items()},
+            **{f'pieceSize:{k}': v for k, v in PIECE_SIZE.items()},
+            # Spread cheeses pack tighter to cover the base.
+            **{f'{p}:{ing}': v for ing in ('mozzarella', 'cheddar')
+               for p, v in (('minGap', 0.12), ('radius', 0.72))}}},
         'constraints': {'maxQty': 2},
         'sizes': [
-            {'id': 's', 'name': 'صغير', 'scale': 0.8},
-            {'id': 'm', 'name': 'وسط', 'scale': 0.9},
+            {'id': 's', 'name': 'صغير', 'scale': 0.82},
+            {'id': 'm', 'name': 'وسط', 'scale': 0.91},
             {'id': 'l', 'name': 'كبير', 'scale': 1.0},
         ],
         'optionGroups': [{
@@ -133,6 +167,9 @@ def main() -> None:
             {'step': 'Swap', 'weight': 1, 'params': {}},
             {'step': 'FlyToCart', 'weight': 1, 'params': {}},
         ],
+        'ingredientMotion': {
+            k: {'enter': v[0], 'exit': v[1]} for k, v in MOTION.items()
+        },
         'assetSpecs': {
             'base': {'formats': ['png', 'webp'], 'maxBytes': 500 * 1024,
                      'transparent': True},
@@ -144,7 +181,7 @@ def main() -> None:
     dump('definitions/pizza.temp.json', {
         '_note': TEMP_NOTE,
         'tempFields': ['constraints.maxQty', 'sizes', 'optionGroups',
-                       'placement.params'],
+                       'placement.params', 'ingredientMotion'],
         'pendingNotes': [
             'Only the regular dough exists (no other dough assets yet).',
             'No cooked base asset yet (base.cookedAssetId).',

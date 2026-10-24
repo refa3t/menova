@@ -4,7 +4,8 @@
     "constraints.maxQty",
     "sizes",
     "optionGroups",
-    "placement.params"
+    "placement.params",
+    "ingredientMotion"
   ],
   "pendingNotes": [
     "Only the regular dough exists (no other dough assets yet).",

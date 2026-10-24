@@ -45,6 +45,12 @@ class ProductPreview extends StatelessWidget {
                   CanvasLayer(
                     ingredientId: i.id,
                     imageUrls: [a.secureUrl, ...a.variants],
+                    enterProfile:
+                        definition.ingredientMotion[i.id]?.enter ??
+                        defaultEnterProfile,
+                    exitProfile:
+                        definition.ingredientMotion[i.id]?.exit ??
+                        defaultExitProfile,
                     qty: e.value,
                     layerOrder: definition.layerOverrides[i.id] ?? a.layerOrder,
                   ),

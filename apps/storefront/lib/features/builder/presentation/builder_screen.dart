@@ -172,6 +172,10 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
               CanvasLayer(
                 ingredientId: i.id,
                 imageUrls: urlsFor(i),
+                enterProfile:
+                    def.ingredientMotion[i.id]?.enter ?? defaultEnterProfile,
+                exitProfile:
+                    def.ingredientMotion[i.id]?.exit ?? defaultExitProfile,
                 qty: state.qtyOf(i.id),
                 layerOrder:
                     def.layerOverrides[i.id] ??

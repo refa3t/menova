@@ -53,12 +53,55 @@
       "piecesPerUnit": 9,
       "radius": 0.74,
       "minGap": 0.16,
-      "piecesPerUnit:mozzarella": 22,
+      "piecesPerUnit:mozzarella": 14,
+      "piecesPerUnit:cheddar": 14,
+      "piecesPerUnit:roumi": 14,
+      "piecesPerUnit:feta": 12,
+      "piecesPerUnit:blue_cheese": 10,
+      "piecesPerUnit:parmesan": 20,
+      "piecesPerUnit:pepperoni": 10,
+      "piecesPerUnit:salami_spicy": 10,
+      "piecesPerUnit:ham": 9,
+      "piecesPerUnit:sausage": 9,
+      "piecesPerUnit:bacon": 10,
+      "piecesPerUnit:ground_beef": 24,
+      "piecesPerUnit:chicken": 12,
+      "piecesPerUnit:basterma": 9,
+      "piecesPerUnit:mortadella": 9,
+      "piecesPerUnit:tuna": 14,
+      "piecesPerUnit:shrimp": 6,
+      "piecesPerUnit:calamari": 10,
+      "piecesPerUnit:anchovy": 8,
+      "piecesPerUnit:bell_pepper_green": 10,
+      "piecesPerUnit:bell_pepper_red": 10,
+      "piecesPerUnit:mushroom": 12,
+      "piecesPerUnit:onion": 14,
+      "piecesPerUnit:red_onion": 14,
+      "piecesPerUnit:tomato": 8,
+      "piecesPerUnit:cherry_tomato": 10,
+      "piecesPerUnit:olive_black": 14,
+      "piecesPerUnit:olive_green": 14,
+      "piecesPerUnit:corn": 30,
+      "piecesPerUnit:pineapple": 10,
+      "piecesPerUnit:jalapeno": 14,
+      "piecesPerUnit:chili_red": 12,
+      "piecesPerUnit:artichoke": 8,
+      "piecesPerUnit:capers": 14,
+      "piecesPerUnit:garlic": 14,
+      "piecesPerUnit:basil": 8,
+      "piecesPerUnit:oregano": 18,
+      "piecesPerUnit:parsley": 18,
       "pieceSize:mozzarella": 0.2,
+      "pieceSize:cheddar": 0.2,
+      "pieceSize:roumi": 0.12,
+      "pieceSize:ground_beef": 0.09,
+      "pieceSize:corn": 0.08,
+      "pieceSize:oregano": 0.09,
+      "pieceSize:parsley": 0.09,
+      "pieceSize:parmesan": 0.1,
+      "pieceSize:capers": 0.09,
       "minGap:mozzarella": 0.12,
       "radius:mozzarella": 0.72,
-      "piecesPerUnit:cheddar": 22,
-      "pieceSize:cheddar": 0.2,
       "minGap:cheddar": 0.12,
       "radius:cheddar": 0.72
     }
@@ -70,12 +113,12 @@
     {
       "id": "s",
       "name": "صغير",
-      "scale": 0.8
+      "scale": 0.82
     },
     {
       "id": "m",
       "name": "وسط",
-      "scale": 0.9
+      "scale": 0.91
     },
     {
       "id": "l",
@@ -113,6 +156,160 @@
       "params": {}
     }
   ],
+  "ingredientMotion": {
+    "mozzarella": {
+      "enter": "shower",
+      "exit": "dissolve"
+    },
+    "cheddar": {
+      "enter": "shower",
+      "exit": "dissolve"
+    },
+    "roumi": {
+      "enter": "shower",
+      "exit": "dissolve"
+    },
+    "feta": {
+      "enter": "shower",
+      "exit": "dissolve"
+    },
+    "blue_cheese": {
+      "enter": "shower",
+      "exit": "dissolve"
+    },
+    "parmesan": {
+      "enter": "sprinkle",
+      "exit": "dissolve"
+    },
+    "pepperoni": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "salami_spicy": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "ham": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "sausage": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "bacon": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "ground_beef": {
+      "enter": "shower",
+      "exit": "dissolve"
+    },
+    "chicken": {
+      "enter": "toss",
+      "exit": "liftFade"
+    },
+    "basterma": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "mortadella": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "tuna": {
+      "enter": "shower",
+      "exit": "dissolve"
+    },
+    "shrimp": {
+      "enter": "toss",
+      "exit": "liftFade"
+    },
+    "calamari": {
+      "enter": "toss",
+      "exit": "liftFade"
+    },
+    "anchovy": {
+      "enter": "toss",
+      "exit": "liftFade"
+    },
+    "bell_pepper_green": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "bell_pepper_red": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "mushroom": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "onion": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "red_onion": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "tomato": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "cherry_tomato": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "olive_black": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "olive_green": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "corn": {
+      "enter": "sprinkle",
+      "exit": "dissolve"
+    },
+    "pineapple": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "jalapeno": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "chili_red": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "artichoke": {
+      "enter": "toss",
+      "exit": "liftFade"
+    },
+    "capers": {
+      "enter": "sprinkle",
+      "exit": "dissolve"
+    },
+    "garlic": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "basil": {
+      "enter": "float",
+      "exit": "liftFade"
+    },
+    "oregano": {
+      "enter": "sprinkle",
+      "exit": "dissolve"
+    },
+    "parsley": {
+      "enter": "sprinkle",
+      "exit": "dissolve"
+    }
+  },
   "assetSpecs": {
     "base": {
       "formats": [

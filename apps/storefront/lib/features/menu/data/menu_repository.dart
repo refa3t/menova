@@ -29,6 +29,8 @@ class MenuRepository {
       definitions: loadBundledDefinitions(
         placementStrategies: placementStrategies.keys.toSet(),
         animationSteps: animationStepKeys,
+        enterProfiles: enterProfiles.keys.toSet(),
+        exitProfiles: exitProfiles.keys.toSet(),
       ).definitions,
       contents: parse(results[0], CategoryContent.fromJson),
       products: parse(results[1], Product.fromJson),

@@ -18,6 +18,8 @@ List<DefinitionIssue> validateDefinition(
   CategoryDefinition d, {
   Set<String>? placementStrategies,
   Set<String>? animationSteps,
+  Set<String>? enterProfiles,
+  Set<String>? exitProfiles,
   Set<String>? assetIds,
   Set<String>? ingredientIds,
 }) {
@@ -71,6 +73,17 @@ List<DefinitionIssue> validateDefinition(
   for (final id in d.layerOverrides.keys) {
     if (!allowed.contains(id)) {
       issue('layerOverrides.$id', 'ingredient is not allowed');
+    }
+  }
+
+  for (final e in d.ingredientMotion.entries) {
+    final path = 'ingredientMotion.${e.key}';
+    if (!allowed.contains(e.key)) issue(path, 'ingredient is not allowed');
+    if (enterProfiles != null && !enterProfiles.contains(e.value.enter)) {
+      issue('$path.enter', 'unregistered "${e.value.enter}"');
+    }
+    if (exitProfiles != null && !exitProfiles.contains(e.value.exit)) {
+      issue('$path.exit', 'unregistered "${e.value.exit}"');
     }
   }
 

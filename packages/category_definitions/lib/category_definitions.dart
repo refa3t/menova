@@ -17,6 +17,8 @@ export 'src/validator.dart';
 DefinitionLoadResult loadBundledDefinitions({
   Set<String>? placementStrategies,
   Set<String>? animationSteps,
+  Set<String>? enterProfiles,
+  Set<String>? exitProfiles,
 }) {
   final valid = <String, CategoryDefinition>{};
   final rejected = <String, String>{};
@@ -29,6 +31,8 @@ DefinitionLoadResult loadBundledDefinitions({
         d,
         placementStrategies: placementStrategies,
         animationSteps: animationSteps,
+        enterProfiles: enterProfiles,
+        exitProfiles: exitProfiles,
       );
       if (issues.isEmpty) {
         valid[d.id] = d;

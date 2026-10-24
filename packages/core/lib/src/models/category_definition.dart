@@ -16,6 +16,7 @@ class CategoryDefinition {
     required this.animation,
     required this.assetSpecs,
     this.layerOverrides = const {},
+    this.ingredientMotion = const {},
   });
 
   final String id;
@@ -37,6 +38,10 @@ class CategoryDefinition {
   /// Per-ingredient layer order overriding the asset default (definition wins).
   final Map<String, int> layerOverrides;
 
+  /// Enter/exit motion profile per ingredient (ANIMATIONS.md 4). Ingredients
+  /// without an entry use the builder engine's default profiles.
+  final Map<String, IngredientMotion> ingredientMotion;
+
   factory CategoryDefinition.fromJson(Json j) => CategoryDefinition(
     id: req(j, 'id'),
     definitionVersion: req(j, 'definitionVersion'),
@@ -50,6 +55,11 @@ class CategoryDefinition {
     animation: reqList(j, 'animation', StepSpec.fromJson),
     assetSpecs: mapOf(j, 'assetSpecs', (v) => AssetSpec.fromJson(v as Json)),
     layerOverrides: mapOf(j, 'layerOverrides', toInt),
+    ingredientMotion: mapOf(
+      j,
+      'ingredientMotion',
+      (v) => IngredientMotion.fromJson(v as Json),
+    ),
   );
 
   Json toJson() => {
@@ -65,6 +75,9 @@ class CategoryDefinition {
     'animation': [for (final s in animation) s.toJson()],
     'assetSpecs': {for (final e in assetSpecs.entries) e.key: e.value.toJson()},
     'layerOverrides': layerOverrides,
+    'ingredientMotion': {
+      for (final e in ingredientMotion.entries) e.key: e.value.toJson(),
+    },
   };
 
   @override
@@ -81,7 +94,8 @@ class CategoryDefinition {
       listEq(other.optionGroups, optionGroups) &&
       listEq(other.animation, animation) &&
       mapEq(other.assetSpecs, assetSpecs) &&
-      mapEq(other.layerOverrides, layerOverrides);
+      mapEq(other.layerOverrides, layerOverrides) &&
+      mapEq(other.ingredientMotion, ingredientMotion);
 
   @override
   int get hashCode => Object.hash(
@@ -97,6 +111,7 @@ class CategoryDefinition {
     Object.hashAll(animation),
     mapHash(assetSpecs),
     mapHash(layerOverrides),
+    mapHash(ingredientMotion),
   );
 }
 
@@ -345,4 +360,25 @@ class AssetSpec {
   @override
   int get hashCode =>
       Object.hash(Object.hashAll(formats), maxBytes, transparent);
+}
+
+/// Which registered motion profiles an ingredient uses when it is added or
+/// removed. The profiles themselves are builder engine capabilities.
+class IngredientMotion {
+  const IngredientMotion({required this.enter, required this.exit});
+
+  final String enter;
+  final String exit;
+
+  factory IngredientMotion.fromJson(Json j) =>
+      IngredientMotion(enter: req(j, 'enter'), exit: req(j, 'exit'));
+
+  Json toJson() => {'enter': enter, 'exit': exit};
+
+  @override
+  bool operator ==(Object other) =>
+      other is IngredientMotion && other.enter == enter && other.exit == exit;
+
+  @override
+  int get hashCode => Object.hash(enter, exit);
 }

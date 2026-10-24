@@ -20,6 +20,8 @@ void main() {
       def,
       placementStrategies: placementStrategies.keys.toSet(),
       animationSteps: animationStepKeys,
+      enterProfiles: enterProfiles.keys.toSet(),
+      exitProfiles: exitProfiles.keys.toSet(),
       assetIds: {for (final f in manifest.keys) f.split('.').first},
       ingredientIds: {
         for (final i in ingredients['ingredients'] as List) i['id'] as String,
@@ -30,6 +32,8 @@ void main() {
       loadBundledDefinitions(
         placementStrategies: placementStrategies.keys.toSet(),
         animationSteps: animationStepKeys,
+        enterProfiles: enterProfiles.keys.toSet(),
+        exitProfiles: exitProfiles.keys.toSet(),
       ).rejected,
       isEmpty,
     );
