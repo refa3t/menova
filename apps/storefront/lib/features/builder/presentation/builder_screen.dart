@@ -37,14 +37,43 @@ class BuilderScreen extends ConsumerWidget {
   }
 }
 
-class _BuilderBody extends ConsumerWidget {
+class _BuilderBody extends ConsumerStatefulWidget {
   const _BuilderBody({required this.menu, required this.productId});
 
   final Menu menu;
   final String productId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_BuilderBody> createState() => _BuilderBodyState();
+}
+
+class _BuilderBodyState extends ConsumerState<_BuilderBody> {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Precache every asset of the category when the product opens (5.6), so
+    // added ingredients appear without a loading gap.
+    final def = ref.read(builderProvider(widget.productId)).definition;
+    final urls = <String>{
+      for (final id in def.allowedIngredientIds)
+        if (widget.menu.ingredients[id] case final i?)
+          if (widget.menu.assets[i.assetId] case final a?) ...[
+            a.secureUrl,
+            ...a.variants,
+          ],
+      for (final a in widget.menu.assets.values)
+        if (a.kind == 'base' && a.allowedCategoryIds.contains(def.id))
+          a.secureUrl,
+    };
+    for (final url in urls) {
+      precacheImage(NetworkImage(url), context, onError: (_, _) {});
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final menu = widget.menu;
+    final productId = widget.productId;
     final state = ref.watch(builderProvider(productId));
     final controller = ref.read(builderProvider(productId).notifier);
     final def = state.definition;

@@ -68,61 +68,66 @@ class _BuilderCanvasState extends State<BuilderCanvas> {
                 0.14)
             .toDouble();
 
-    return AspectRatio(
-      aspectRatio: 1,
-      child: AnimatedScale(
-        scale: widget.scale,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-        child: LayoutBuilder(
-          builder: (context, box) {
-            final side = box.maxWidth;
-            final half = side / 2;
-            return Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Positioned.fill(
-                  child: Image.network(
-                    widget.baseImageUrl,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                for (final layer in layers)
-                  for (
-                    var unit = 0;
-                    unit < (_shownUnits[layer.ingredientId] ?? 0);
-                    unit++
-                  )
-                    for (final p in widget.strategy.place(
-                      ingredientId: layer.ingredientId,
-                      unit: unit,
-                      variantCount: layer.imageUrls.length,
-                      params: widget.placementParams,
-                    ))
-                      Positioned(
-                        key: ValueKey('${layer.ingredientId}#$unit#${p.dx}'),
-                        left:
-                            half +
-                            p.dx * half -
-                            side * pieceSizeOf(layer.ingredientId) / 2,
-                        top:
-                            half +
-                            p.dy * half -
-                            side * pieceSizeOf(layer.ingredientId) / 2,
-                        width: side * pieceSizeOf(layer.ingredientId),
-                        height: side * pieceSizeOf(layer.ingredientId),
-                        child: _Piece(
-                          url: layer.imageUrls[p.variant],
-                          rotation: p.rotation,
-                          scale: p.scale,
-                          visible: unit < layer.qty,
-                          animateIn:
-                              unit >= (_initialQty[layer.ingredientId] ?? 0),
-                        ),
+    // Isolates canvas repaints from the surrounding controls (P1-B06).
+    return RepaintBoundary(
+      child: AspectRatio(
+        aspectRatio: 1,
+        child: AnimatedScale(
+          scale: widget.scale,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+          child: LayoutBuilder(
+            builder: (context, box) {
+              final side = box.maxWidth;
+              final half = side / 2;
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned.fill(
+                    child: RepaintBoundary(
+                      child: Image.network(
+                        widget.baseImageUrl,
+                        fit: BoxFit.contain,
                       ),
-              ],
-            );
-          },
+                    ),
+                  ),
+                  for (final layer in layers)
+                    for (
+                      var unit = 0;
+                      unit < (_shownUnits[layer.ingredientId] ?? 0);
+                      unit++
+                    )
+                      for (final p in widget.strategy.place(
+                        ingredientId: layer.ingredientId,
+                        unit: unit,
+                        variantCount: layer.imageUrls.length,
+                        params: widget.placementParams,
+                      ))
+                        Positioned(
+                          key: ValueKey('${layer.ingredientId}#$unit#${p.dx}'),
+                          left:
+                              half +
+                              p.dx * half -
+                              side * pieceSizeOf(layer.ingredientId) / 2,
+                          top:
+                              half +
+                              p.dy * half -
+                              side * pieceSizeOf(layer.ingredientId) / 2,
+                          width: side * pieceSizeOf(layer.ingredientId),
+                          height: side * pieceSizeOf(layer.ingredientId),
+                          child: _Piece(
+                            url: layer.imageUrls[p.variant],
+                            rotation: p.rotation,
+                            scale: p.scale,
+                            visible: unit < layer.qty,
+                            animateIn:
+                                unit >= (_initialQty[layer.ingredientId] ?? 0),
+                          ),
+                        ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
