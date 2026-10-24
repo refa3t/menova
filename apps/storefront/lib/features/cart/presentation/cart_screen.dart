@@ -16,13 +16,13 @@ class CartScreen extends ConsumerWidget {
     final cart = ref.watch(cartProvider);
     final menu = ref.watch(menuProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.cart)),
+      appBar: AppBar(title: Text(AppStrings.cart)),
       body: menu.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => const Center(child: Text(AppStrings.menuLoadError)),
+        error: (_, _) => Center(child: Text(AppStrings.menuLoadError)),
         data: (menu) {
           if (cart.lines.isEmpty) {
-            return const Center(child: Text(AppStrings.cartEmpty));
+            return Center(child: Text(AppStrings.cartEmpty));
           }
           final views = [
             for (final l in cart.lines) CartLineView.resolve(l, menu),
@@ -61,7 +61,7 @@ class CartScreen extends ConsumerWidget {
                     children: [
                       Row(
                         children: [
-                          const Text(AppStrings.subtotal),
+                          Text(AppStrings.subtotal),
                           const Spacer(),
                           Text(
                             AppStrings.price(subtotal),
@@ -70,7 +70,7 @@ class CartScreen extends ConsumerWidget {
                         ],
                       ),
                       if (!canCheckout)
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.only(top: 6),
                           child: Text(AppStrings.cartHasUnavailable),
                         ),
@@ -82,7 +82,7 @@ class CartScreen extends ConsumerWidget {
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(52),
                         ),
-                        child: const Text(AppStrings.checkout),
+                        child: Text(AppStrings.checkout),
                       ),
                     ],
                   ),
@@ -121,7 +121,12 @@ class _LineTile extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                view.product?.name ?? AppStrings.productNotFound,
+                view.product == null
+                    ? AppStrings.productNotFound
+                    : AppStrings.localized(
+                        view.product!.name,
+                        view.product!.names,
+                      ),
                 style: theme.textTheme.titleMedium,
               ),
               if (details.isNotEmpty) Text(details),
@@ -167,14 +172,14 @@ class _LineTile extends ConsumerWidget {
                       style: TextButton.styleFrom(
                         minimumSize: const Size(44, 44),
                       ),
-                      child: const Text(AppStrings.edit),
+                      child: Text(AppStrings.edit),
                     ),
                   TextButton(
                     onPressed: () => cart.remove(line.lineId),
                     style: TextButton.styleFrom(
                       minimumSize: const Size(44, 44),
                     ),
-                    child: const Text(AppStrings.delete),
+                    child: Text(AppStrings.delete),
                   ),
                 ],
               ),

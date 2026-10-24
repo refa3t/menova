@@ -12,11 +12,14 @@ class AddBar extends StatelessWidget {
     super.key,
     required this.total,
     required this.onAdd,
-    this.label = AppStrings.add,
+    String? label,
     this.status = AddStatus.idle,
-  });
+  }) : _label = label;
 
-  final String label;
+  final String? _label;
+
+  /// Button label; defaults to "add" in the current language.
+  String get label => _label ?? AppStrings.add;
   final AddStatus status;
 
   /// Total in piasters, or null when the item cannot be priced.
@@ -39,7 +42,7 @@ class AddBar extends StatelessWidget {
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(52),
               ),
-              child: const Text(AppStrings.preparing),
+              child: Text(AppStrings.preparing),
             ),
             AddStatus.done => FilledButton(
               key: const ValueKey('done'),
@@ -49,7 +52,7 @@ class AddBar extends StatelessWidget {
                 disabledBackgroundColor: const Color(0xFF2E7D32),
                 disabledForegroundColor: Colors.white,
               ),
-              child: const Text('${AppStrings.addedToCart} ✓'),
+              child: Text('${AppStrings.addedToCart} ✓'),
             ),
             AddStatus.idle => FilledButton(
               key: const ValueKey('idle'),

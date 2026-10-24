@@ -22,6 +22,6 @@ void main() {
       find.text('${AppStrings.add} · ${AppStrings.price(11500)}'),
       findsOneWidget,
     );
-    expect(AppStrings.price(10750), '107.50 ج.م');
+    expect(AppStrings.price(10750), 'EGP 107.50');
   });
 }

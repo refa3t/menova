@@ -2,6 +2,10 @@
   "id": "pizza",
   "definitionVersion": 1,
   "name": "بيتزا",
+  "names": {
+    "en": "Pizza",
+    "ar": "بيتزا"
+  },
   "base": {
     "shape": "circle",
     "rawAssetId": "base_pizza_regular_raw"
@@ -113,16 +117,28 @@
     {
       "id": "s",
       "name": "صغير",
+      "names": {
+        "en": "Small",
+        "ar": "صغير"
+      },
       "scale": 0.82
     },
     {
       "id": "m",
       "name": "وسط",
+      "names": {
+        "en": "Medium",
+        "ar": "وسط"
+      },
       "scale": 0.91
     },
     {
       "id": "l",
       "name": "كبير",
+      "names": {
+        "en": "Large",
+        "ar": "كبير"
+      },
       "scale": 1.0
     }
   ],
@@ -130,11 +146,19 @@
     {
       "id": "dough",
       "name": "العجينة",
+      "names": {
+        "en": "Dough",
+        "ar": "العجينة"
+      },
       "defaultChoiceId": "regular",
       "choices": [
         {
           "id": "regular",
-          "name": "عادية"
+          "name": "عادية",
+          "names": {
+            "en": "Regular",
+            "ar": "عادية"
+          }
         }
       ]
     }
@@ -175,6 +199,48 @@
         "shrinkTo": 0.18,
         "arcControlPct": 20,
         "rotateDeg": -12
+      }
+    }
+  ],
+  "productGroups": [
+    {
+      "id": "chicken",
+      "name": "بيتزا فراخ",
+      "names": {
+        "en": "Chicken pizza",
+        "ar": "بيتزا فراخ"
+      }
+    },
+    {
+      "id": "meat",
+      "name": "بيتزا لحوم",
+      "names": {
+        "en": "Meat pizza",
+        "ar": "بيتزا لحوم"
+      }
+    },
+    {
+      "id": "cheese",
+      "name": "عشاق الجبن",
+      "names": {
+        "en": "Cheese lovers",
+        "ar": "عشاق الجبن"
+      }
+    },
+    {
+      "id": "veggie",
+      "name": "خضار",
+      "names": {
+        "en": "Veggie",
+        "ar": "خضار"
+      }
+    },
+    {
+      "id": "seafood",
+      "name": "سي فود",
+      "names": {
+        "en": "Seafood",
+        "ar": "سي فود"
       }
     }
   ],

@@ -1,14 +1,39 @@
 import 'package:core/core.dart';
 
-/// All user-facing Arabic strings live here (no scattered literals).
+/// The storefront's display language. English is the default; Arabic is
+/// available from the language toggle (owner decision, amends UX-01).
+enum AppLanguage {
+  en('en'),
+  ar('ar');
+
+  const AppLanguage(this.code);
+  final String code;
+
+  bool get isRtl => this == ar;
+}
+
+/// All user-facing strings live here, in both languages (no scattered
+/// literals). [current] is set by the app from the saved language choice.
 abstract final class AppStrings {
-  static const orderTitle = 'طلبك';
-  static const orderReference = 'رقم الطلب';
-  static const orderStatusLabel = 'حالة الطلب';
-  static const paymentStatusLabel = 'حالة الدفع';
-  static const orderCancelled = 'تم إلغاء الطلب';
-  static const orderNotFound = 'الطلب غير موجود';
-  static const orderLoadError = 'تعذّر تحميل الطلب';
+  static AppLanguage current = AppLanguage.en;
+
+  static String _t(String en, String ar) => current == AppLanguage.ar ? ar : en;
+
+  /// A data name in the current language: `names[code]`, else [fallback].
+  static String localized(String fallback, Map<String, String> names) =>
+      names[current.code] ?? fallback;
+
+  static String get languageToggle => _t('العربية', 'English');
+
+  static String get orderTitle => _t('Your order', 'طلبك');
+  static String get orderReference => _t('Order number', 'رقم الطلب');
+  static String get orderStatusLabel => _t('Order status', 'حالة الطلب');
+  static String get paymentStatusLabel => _t('Payment', 'حالة الدفع');
+  static String get orderCancelled =>
+      _t('This order was cancelled', 'تم إلغاء الطلب');
+  static String get orderNotFound => _t('Order not found', 'الطلب غير موجود');
+  static String get orderLoadError =>
+      _t('Could not load the order', 'تعذّر تحميل الطلب');
 
   /// Short human reference shown to the guest and the kitchen.
   static String shortReference(String id) => id.length <= 8
@@ -16,82 +41,125 @@ abstract final class AppStrings {
       : id.substring(id.length - 8).toUpperCase();
 
   static String orderStatus(OrderStatus s) => switch (s) {
-    OrderStatus.newOrder => 'تم استلام الطلب',
-    OrderStatus.accepted => 'تم قبول الطلب',
-    OrderStatus.preparing => 'جارٍ التحضير',
-    OrderStatus.ready => 'جاهز',
-    OrderStatus.outForDelivery => 'في الطريق إليك',
-    OrderStatus.completed => 'تم التسليم',
-    OrderStatus.cancelled => 'ملغي',
+    OrderStatus.newOrder => _t('Order received', 'تم استلام الطلب'),
+    OrderStatus.accepted => _t('Accepted', 'تم قبول الطلب'),
+    OrderStatus.preparing => _t('Preparing', 'جارٍ التحضير'),
+    OrderStatus.ready => _t('Ready', 'جاهز'),
+    OrderStatus.outForDelivery => _t('On the way', 'في الطريق إليك'),
+    OrderStatus.completed => _t('Delivered', 'تم التسليم'),
+    OrderStatus.cancelled => _t('Cancelled', 'ملغي'),
   };
 
   static String paymentStatus(PaymentStatus s) => switch (s) {
-    PaymentStatus.unpaid => 'لم يُدفع',
-    PaymentStatus.paid => 'مدفوع',
-    PaymentStatus.refunded => 'مسترد',
+    PaymentStatus.unpaid => _t('Unpaid', 'لم يُدفع'),
+    PaymentStatus.paid => _t('Paid', 'مدفوع'),
+    PaymentStatus.refunded => _t('Refunded', 'مسترد'),
   };
 
-  static const appTitle = 'منوفا';
-  static const menuEmpty = 'لا توجد أقسام متاحة حالياً';
-  static const categoryEmpty = 'لا توجد منتجات في هذا القسم حالياً';
-  static const menuLoadError = 'تعذّر تحميل المنيو';
-  static const retry = 'إعادة المحاولة';
-  static const productNotFound = 'المنتج غير متاح';
-  static const maxQtyReached = 'وصلت للحد الأقصى لهذا المكوّن';
-  static const reset = 'إعادة الضبط';
-  static const name = 'الاسم';
-  static const fulfillment = 'طريقة الاستلام';
-  static const pickup = 'استلام من المطعم';
-  static const delivery = 'توصيل';
-  static const address = 'العنوان';
-  static const orderNotes = 'ملاحظات على الطلب';
-  static const paymentCash = 'الدفع نقداً عند الاستلام';
-  static const confirmOrder = 'تأكيد الطلب';
-  static const errorName = 'اكتب اسمك';
-  static const errorPhone = 'اكتب رقم موبايل مصري صحيح (11 رقم)';
-  static const errorAddress = 'اكتب عنوان التوصيل';
-  static const sendingOrder = 'جارٍ إرسال الطلب...';
-  static const checkingOrder = 'جارٍ التأكد من الطلب...';
-  static const pendingSend =
-      'بانتظار الإرسال: لم يتأكد وصول الطلب. أعد المحاولة، ولن يتكرر الطلب';
-  static const retrySend = 'إعادة المحاولة';
-  static const orderConflict = 'تعذّر تأكيد الطلب، حاول مرة أخرى';
-  static const pricesChanged = 'تغيّرت بعض الأسعار';
-  static const pricesChangedBody =
-      'تغيّرت أسعار أو توفر بعض البنود منذ فتحت السلة:';
-  static const noLongerAvailable = 'لم يعد متاحاً';
-  static const acceptNewPrices = 'موافق على الأسعار الجديدة';
-  static const backToCart = 'العودة للسلة';
-  static const update = 'تحديث';
-  static const addedToCart = 'تمت الإضافة';
-  static const preparing = 'جارٍ التحضير...';
-  static const viewCart = 'عرض السلة';
-  static const cart = 'السلة';
-  static const cartEmpty = 'السلة فارغة';
-  static const subtotal = 'الإجمالي';
-  static const checkout = 'إتمام الطلب';
-  static const without = 'بدون';
-  static const edit = 'تعديل';
-  static const delete = 'حذف';
-  static const lineUnavailable = 'هذا البند لم يعد متاحاً، عدّله أو احذفه';
-  static const cartHasUnavailable = 'في السلة بنود غير متاحة';
-  static const ingredients = 'المكونات';
-  static const quantity = 'الكمية';
-  static const notes = 'ملاحظات';
-  static const notesHint = 'مثال: بدون بصل زيادة، تسوية زيادة';
-  static const notRemovable = 'هذا المكوّن أساسي ولا يمكن إزالته';
-  static const unavailable = 'هذا المكوّن غير متوفر حالياً';
-  static const notAllowed = 'هذا الاختيار غير متاح لهذا المنتج';
-  static const add = 'إضافة';
-  static const remove = 'إزالة';
-  static const about = 'عن التطبيق';
-  static const developerInfo = 'معلومات المطور';
-  static const developerName = 'المطور';
-  static const email = 'البريد الإلكتروني';
-  static const phone = 'الهاتف';
-  static const whatsapp = 'واتساب';
-  static const credit =
-      'تطوير ${DeveloperInfo.nameAr} · ${DeveloperInfo.phone}';
+  static String get appTitle => _t('Menova', 'منوفا');
+  static String get menuEmpty =>
+      _t('No categories available right now', 'لا توجد أقسام متاحة حالياً');
+  static String get categoryEmpty => _t(
+    'No products in this category right now',
+    'لا توجد منتجات في هذا القسم حالياً',
+  );
+  static String get allGroups => _t('All', 'الكل');
+  static String get menuLoadError =>
+      _t('Could not load the menu', 'تعذّر تحميل المنيو');
+  static String get retry => _t('Try again', 'إعادة المحاولة');
+  static String get productNotFound =>
+      _t('This product is not available', 'المنتج غير متاح');
+  static String get maxQtyReached =>
+      _t('Maximum reached for this topping', 'وصلت للحد الأقصى لهذا المكوّن');
+  static String get reset => _t('Reset', 'إعادة الضبط');
+  static String get name => _t('Name', 'الاسم');
+  static String get fulfillment => _t('How do you want it?', 'طريقة الاستلام');
+  static String get pickup => _t('Pick up', 'استلام من المطعم');
+  static String get delivery => _t('Delivery', 'توصيل');
+  static String get address => _t('Address', 'العنوان');
+  static String get orderNotes => _t('Order notes', 'ملاحظات على الطلب');
+  static String get paymentCash =>
+      _t('Cash on delivery or pickup', 'الدفع نقداً عند الاستلام');
+  static String get confirmOrder => _t('Place order', 'تأكيد الطلب');
+  static String get errorName => _t('Enter your name', 'اكتب اسمك');
+  static String get errorPhone => _t(
+    'Enter a valid Egyptian mobile number (11 digits)',
+    'اكتب رقم موبايل مصري صحيح (11 رقم)',
+  );
+  static String get errorAddress =>
+      _t('Enter the delivery address', 'اكتب عنوان التوصيل');
+  static String get sendingOrder =>
+      _t('Sending your order...', 'جارٍ إرسال الطلب...');
+  static String get checkingOrder =>
+      _t('Checking your order...', 'جارٍ التأكد من الطلب...');
+  static String get pendingSend => _t(
+    'Waiting to send: we could not confirm your order. Try again; it will '
+        'not be duplicated.',
+    'بانتظار الإرسال: لم يتأكد وصول الطلب. أعد المحاولة، ولن يتكرر الطلب',
+  );
+  static String get retrySend => _t('Try again', 'إعادة المحاولة');
+  static String get orderConflict => _t(
+    'We could not confirm the order, please try again',
+    'تعذّر تأكيد الطلب، حاول مرة أخرى',
+  );
+  static String get pricesChanged =>
+      _t('Some prices changed', 'تغيّرت بعض الأسعار');
+  static String get pricesChangedBody => _t(
+    'The price or availability of some items changed since you opened '
+        'the cart:',
+    'تغيّرت أسعار أو توفر بعض البنود منذ فتحت السلة:',
+  );
+  static String get noLongerAvailable =>
+      _t('no longer available', 'لم يعد متاحاً');
+  static String get acceptNewPrices =>
+      _t('Accept the new prices', 'موافق على الأسعار الجديدة');
+  static String get backToCart => _t('Back to cart', 'العودة للسلة');
+  static String get update => _t('Update', 'تحديث');
+  static String get addedToCart => _t('Added', 'تمت الإضافة');
+  static String get preparing => _t('Preparing...', 'جارٍ التحضير...');
+  static String get viewCart => _t('View cart', 'عرض السلة');
+  static String get cart => _t('Cart', 'السلة');
+  static String get cartEmpty => _t('Your cart is empty', 'السلة فارغة');
+  static String get subtotal => _t('Total', 'الإجمالي');
+  static String get checkout => _t('Checkout', 'إتمام الطلب');
+  static String get without => _t('No', 'بدون');
+  static String get edit => _t('Edit', 'تعديل');
+  static String get delete => _t('Remove', 'حذف');
+  static String get lineUnavailable => _t(
+    'This item is no longer available. Edit or remove it.',
+    'هذا البند لم يعد متاحاً، عدّله أو احذفه',
+  );
+  static String get cartHasUnavailable =>
+      _t('Your cart has unavailable items', 'في السلة بنود غير متاحة');
+  static String get ingredients => _t('Toppings', 'المكونات');
+  static String get quantity => _t('Quantity', 'الكمية');
+  static String get notes => _t('Notes', 'ملاحظات');
+  static String get notesHint =>
+      _t('e.g. extra crispy, light sauce', 'مثال: بدون بصل زيادة، تسوية زيادة');
+  static String get notRemovable => _t(
+    'This topping is part of the recipe and cannot be removed',
+    'هذا المكوّن أساسي ولا يمكن إزالته',
+  );
+  static String get unavailable => _t(
+    'This topping is not available right now',
+    'هذا المكوّن غير متوفر حالياً',
+  );
+  static String get notAllowed => _t(
+    'This choice is not available for this product',
+    'هذا الاختيار غير متاح لهذا المنتج',
+  );
+  static String get add => _t('Add', 'إضافة');
+  static String get remove => _t('Remove', 'إزالة');
+  static String get about => _t('About', 'عن التطبيق');
+  static String get developerInfo => _t('Developer', 'معلومات المطور');
+  static String get developerName => _t('Developer', 'المطور');
+  static String get email => _t('Email', 'البريد الإلكتروني');
+  static String get phone => _t('Phone', 'الهاتف');
+  static String get whatsapp => _t('WhatsApp', 'واتساب');
+  static String get credit => _t(
+    'Developed by ${DeveloperInfo.nameEn} · ${DeveloperInfo.phone}',
+    'تطوير ${DeveloperInfo.nameAr} · ${DeveloperInfo.phone}',
+  );
 
   /// Display-only formatting of an amount in piasters as EGP.
   static String price(int piasters) {
@@ -99,8 +167,9 @@ abstract final class AppStrings {
     final text = pounds == pounds.roundToDouble()
         ? pounds.toStringAsFixed(0)
         : pounds.toStringAsFixed(2);
-    return '$text ج.م';
+    return _t('EGP $text', '$text ج.م');
   }
 
-  static String priceFrom(int piasters) => 'يبدأ من ${price(piasters)}';
+  static String priceFrom(int piasters) =>
+      _t('From ${price(piasters)}', 'يبدأ من ${price(piasters)}');
 }

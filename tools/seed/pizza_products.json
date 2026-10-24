@@ -19,6 +19,10 @@
       "id": "pizza_margherita",
       "categoryId": "pizza",
       "name": "مارجريتا",
+      "names": {
+        "en": "Margherita",
+        "ar": "مارجريتا"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_margherita",
@@ -48,12 +52,17 @@
         "regular": 0
       },
       "displayOrder": 0,
+      "groupId": "cheese",
       "sauce": "tomato"
     },
     {
       "id": "pizza_marinara",
       "categoryId": "pizza",
       "name": "مارينارا",
+      "names": {
+        "en": "Marinara",
+        "ar": "مارينارا"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_marinara",
@@ -83,12 +92,17 @@
         "regular": 0
       },
       "displayOrder": 1,
+      "groupId": "veggie",
       "sauce": "tomato"
     },
     {
       "id": "pizza_cheese",
       "categoryId": "pizza",
       "name": "جبنة",
+      "names": {
+        "en": "Cheese",
+        "ar": "جبنة"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_cheese",
@@ -111,12 +125,17 @@
         "regular": 0
       },
       "displayOrder": 2,
+      "groupId": "cheese",
       "sauce": "tomato"
     },
     {
       "id": "pizza_pepperoni",
       "categoryId": "pizza",
       "name": "بيبروني",
+      "names": {
+        "en": "Pepperoni",
+        "ar": "بيبروني"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_pepperoni",
@@ -146,12 +165,17 @@
         "regular": 0
       },
       "displayOrder": 3,
+      "groupId": "meat",
       "sauce": "tomato"
     },
     {
       "id": "pizza_quattro_formaggi",
       "categoryId": "pizza",
       "name": "أربعة أجبان",
+      "names": {
+        "en": "Quattro Formaggi",
+        "ar": "أربعة أجبان"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_quattro_formaggi",
@@ -195,12 +219,17 @@
         "regular": 0
       },
       "displayOrder": 4,
+      "groupId": "cheese",
       "sauce": "tomato"
     },
     {
       "id": "pizza_egyptian_mixed_cheese",
       "categoryId": "pizza",
       "name": "مشكل جبن",
+      "names": {
+        "en": "Mixed Cheese",
+        "ar": "مشكل جبن"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_egyptian_mixed_cheese",
@@ -244,12 +273,17 @@
         "regular": 0
       },
       "displayOrder": 5,
+      "groupId": "cheese",
       "sauce": "tomato"
     },
     {
       "id": "pizza_capricciosa",
       "categoryId": "pizza",
       "name": "كابريتشوزا",
+      "names": {
+        "en": "Capricciosa",
+        "ar": "كابريتشوزا"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_capricciosa",
@@ -300,12 +334,17 @@
         "regular": 0
       },
       "displayOrder": 6,
+      "groupId": "meat",
       "sauce": "tomato"
     },
     {
       "id": "pizza_diavola",
       "categoryId": "pizza",
       "name": "ديافولا",
+      "names": {
+        "en": "Diavola",
+        "ar": "ديافولا"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_diavola",
@@ -342,12 +381,17 @@
         "regular": 0
       },
       "displayOrder": 7,
+      "groupId": "meat",
       "sauce": "tomato"
     },
     {
       "id": "pizza_ham_mushroom",
       "categoryId": "pizza",
       "name": "هام ومشروم",
+      "names": {
+        "en": "Ham & Mushroom",
+        "ar": "هام ومشروم"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_ham_mushroom",
@@ -384,12 +428,17 @@
         "regular": 0
       },
       "displayOrder": 8,
+      "groupId": "meat",
       "sauce": "tomato"
     },
     {
       "id": "pizza_napoletana",
       "categoryId": "pizza",
       "name": "نابوليتانا",
+      "names": {
+        "en": "Napoletana",
+        "ar": "نابوليتانا"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_napoletana",
@@ -440,12 +489,17 @@
         "regular": 0
       },
       "displayOrder": 9,
+      "groupId": "seafood",
       "sauce": "tomato"
     },
     {
       "id": "pizza_veggie",
       "categoryId": "pizza",
       "name": "خضار",
+      "names": {
+        "en": "Veggie",
+        "ar": "خضار"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_veggie",
@@ -517,12 +571,17 @@
         "regular": 0
       },
       "displayOrder": 10,
+      "groupId": "veggie",
       "sauce": "tomato"
     },
     {
       "id": "pizza_hawaiian",
       "categoryId": "pizza",
       "name": "هاواي",
+      "names": {
+        "en": "Hawaiian",
+        "ar": "هاواي"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_hawaiian",
@@ -559,12 +618,17 @@
         "regular": 0
       },
       "displayOrder": 11,
+      "groupId": "meat",
       "sauce": "tomato"
     },
     {
       "id": "pizza_bbq_chicken",
       "categoryId": "pizza",
       "name": "فراخ باربكيو",
+      "names": {
+        "en": "BBQ Chicken",
+        "ar": "فراخ باربكيو"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_bbq_chicken",
@@ -601,12 +665,17 @@
         "regular": 0
       },
       "displayOrder": 12,
+      "groupId": "chicken",
       "sauce": "bbq"
     },
     {
       "id": "pizza_chicken_ranch",
       "categoryId": "pizza",
       "name": "فراخ رانش",
+      "names": {
+        "en": "Chicken Ranch",
+        "ar": "فراخ رانش"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_chicken_ranch",
@@ -650,12 +719,17 @@
         "regular": 0
       },
       "displayOrder": 13,
+      "groupId": "chicken",
       "sauce": "ranch"
     },
     {
       "id": "pizza_chicken",
       "categoryId": "pizza",
       "name": "فراخ",
+      "names": {
+        "en": "Chicken",
+        "ar": "فراخ"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_chicken",
@@ -706,12 +780,17 @@
         "regular": 0
       },
       "displayOrder": 14,
+      "groupId": "chicken",
       "sauce": "tomato"
     },
     {
       "id": "pizza_chicken_fajita",
       "categoryId": "pizza",
       "name": "فراخ فاهيتا",
+      "names": {
+        "en": "Chicken Fajita",
+        "ar": "فراخ فاهيتا"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_chicken_fajita",
@@ -762,12 +841,17 @@
         "regular": 0
       },
       "displayOrder": 15,
+      "groupId": "chicken",
       "sauce": "tomato"
     },
     {
       "id": "pizza_supreme",
       "categoryId": "pizza",
       "name": "سوبريم",
+      "names": {
+        "en": "Supreme",
+        "ar": "سوبريم"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_supreme",
@@ -832,12 +916,17 @@
         "regular": 0
       },
       "displayOrder": 16,
+      "groupId": "meat",
       "sauce": "tomato"
     },
     {
       "id": "pizza_meat_lovers",
       "categoryId": "pizza",
       "name": "ميت لافرز",
+      "names": {
+        "en": "Meat Lovers",
+        "ar": "ميت لافرز"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_meat_lovers",
@@ -895,12 +984,17 @@
         "regular": 0
       },
       "displayOrder": 17,
+      "groupId": "meat",
       "sauce": "tomato"
     },
     {
       "id": "pizza_sausage",
       "categoryId": "pizza",
       "name": "سوسيس",
+      "names": {
+        "en": "Sausage",
+        "ar": "سوسيس"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_sausage",
@@ -930,12 +1024,17 @@
         "regular": 0
       },
       "displayOrder": 18,
+      "groupId": "meat",
       "sauce": "tomato"
     },
     {
       "id": "pizza_mushroom",
       "categoryId": "pizza",
       "name": "مشروم",
+      "names": {
+        "en": "Mushroom",
+        "ar": "مشروم"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_mushroom",
@@ -972,12 +1071,17 @@
         "regular": 0
       },
       "displayOrder": 19,
+      "groupId": "veggie",
       "sauce": "tomato"
     },
     {
       "id": "pizza_tuna",
       "categoryId": "pizza",
       "name": "تونة",
+      "names": {
+        "en": "Tuna",
+        "ar": "تونة"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_tuna",
@@ -1028,12 +1132,17 @@
         "regular": 0
       },
       "displayOrder": 20,
+      "groupId": "seafood",
       "sauce": "tomato"
     },
     {
       "id": "pizza_seafood",
       "categoryId": "pizza",
       "name": "مأكولات بحرية",
+      "names": {
+        "en": "Seafood",
+        "ar": "مأكولات بحرية"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_seafood",
@@ -1084,12 +1193,17 @@
         "regular": 0
       },
       "displayOrder": 21,
+      "groupId": "seafood",
       "sauce": "tomato"
     },
     {
       "id": "pizza_mexican",
       "categoryId": "pizza",
       "name": "مكسيكانا",
+      "names": {
+        "en": "Mexicana",
+        "ar": "مكسيكانا"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_mexican",
@@ -1147,12 +1261,17 @@
         "regular": 0
       },
       "displayOrder": 22,
+      "groupId": "meat",
       "sauce": "hot"
     },
     {
       "id": "pizza_greek",
       "categoryId": "pizza",
       "name": "يوناني",
+      "names": {
+        "en": "Greek",
+        "ar": "يوناني"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_greek",
@@ -1210,12 +1329,17 @@
         "regular": 0
       },
       "displayOrder": 23,
+      "groupId": "veggie",
       "sauce": "tomato"
     },
     {
       "id": "pizza_pesto_chicken",
       "categoryId": "pizza",
       "name": "فراخ بيستو",
+      "names": {
+        "en": "Pesto Chicken",
+        "ar": "فراخ بيستو"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_pesto_chicken",
@@ -1259,12 +1383,17 @@
         "regular": 0
       },
       "displayOrder": 24,
+      "groupId": "chicken",
       "sauce": "pesto"
     },
     {
       "id": "pizza_basterma",
       "categoryId": "pizza",
       "name": "بسطرمة",
+      "names": {
+        "en": "Basterma",
+        "ar": "بسطرمة"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_basterma",
@@ -1308,12 +1437,17 @@
         "regular": 0
       },
       "displayOrder": 25,
+      "groupId": "meat",
       "sauce": "tomato"
     },
     {
       "id": "pizza_mortadella",
       "categoryId": "pizza",
       "name": "مرتديلا",
+      "names": {
+        "en": "Mortadella",
+        "ar": "مرتديلا"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_mortadella",
@@ -1350,6 +1484,7 @@
         "regular": 0
       },
       "displayOrder": 26,
+      "groupId": "meat",
       "sauce": "tomato"
     }
   ]

@@ -14,7 +14,7 @@ class AboutScreen extends StatelessWidget {
       subtitle: SelectableText(value, textDirection: TextDirection.ltr),
     );
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.about)),
+      appBar: AppBar(title: Text(AppStrings.about)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

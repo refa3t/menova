@@ -98,6 +98,13 @@ List<DefinitionIssue> validateDefinition(
     }
   }
 
+  final productGroupIds = <String>{};
+  for (final (i, g) in d.productGroups.indexed) {
+    if (!productGroupIds.add(g.id)) {
+      issue('productGroups[$i].id', 'duplicate "${g.id}"');
+    }
+  }
+
   // Limits.
   if (d.constraints.maxQty < 1) issue('constraints.maxQty', 'must be >= 1');
   final sizeIds = <String>{};

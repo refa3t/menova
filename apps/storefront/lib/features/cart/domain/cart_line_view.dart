@@ -1,6 +1,8 @@
 import 'package:core/core.dart';
 import 'package:pricing/pricing.dart';
 
+import '../../../core/strings/app_strings.dart';
+
 import '../../menu/domain/menu.dart';
 import 'cart.dart';
 
@@ -43,7 +45,12 @@ class CartLineView {
       for (final p in c.products) {
         if (p.id != s.productId) continue;
         final def = c.definition;
-        String name(String id) => menu.ingredients[id]?.name ?? id;
+        String name(String id) => menu.ingredients[id] == null
+            ? id
+            : AppStrings.localized(
+                menu.ingredients[id]!.name,
+                menu.ingredients[id]!.names,
+              );
         PriceBreakdown? price;
         try {
           price = priceItem(
@@ -65,14 +72,17 @@ class CartLineView {
           available: price != null && !unavailable,
           category: c,
           product: p,
-          sizeName: def.sizes.where((x) => x.id == s.sizeId).firstOrNull?.name,
+          sizeName: [
+            for (final x in def.sizes)
+              if (x.id == s.sizeId) AppStrings.localized(x.name, x.names),
+          ].firstOrNull,
           optionNames: [
             for (final g in def.optionGroups)
               // Show only real choices, not the default of a 1-choice group.
               if (g.choices.length > 1)
                 if (g.choices.where((c) => c.id == s.options[g.id]).firstOrNull
                     case final choice?)
-                  choice.name,
+                  AppStrings.localized(choice.name, choice.names),
           ],
           extras: [for (final e in extras.entries) (name(e.key), e.value)],
           removed: [for (final id in s.removed(p.defaults)) name(id)],

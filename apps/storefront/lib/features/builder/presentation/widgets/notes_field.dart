@@ -37,7 +37,7 @@ class _NotesFieldState extends State<NotesField> {
       maxLength: 200,
       minLines: 1,
       maxLines: 3,
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         labelText: AppStrings.notes,
         hintText: AppStrings.notesHint,
         border: OutlineInputBorder(),

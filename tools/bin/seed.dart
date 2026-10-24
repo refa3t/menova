@@ -140,6 +140,10 @@ Future<void> main(List<String> args) async {
         errors.add('${product.id}: unknown size $sizeId');
       }
     }
+    final group = product.groupId;
+    if (group != null && !definition.productGroups.any((g) => g.id == group)) {
+      errors.add('${product.id}: unknown group $group');
+    }
     if (!manifest.containsKey('${product.imageAssetId}.webp')) {
       missingFinal.add(product.id);
     }

@@ -7,6 +7,7 @@ class CategoryDefinition {
     required this.id,
     required this.definitionVersion,
     required this.name,
+    this.names = const {},
     required this.base,
     required this.allowedIngredientIds,
     required this.placement,
@@ -17,11 +18,16 @@ class CategoryDefinition {
     required this.assetSpecs,
     this.layerOverrides = const {},
     this.ingredientMotion = const {},
+    this.productGroups = const [],
   });
 
   final String id;
   final int definitionVersion;
   final String name;
+
+  /// Display names by language code ('en', 'ar'); [name] is the
+  /// fallback (and the name frozen into orders for the kitchen).
+  final Map<String, String> names;
   final BaseSpec base;
   final List<String> allowedIngredientIds;
   final PlacementSpec placement;
@@ -42,10 +48,15 @@ class CategoryDefinition {
   /// without an entry use the builder engine's default profiles.
   final Map<String, IngredientMotion> ingredientMotion;
 
+  /// Ordered groups the menu uses to organise this category's products
+  /// (e.g. chicken, meats). Empty means no grouping.
+  final List<ProductGroup> productGroups;
+
   factory CategoryDefinition.fromJson(Json j) => CategoryDefinition(
     id: req(j, 'id'),
     definitionVersion: req(j, 'definitionVersion'),
     name: req(j, 'name'),
+    names: mapOf(j, 'names', (v) => v as String),
     base: BaseSpec.fromJson(req(j, 'base')),
     allowedIngredientIds: strList(j, 'allowedIngredientIds'),
     placement: PlacementSpec.fromJson(req(j, 'placement')),
@@ -60,12 +71,16 @@ class CategoryDefinition {
       'ingredientMotion',
       (v) => IngredientMotion.fromJson(v as Json),
     ),
+    productGroups: j['productGroups'] == null
+        ? const []
+        : reqList(j, 'productGroups', ProductGroup.fromJson),
   );
 
   Json toJson() => {
     'id': id,
     'definitionVersion': definitionVersion,
     'name': name,
+    'names': names,
     'base': base.toJson(),
     'allowedIngredientIds': allowedIngredientIds,
     'placement': placement.toJson(),
@@ -78,6 +93,7 @@ class CategoryDefinition {
     'ingredientMotion': {
       for (final e in ingredientMotion.entries) e.key: e.value.toJson(),
     },
+    'productGroups': [for (final g in productGroups) g.toJson()],
   };
 
   @override
@@ -86,6 +102,7 @@ class CategoryDefinition {
       other.id == id &&
       other.definitionVersion == definitionVersion &&
       other.name == name &&
+      mapEq(other.names, names) &&
       other.base == base &&
       listEq(other.allowedIngredientIds, allowedIngredientIds) &&
       other.placement == placement &&
@@ -95,13 +112,15 @@ class CategoryDefinition {
       listEq(other.animation, animation) &&
       mapEq(other.assetSpecs, assetSpecs) &&
       mapEq(other.layerOverrides, layerOverrides) &&
-      mapEq(other.ingredientMotion, ingredientMotion);
+      mapEq(other.ingredientMotion, ingredientMotion) &&
+      listEq(other.productGroups, productGroups);
 
   @override
   int get hashCode => Object.hash(
     id,
     definitionVersion,
     name,
+    mapHash(names),
     base,
     Object.hashAll(allowedIngredientIds),
     placement,
@@ -112,6 +131,7 @@ class CategoryDefinition {
     mapHash(assetSpecs),
     mapHash(layerOverrides),
     mapHash(ingredientMotion),
+    Object.hashAll(productGroups),
   );
 }
 
@@ -197,10 +217,19 @@ class CustomizationConstraints {
 
 /// A size the category supports. Price deltas live on the product.
 class SizeOption {
-  const SizeOption({required this.id, required this.name, this.scale = 1});
+  const SizeOption({
+    required this.id,
+    required this.name,
+    this.names = const {},
+    this.scale = 1,
+  });
 
   final String id;
   final String name;
+
+  /// Display names by language code ('en', 'ar'); [name] is the
+  /// fallback (and the name frozen into orders for the kitchen).
+  final Map<String, String> names;
 
   /// Visual scale of the canvas for this size.
   final double scale;
@@ -208,20 +237,22 @@ class SizeOption {
   factory SizeOption.fromJson(Json j) => SizeOption(
     id: req(j, 'id'),
     name: req(j, 'name'),
+    names: mapOf(j, 'names', (v) => v as String),
     scale: toDouble(j['scale'] ?? 1),
   );
 
-  Json toJson() => {'id': id, 'name': name, 'scale': scale};
+  Json toJson() => {'id': id, 'name': name, 'names': names, 'scale': scale};
 
   @override
   bool operator ==(Object other) =>
       other is SizeOption &&
       other.id == id &&
       other.name == name &&
+      mapEq(other.names, names) &&
       other.scale == scale;
 
   @override
-  int get hashCode => Object.hash(id, name, scale);
+  int get hashCode => Object.hash(id, name, mapHash(names), scale);
 }
 
 /// Generic option group (dough is just one instance). Price deltas live on
@@ -230,18 +261,24 @@ class OptionGroup {
   const OptionGroup({
     required this.id,
     required this.name,
+    this.names = const {},
     required this.choices,
     required this.defaultChoiceId,
   });
 
   final String id;
   final String name;
+
+  /// Display names by language code ('en', 'ar'); [name] is the
+  /// fallback (and the name frozen into orders for the kitchen).
+  final Map<String, String> names;
   final List<OptionChoice> choices;
   final String defaultChoiceId;
 
   factory OptionGroup.fromJson(Json j) => OptionGroup(
     id: req(j, 'id'),
     name: req(j, 'name'),
+    names: mapOf(j, 'names', (v) => v as String),
     choices: reqList(j, 'choices', OptionChoice.fromJson),
     defaultChoiceId: req(j, 'defaultChoiceId'),
   );
@@ -249,6 +286,7 @@ class OptionGroup {
   Json toJson() => {
     'id': id,
     'name': name,
+    'names': names,
     'choices': [for (final c in choices) c.toJson()],
     'defaultChoiceId': defaultChoiceId,
   };
@@ -258,19 +296,34 @@ class OptionGroup {
       other is OptionGroup &&
       other.id == id &&
       other.name == name &&
+      mapEq(other.names, names) &&
       listEq(other.choices, choices) &&
       other.defaultChoiceId == defaultChoiceId;
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, Object.hashAll(choices), defaultChoiceId);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    mapHash(names),
+    Object.hashAll(choices),
+    defaultChoiceId,
+  );
 }
 
 class OptionChoice {
-  const OptionChoice({required this.id, required this.name, this.base});
+  const OptionChoice({
+    required this.id,
+    required this.name,
+    this.names = const {},
+    this.base,
+  });
 
   final String id;
   final String name;
+
+  /// Display names by language code ('en', 'ar'); [name] is the
+  /// fallback (and the name frozen into orders for the kitchen).
+  final Map<String, String> names;
 
   /// Replaces the category base when chosen (e.g. a different dough).
   final BaseSpec? base;
@@ -278,12 +331,14 @@ class OptionChoice {
   factory OptionChoice.fromJson(Json j) => OptionChoice(
     id: req(j, 'id'),
     name: req(j, 'name'),
+    names: mapOf(j, 'names', (v) => v as String),
     base: j['base'] == null ? null : BaseSpec.fromJson(j['base'] as Json),
   );
 
   Json toJson() => {
     'id': id,
     'name': name,
+    'names': names,
     if (base != null) 'base': base!.toJson(),
   };
 
@@ -292,10 +347,11 @@ class OptionChoice {
       other is OptionChoice &&
       other.id == id &&
       other.name == name &&
+      mapEq(other.names, names) &&
       other.base == base;
 
   @override
-  int get hashCode => Object.hash(id, name, base);
+  int get hashCode => Object.hash(id, name, mapHash(names), base);
 }
 
 /// One animation step: a registered step key with weight and parameters.
@@ -381,4 +437,38 @@ class IngredientMotion {
 
   @override
   int get hashCode => Object.hash(enter, exit);
+}
+
+/// A named group of products inside a category, in display order.
+class ProductGroup {
+  const ProductGroup({
+    required this.id,
+    required this.name,
+    this.names = const {},
+  });
+
+  final String id;
+  final String name;
+
+  /// Display names by language code ('en', 'ar'); [name] is the
+  /// fallback (and the name frozen into orders for the kitchen).
+  final Map<String, String> names;
+
+  factory ProductGroup.fromJson(Json j) => ProductGroup(
+    id: req(j, 'id'),
+    name: req(j, 'name'),
+    names: mapOf(j, 'names', (v) => v as String),
+  );
+
+  Json toJson() => {'id': id, 'name': name, 'names': names};
+
+  @override
+  bool operator ==(Object other) =>
+      other is ProductGroup &&
+      other.id == id &&
+      other.name == name &&
+      mapEq(other.names, names);
+
+  @override
+  int get hashCode => Object.hash(id, name, mapHash(names));
 }

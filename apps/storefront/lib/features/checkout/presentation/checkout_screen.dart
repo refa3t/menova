@@ -93,9 +93,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       case CheckoutConflict():
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(
-            const SnackBar(content: Text(AppStrings.orderConflict)),
-          );
+          ..showSnackBar(SnackBar(content: Text(AppStrings.orderConflict)));
         ref.read(checkoutProvider.notifier).dismiss();
       default:
         break;
@@ -107,12 +105,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text(AppStrings.pricesChanged),
+        title: Text(AppStrings.pricesChanged),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(AppStrings.pricesChangedBody),
+            Text(AppStrings.pricesChangedBody),
             const SizedBox(height: 12),
             for (final d in diffs)
               Padding(
@@ -130,11 +128,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text(AppStrings.backToCart),
+            child: Text(AppStrings.backToCart),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(AppStrings.acceptNewPrices),
+            child: Text(AppStrings.acceptNewPrices),
           ),
         ],
       ),
@@ -170,7 +168,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     };
 
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.checkout)),
+      appBar: AppBar(title: Text(AppStrings.checkout)),
       body: Form(
         key: _form,
         child: ListView(
@@ -180,7 +178,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               controller: _name,
               textInputAction: TextInputAction.next,
               autofillHints: const [AutofillHints.name],
-              decoration: const InputDecoration(labelText: AppStrings.name),
+              decoration: InputDecoration(labelText: AppStrings.name),
               validator: (v) => message(GuestValidation.name(v ?? '')),
             ),
             const SizedBox(height: 12),
@@ -189,7 +187,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               keyboardType: TextInputType.phone,
               textDirection: TextDirection.ltr,
               autofillHints: const [AutofillHints.telephoneNumber],
-              decoration: const InputDecoration(labelText: AppStrings.phone),
+              decoration: InputDecoration(labelText: AppStrings.phone),
               validator: (v) => message(GuestValidation.phone(v ?? '')),
             ),
             const SizedBox(height: 16),
@@ -197,10 +195,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               AppStrings.fulfillment,
               style: Theme.of(context).textTheme.titleSmall,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             // TEMP: both methods offered until OWNER_INPUTS decision 4.
             SegmentedButton<Fulfillment>(
-              segments: const [
+              segments: [
                 ButtonSegment(
                   value: Fulfillment.pickup,
                   label: Text(AppStrings.pickup),
@@ -220,9 +218,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 minLines: 2,
                 maxLines: 4,
                 autofillHints: const [AutofillHints.fullStreetAddress],
-                decoration: const InputDecoration(
-                  labelText: AppStrings.address,
-                ),
+                decoration: InputDecoration(labelText: AppStrings.address),
                 validator: (v) =>
                     message(GuestValidation.address(v ?? '', _fulfillment)),
               ),
@@ -233,15 +229,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               maxLength: 300,
               minLines: 1,
               maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: AppStrings.orderNotes,
-              ),
+              decoration: InputDecoration(labelText: AppStrings.orderNotes),
             ),
             const SizedBox(height: 8),
             if (subtotal != null)
               Row(
                 children: [
-                  const Text(AppStrings.subtotal),
+                  Text(AppStrings.subtotal),
                   const Spacer(),
                   Text(
                     AppStrings.price(subtotal),
@@ -266,7 +260,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (checkout is CheckoutPending)
-                const Padding(
+                Padding(
                   padding: EdgeInsets.only(bottom: 8),
                   child: Text(
                     AppStrings.pendingSend,

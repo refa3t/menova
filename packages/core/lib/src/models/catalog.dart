@@ -41,6 +41,7 @@ class Product {
     required this.id,
     required this.categoryId,
     required this.name,
+    this.names = const {},
     required this.description,
     required this.basePrice,
     required this.imageAssetId,
@@ -49,11 +50,16 @@ class Product {
     this.sizeDeltas = const {},
     this.optionDeltas = const {},
     this.displayOrder = 0,
+    this.groupId,
   });
 
   final String id;
   final String categoryId;
   final String name;
+
+  /// Display names by language code ('en', 'ar'); [name] is the
+  /// fallback (and the name frozen into orders for the kitchen).
+  final Map<String, String> names;
   final String description;
 
   /// Always includes every default ingredient; a default is never an extra.
@@ -69,10 +75,14 @@ class Product {
   final Map<String, Piasters> optionDeltas;
   final int displayOrder;
 
+  /// Menu group within the category (a definition `productGroups` id).
+  final String? groupId;
+
   factory Product.fromJson(Json j) => Product(
     id: req(j, 'id'),
     categoryId: req(j, 'categoryId'),
     name: req(j, 'name'),
+    names: mapOf(j, 'names', (v) => v as String),
     description: opt(j, 'description') ?? '',
     basePrice: req(j, 'basePrice'),
     imageAssetId: req(j, 'imageAssetId'),
@@ -81,12 +91,14 @@ class Product {
     sizeDeltas: mapOf(j, 'sizeDeltas', toInt),
     optionDeltas: mapOf(j, 'optionDeltas', toInt),
     displayOrder: opt(j, 'displayOrder') ?? 0,
+    groupId: opt(j, 'groupId'),
   );
 
   Json toJson() => {
     'id': id,
     'categoryId': categoryId,
     'name': name,
+    'names': names,
     'description': description,
     'basePrice': basePrice,
     'imageAssetId': imageAssetId,
@@ -95,6 +107,7 @@ class Product {
     'sizeDeltas': sizeDeltas,
     'optionDeltas': optionDeltas,
     'displayOrder': displayOrder,
+    if (groupId != null) 'groupId': groupId,
   };
 
   @override
@@ -103,6 +116,7 @@ class Product {
       other.id == id &&
       other.categoryId == categoryId &&
       other.name == name &&
+      mapEq(other.names, names) &&
       other.description == description &&
       other.basePrice == basePrice &&
       other.imageAssetId == imageAssetId &&
@@ -110,13 +124,15 @@ class Product {
       other.isAvailable == isAvailable &&
       mapEq(other.sizeDeltas, sizeDeltas) &&
       mapEq(other.optionDeltas, optionDeltas) &&
-      other.displayOrder == displayOrder;
+      other.displayOrder == displayOrder &&
+      other.groupId == groupId;
 
   @override
   int get hashCode => Object.hash(
     id,
     categoryId,
     name,
+    mapHash(names),
     description,
     basePrice,
     imageAssetId,
@@ -125,6 +141,7 @@ class Product {
     mapHash(sizeDeltas),
     mapHash(optionDeltas),
     displayOrder,
+    groupId,
   );
 }
 
@@ -177,6 +194,7 @@ class Ingredient {
   const Ingredient({
     required this.id,
     required this.name,
+    this.names = const {},
     required this.assetId,
     required this.extraPrice,
     required this.isAvailable,
@@ -185,6 +203,10 @@ class Ingredient {
 
   final String id;
   final String name;
+
+  /// Display names by language code ('en', 'ar'); [name] is the
+  /// fallback (and the name frozen into orders for the kitchen).
+  final Map<String, String> names;
   final String assetId;
   final Piasters extraPrice;
   final bool isAvailable;
@@ -198,6 +220,7 @@ class Ingredient {
   factory Ingredient.fromJson(Json j) => Ingredient(
     id: req(j, 'id'),
     name: req(j, 'name'),
+    names: mapOf(j, 'names', (v) => v as String),
     assetId: req(j, 'assetId'),
     extraPrice: req(j, 'extraPrice'),
     isAvailable: req(j, 'isAvailable'),
@@ -207,6 +230,7 @@ class Ingredient {
   Json toJson() => {
     'id': id,
     'name': name,
+    'names': names,
     'assetId': assetId,
     'extraPrice': extraPrice,
     'isAvailable': isAvailable,
@@ -218,6 +242,7 @@ class Ingredient {
       other is Ingredient &&
       other.id == id &&
       other.name == name &&
+      mapEq(other.names, names) &&
       other.assetId == assetId &&
       other.extraPrice == extraPrice &&
       other.isAvailable == isAvailable &&
@@ -227,6 +252,7 @@ class Ingredient {
   int get hashCode => Object.hash(
     id,
     name,
+    mapHash(names),
     assetId,
     extraPrice,
     isAvailable,

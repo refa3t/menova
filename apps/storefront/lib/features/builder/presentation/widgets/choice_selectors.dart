@@ -1,6 +1,8 @@
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/strings/app_strings.dart';
+
 /// Size selector (P1-C01). Renders nothing when the category has no sizes.
 class SizeSelector extends StatelessWidget {
   const SizeSelector({
@@ -18,7 +20,9 @@ class SizeSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     if (sizes.isEmpty) return const SizedBox.shrink();
     return _Chips(
-      items: [for (final s in sizes) (s.id, s.name)],
+      items: [
+        for (final s in sizes) (s.id, AppStrings.localized(s.name, s.names)),
+      ],
       selectedId: selectedId,
       onSelected: onSelected,
     );
@@ -45,10 +49,16 @@ class OptionGroupSelector extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(group.name, style: Theme.of(context).textTheme.titleSmall),
+        Text(
+          AppStrings.localized(group.name, group.names),
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
         const SizedBox(height: 8),
         _Chips(
-          items: [for (final c in group.choices) (c.id, c.name)],
+          items: [
+            for (final c in group.choices)
+              (c.id, AppStrings.localized(c.name, c.names)),
+          ],
           selectedId: selectedId,
           onSelected: onSelected,
         ),

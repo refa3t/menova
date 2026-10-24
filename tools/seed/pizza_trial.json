@@ -12,6 +12,10 @@
       "id": "pizza_margherita",
       "categoryId": "pizza",
       "name": "مارجريتا",
+      "names": {
+        "en": "Margherita",
+        "ar": "مارجريتا"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_margherita",
@@ -41,12 +45,17 @@
         "regular": 0
       },
       "displayOrder": 0,
+      "groupId": "cheese",
       "sauce": "tomato"
     },
     {
       "id": "pizza_pepperoni",
       "categoryId": "pizza",
       "name": "بيبروني",
+      "names": {
+        "en": "Pepperoni",
+        "ar": "بيبروني"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_pepperoni",
@@ -76,12 +85,17 @@
         "regular": 0
       },
       "displayOrder": 3,
+      "groupId": "meat",
       "sauce": "tomato"
     },
     {
       "id": "pizza_veggie",
       "categoryId": "pizza",
       "name": "خضار",
+      "names": {
+        "en": "Veggie",
+        "ar": "خضار"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_veggie",
@@ -153,12 +167,17 @@
         "regular": 0
       },
       "displayOrder": 10,
+      "groupId": "veggie",
       "sauce": "tomato"
     },
     {
       "id": "pizza_chicken",
       "categoryId": "pizza",
       "name": "فراخ",
+      "names": {
+        "en": "Chicken",
+        "ar": "فراخ"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_chicken",
@@ -209,12 +228,17 @@
         "regular": 0
       },
       "displayOrder": 14,
+      "groupId": "chicken",
       "sauce": "tomato"
     },
     {
       "id": "pizza_supreme",
       "categoryId": "pizza",
       "name": "سوبريم",
+      "names": {
+        "en": "Supreme",
+        "ar": "سوبريم"
+      },
       "description": "",
       "basePrice": 10000,
       "imageAssetId": "final_pizza_supreme",
@@ -279,6 +303,7 @@
         "regular": 0
       },
       "displayOrder": 16,
+      "groupId": "meat",
       "sauce": "tomato"
     }
   ]

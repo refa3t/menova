@@ -86,7 +86,7 @@ class OrderStatusView extends StatelessWidget {
         const Divider(height: 32),
         Row(
           children: [
-            const Text(AppStrings.subtotal),
+            Text(AppStrings.subtotal),
             const Spacer(),
             Text(
               AppStrings.price(order.total),

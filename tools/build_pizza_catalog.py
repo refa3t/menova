@@ -113,6 +113,56 @@ PIECE_SIZE = {
     'capers': 0.09,
 }
 
+# Menu groups (owner request), in display order, and each product's group.
+PRODUCT_GROUPS = [
+    ('chicken', 'بيتزا فراخ'), ('meat', 'بيتزا لحوم'),
+    ('cheese', 'عشاق الجبن'), ('veggie', 'خضار'), ('seafood', 'سي فود'),
+]
+PRODUCT_GROUP = {
+    'chicken': 'chicken', 'bbq_chicken': 'chicken', 'chicken_ranch': 'chicken',
+    'chicken_fajita': 'chicken', 'pesto_chicken': 'chicken',
+    'pepperoni': 'meat', 'diavola': 'meat', 'ham_mushroom': 'meat',
+    'capricciosa': 'meat', 'hawaiian': 'meat', 'supreme': 'meat',
+    'meat_lovers': 'meat', 'sausage': 'meat', 'mexican': 'meat',
+    'basterma': 'meat', 'mortadella': 'meat',
+    'margherita': 'cheese', 'cheese': 'cheese', 'quattro_formaggi': 'cheese',
+    'egyptian_mixed_cheese': 'cheese',
+    'marinara': 'veggie', 'veggie': 'veggie', 'mushroom': 'veggie', 'greek': 'veggie',
+    'tuna': 'seafood', 'seafood': 'seafood', 'napoletana': 'seafood',
+}
+
+# English display names (owner decision: bilingual, English default).
+INGREDIENT_EN = {
+    'mozzarella': 'Mozzarella', 'olive_black': 'Black olives', 'mushroom': 'Mushrooms',
+    'bell_pepper_green': 'Green pepper', 'ham': 'Ham', 'chicken': 'Chicken',
+    'onion': 'Onion', 'pepperoni': 'Pepperoni', 'sausage': 'Sausage',
+    'tomato': 'Tomato', 'corn': 'Sweet corn', 'basil': 'Basil', 'oregano': 'Oregano',
+    'cheddar': 'Cheddar', 'feta': 'Feta', 'parmesan': 'Parmesan', 'bacon': 'Bacon',
+    'ground_beef': 'Ground beef', 'bell_pepper_red': 'Red pepper',
+    'red_onion': 'Red onion', 'cherry_tomato': 'Cherry tomatoes', 'garlic': 'Garlic',
+    'parsley': 'Parsley', 'roumi': 'Roumi cheese', 'tuna': 'Tuna',
+    'olive_green': 'Green olives', 'pineapple': 'Pineapple', 'jalapeno': 'Jalapeño',
+    'artichoke': 'Artichoke', 'blue_cheese': 'Blue cheese',
+    'salami_spicy': 'Spicy salami', 'basterma': 'Basterma', 'mortadella': 'Mortadella',
+    'shrimp': 'Shrimp', 'calamari': 'Calamari', 'anchovy': 'Anchovies',
+    'chili_red': 'Red chili', 'capers': 'Capers',
+}
+PRODUCT_EN = {
+    'margherita': 'Margherita', 'marinara': 'Marinara', 'cheese': 'Cheese',
+    'pepperoni': 'Pepperoni', 'quattro_formaggi': 'Quattro Formaggi',
+    'egyptian_mixed_cheese': 'Mixed Cheese', 'capricciosa': 'Capricciosa',
+    'diavola': 'Diavola', 'ham_mushroom': 'Ham & Mushroom', 'napoletana': 'Napoletana',
+    'veggie': 'Veggie', 'hawaiian': 'Hawaiian', 'bbq_chicken': 'BBQ Chicken',
+    'chicken_ranch': 'Chicken Ranch', 'chicken': 'Chicken',
+    'chicken_fajita': 'Chicken Fajita', 'supreme': 'Supreme',
+    'meat_lovers': 'Meat Lovers', 'sausage': 'Sausage', 'mushroom': 'Mushroom',
+    'tuna': 'Tuna', 'seafood': 'Seafood', 'mexican': 'Mexicana', 'greek': 'Greek',
+    'pesto_chicken': 'Pesto Chicken', 'basterma': 'Basterma',
+    'mortadella': 'Mortadella',
+}
+GROUP_EN = {'chicken': 'Chicken pizza', 'meat': 'Meat pizza',
+            'cheese': 'Cheese lovers', 'veggie': 'Veggie', 'seafood': 'Seafood'}
+
 # Trial subset used for development/testing (seeded first in P1-A03).
 TRIAL_PRODUCT_IDS = ['margherita', 'pepperoni', 'veggie', 'chicken', 'supreme']
 
@@ -132,6 +182,7 @@ def dump(path: str, data) -> None:
 def main() -> None:
     keys = {k for k, _ in INGREDIENTS}
     assert set(MOTION) == keys, set(MOTION) ^ keys
+    assert set(PRODUCT_GROUP) == {p[0] for p in PRODUCTS}
     for pid, _, _, defaults in PRODUCTS:
         unknown = set(defaults) - keys
         assert not unknown, f'{pid}: unknown ingredients {unknown}'
@@ -142,6 +193,7 @@ def main() -> None:
         'id': 'pizza',
         'definitionVersion': 1,
         'name': 'بيتزا',
+        'names': {'en': 'Pizza', 'ar': 'بيتزا'},
         'base': {'shape': 'circle', 'rawAssetId': 'base_pizza_regular_raw'},
         'allowedIngredientIds': [k for k, _ in INGREDIENTS],
         # TEMP: calibrated during the P1-B00 drawing prototype.
@@ -154,13 +206,15 @@ def main() -> None:
                for p, v in (('minGap', 0.12), ('radius', 0.72))}}},
         'constraints': {'maxQty': 2},
         'sizes': [
-            {'id': 's', 'name': 'صغير', 'scale': 0.82},
-            {'id': 'm', 'name': 'وسط', 'scale': 0.91},
-            {'id': 'l', 'name': 'كبير', 'scale': 1.0},
+            {'id': 's', 'name': 'صغير', 'names': {'en': 'Small', 'ar': 'صغير'}, 'scale': 0.82},
+            {'id': 'm', 'name': 'وسط', 'names': {'en': 'Medium', 'ar': 'وسط'}, 'scale': 0.91},
+            {'id': 'l', 'name': 'كبير', 'names': {'en': 'Large', 'ar': 'كبير'}, 'scale': 1.0},
         ],
         'optionGroups': [{
-            'id': 'dough', 'name': 'العجينة', 'defaultChoiceId': 'regular',
-            'choices': [{'id': 'regular', 'name': 'عادية'}],
+            'id': 'dough', 'name': 'العجينة', 'names': {'en': 'Dough', 'ar': 'العجينة'},
+            'defaultChoiceId': 'regular',
+            'choices': [{'id': 'regular', 'name': 'عادية',
+                         'names': {'en': 'Regular', 'ar': 'عادية'}}],
         }],
         # ANIMATIONS.md 7 + OVEN.md 4 (proposed values, TEMP until G06).
         'animation': [
@@ -181,6 +235,8 @@ def main() -> None:
                 'shrinkTo': 0.18, 'arcControlPct': 20, 'rotateDeg': -12,
             }},
         ],
+        'productGroups': [{'id': g, 'name': n, 'names': {'en': GROUP_EN[g], 'ar': n}}
+                          for g, n in PRODUCT_GROUPS],
         'ingredientMotion': {
             k: {'enter': v[0], 'exit': v[1]} for k, v in MOTION.items()
         },
@@ -207,7 +263,8 @@ def main() -> None:
         variants = [f for f in files if f.startswith(f'ing_{k}_')]
         assert variants, f'no asset files for {k}'
         ingredients.append({
-            'id': k, 'name': name, 'assetId': f'ing_{k}', 'assetFiles': variants,
+            'id': k, 'name': name, 'names': {'en': INGREDIENT_EN[k], 'ar': name},
+            'assetId': f'ing_{k}', 'assetFiles': variants,
             'extraPrice': TEMP_EXTRA_PRICE, 'isAvailable': True,
             'sizeMultipliers': {},
         })
@@ -218,6 +275,7 @@ def main() -> None:
 
     products = [{
         'id': f'pizza_{pid}', 'categoryId': 'pizza', 'name': name,
+        'names': {'en': PRODUCT_EN[pid], 'ar': name},
         'description': '', 'basePrice': TEMP_BASE_PRICE,
         'imageAssetId': f'final_pizza_{pid}',
         'defaults': [{'ingredientId': d, 'qty': 1, 'removable': True,
@@ -227,6 +285,7 @@ def main() -> None:
         'sizeDeltas': {'s': 0, 'm': 0, 'l': 0},
         'optionDeltas': {'regular': 0},
         'displayOrder': i,
+        'groupId': PRODUCT_GROUP[pid],
         'sauce': sauce,
     } for i, (pid, name, sauce, defaults) in enumerate(PRODUCTS)]
     dump('tools/seed/pizza_products.json', {

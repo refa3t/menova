@@ -58,7 +58,9 @@ void main() {
   });
 
   test('price formatting', () {
-    expect(AppStrings.priceFrom(10000), 'يبدأ من 100 ج.م');
+    expect(AppStrings.priceFrom(10000), 'From EGP 100');
+    AppStrings.current = AppLanguage.ar;
     expect(AppStrings.priceFrom(12550), 'يبدأ من 125.50 ج.م');
+    AppStrings.current = AppLanguage.en;
   });
 }

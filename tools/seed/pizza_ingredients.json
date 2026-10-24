@@ -8,6 +8,10 @@
     {
       "id": "mozzarella",
       "name": "موزاريلا",
+      "names": {
+        "en": "Mozzarella",
+        "ar": "موزاريلا"
+      },
       "assetId": "ing_mozzarella",
       "assetFiles": [
         "ing_mozzarella_01.webp"
@@ -19,6 +23,10 @@
     {
       "id": "olive_black",
       "name": "زيتون أسود",
+      "names": {
+        "en": "Black olives",
+        "ar": "زيتون أسود"
+      },
       "assetId": "ing_olive_black",
       "assetFiles": [
         "ing_olive_black_01.webp"
@@ -30,6 +38,10 @@
     {
       "id": "mushroom",
       "name": "مشروم",
+      "names": {
+        "en": "Mushrooms",
+        "ar": "مشروم"
+      },
       "assetId": "ing_mushroom",
       "assetFiles": [
         "ing_mushroom_01.webp"
@@ -41,6 +53,10 @@
     {
       "id": "bell_pepper_green",
       "name": "فلفل أخضر",
+      "names": {
+        "en": "Green pepper",
+        "ar": "فلفل أخضر"
+      },
       "assetId": "ing_bell_pepper_green",
       "assetFiles": [
         "ing_bell_pepper_green_01.webp"
@@ -52,6 +68,10 @@
     {
       "id": "ham",
       "name": "هام",
+      "names": {
+        "en": "Ham",
+        "ar": "هام"
+      },
       "assetId": "ing_ham",
       "assetFiles": [
         "ing_ham_01.webp"
@@ -63,6 +83,10 @@
     {
       "id": "chicken",
       "name": "فراخ",
+      "names": {
+        "en": "Chicken",
+        "ar": "فراخ"
+      },
       "assetId": "ing_chicken",
       "assetFiles": [
         "ing_chicken_01.webp"
@@ -74,6 +98,10 @@
     {
       "id": "onion",
       "name": "بصل",
+      "names": {
+        "en": "Onion",
+        "ar": "بصل"
+      },
       "assetId": "ing_onion",
       "assetFiles": [
         "ing_onion_01.webp"
@@ -85,6 +113,10 @@
     {
       "id": "pepperoni",
       "name": "بيبروني",
+      "names": {
+        "en": "Pepperoni",
+        "ar": "بيبروني"
+      },
       "assetId": "ing_pepperoni",
       "assetFiles": [
         "ing_pepperoni_01.webp"
@@ -96,6 +128,10 @@
     {
       "id": "sausage",
       "name": "سوسيس",
+      "names": {
+        "en": "Sausage",
+        "ar": "سوسيس"
+      },
       "assetId": "ing_sausage",
       "assetFiles": [
         "ing_sausage_01.webp"
@@ -107,6 +143,10 @@
     {
       "id": "tomato",
       "name": "طماطم",
+      "names": {
+        "en": "Tomato",
+        "ar": "طماطم"
+      },
       "assetId": "ing_tomato",
       "assetFiles": [
         "ing_tomato_01.webp"
@@ -118,6 +158,10 @@
     {
       "id": "corn",
       "name": "ذرة",
+      "names": {
+        "en": "Sweet corn",
+        "ar": "ذرة"
+      },
       "assetId": "ing_corn",
       "assetFiles": [
         "ing_corn_01.webp"
@@ -129,6 +173,10 @@
     {
       "id": "basil",
       "name": "ريحان",
+      "names": {
+        "en": "Basil",
+        "ar": "ريحان"
+      },
       "assetId": "ing_basil",
       "assetFiles": [
         "ing_basil_01.webp"
@@ -140,6 +188,10 @@
     {
       "id": "oregano",
       "name": "أوريجانو",
+      "names": {
+        "en": "Oregano",
+        "ar": "أوريجانو"
+      },
       "assetId": "ing_oregano",
       "assetFiles": [
         "ing_oregano_01.webp"
@@ -151,6 +203,10 @@
     {
       "id": "cheddar",
       "name": "شيدر",
+      "names": {
+        "en": "Cheddar",
+        "ar": "شيدر"
+      },
       "assetId": "ing_cheddar",
       "assetFiles": [
         "ing_cheddar_01.webp"
@@ -162,6 +218,10 @@
     {
       "id": "feta",
       "name": "فيتا",
+      "names": {
+        "en": "Feta",
+        "ar": "فيتا"
+      },
       "assetId": "ing_feta",
       "assetFiles": [
         "ing_feta_01.webp"
@@ -173,6 +233,10 @@
     {
       "id": "parmesan",
       "name": "بارميزان",
+      "names": {
+        "en": "Parmesan",
+        "ar": "بارميزان"
+      },
       "assetId": "ing_parmesan",
       "assetFiles": [
         "ing_parmesan_01.webp"
@@ -184,6 +248,10 @@
     {
       "id": "bacon",
       "name": "بيكون",
+      "names": {
+        "en": "Bacon",
+        "ar": "بيكون"
+      },
       "assetId": "ing_bacon",
       "assetFiles": [
         "ing_bacon_01.webp"
@@ -195,6 +263,10 @@
     {
       "id": "ground_beef",
       "name": "لحمة مفرومة",
+      "names": {
+        "en": "Ground beef",
+        "ar": "لحمة مفرومة"
+      },
       "assetId": "ing_ground_beef",
       "assetFiles": [
         "ing_ground_beef_01.webp"
@@ -206,6 +278,10 @@
     {
       "id": "bell_pepper_red",
       "name": "فلفل أحمر",
+      "names": {
+        "en": "Red pepper",
+        "ar": "فلفل أحمر"
+      },
       "assetId": "ing_bell_pepper_red",
       "assetFiles": [
         "ing_bell_pepper_red_01.webp"
@@ -217,6 +293,10 @@
     {
       "id": "red_onion",
       "name": "بصل أحمر",
+      "names": {
+        "en": "Red onion",
+        "ar": "بصل أحمر"
+      },
       "assetId": "ing_red_onion",
       "assetFiles": [
         "ing_red_onion_01.webp"
@@ -228,6 +308,10 @@
     {
       "id": "cherry_tomato",
       "name": "طماطم كرزية",
+      "names": {
+        "en": "Cherry tomatoes",
+        "ar": "طماطم كرزية"
+      },
       "assetId": "ing_cherry_tomato",
       "assetFiles": [
         "ing_cherry_tomato_01.webp"
@@ -239,6 +323,10 @@
     {
       "id": "garlic",
       "name": "ثوم",
+      "names": {
+        "en": "Garlic",
+        "ar": "ثوم"
+      },
       "assetId": "ing_garlic",
       "assetFiles": [
         "ing_garlic_01.webp"
@@ -250,6 +338,10 @@
     {
       "id": "parsley",
       "name": "بقدونس",
+      "names": {
+        "en": "Parsley",
+        "ar": "بقدونس"
+      },
       "assetId": "ing_parsley",
       "assetFiles": [
         "ing_parsley_01.webp"
@@ -261,6 +353,10 @@
     {
       "id": "roumi",
       "name": "رومي",
+      "names": {
+        "en": "Roumi cheese",
+        "ar": "رومي"
+      },
       "assetId": "ing_roumi",
       "assetFiles": [
         "ing_roumi_01.webp"
@@ -272,6 +368,10 @@
     {
       "id": "tuna",
       "name": "تونة",
+      "names": {
+        "en": "Tuna",
+        "ar": "تونة"
+      },
       "assetId": "ing_tuna",
       "assetFiles": [
         "ing_tuna_01.webp"
@@ -283,6 +383,10 @@
     {
       "id": "olive_green",
       "name": "زيتون أخضر",
+      "names": {
+        "en": "Green olives",
+        "ar": "زيتون أخضر"
+      },
       "assetId": "ing_olive_green",
       "assetFiles": [
         "ing_olive_green_01.webp"
@@ -294,6 +398,10 @@
     {
       "id": "pineapple",
       "name": "أناناس",
+      "names": {
+        "en": "Pineapple",
+        "ar": "أناناس"
+      },
       "assetId": "ing_pineapple",
       "assetFiles": [
         "ing_pineapple_01.webp"
@@ -305,6 +413,10 @@
     {
       "id": "jalapeno",
       "name": "هالبينو",
+      "names": {
+        "en": "Jalapeño",
+        "ar": "هالبينو"
+      },
       "assetId": "ing_jalapeno",
       "assetFiles": [
         "ing_jalapeno_01.webp"
@@ -316,6 +428,10 @@
     {
       "id": "artichoke",
       "name": "خرشوف",
+      "names": {
+        "en": "Artichoke",
+        "ar": "خرشوف"
+      },
       "assetId": "ing_artichoke",
       "assetFiles": [
         "ing_artichoke_01.webp"
@@ -327,6 +443,10 @@
     {
       "id": "blue_cheese",
       "name": "جبنة زرقاء",
+      "names": {
+        "en": "Blue cheese",
+        "ar": "جبنة زرقاء"
+      },
       "assetId": "ing_blue_cheese",
       "assetFiles": [
         "ing_blue_cheese_01.webp"
@@ -338,6 +458,10 @@
     {
       "id": "salami_spicy",
       "name": "سلامي حار",
+      "names": {
+        "en": "Spicy salami",
+        "ar": "سلامي حار"
+      },
       "assetId": "ing_salami_spicy",
       "assetFiles": [
         "ing_salami_spicy_01.webp"
@@ -349,6 +473,10 @@
     {
       "id": "basterma",
       "name": "بسطرمة",
+      "names": {
+        "en": "Basterma",
+        "ar": "بسطرمة"
+      },
       "assetId": "ing_basterma",
       "assetFiles": [
         "ing_basterma_01.webp",
@@ -363,6 +491,10 @@
     {
       "id": "mortadella",
       "name": "مرتديلا",
+      "names": {
+        "en": "Mortadella",
+        "ar": "مرتديلا"
+      },
       "assetId": "ing_mortadella",
       "assetFiles": [
         "ing_mortadella_01.webp",
@@ -377,6 +509,10 @@
     {
       "id": "shrimp",
       "name": "جمبري",
+      "names": {
+        "en": "Shrimp",
+        "ar": "جمبري"
+      },
       "assetId": "ing_shrimp",
       "assetFiles": [
         "ing_shrimp_01.webp"
@@ -388,6 +524,10 @@
     {
       "id": "calamari",
       "name": "حلقات حبار",
+      "names": {
+        "en": "Calamari",
+        "ar": "حلقات حبار"
+      },
       "assetId": "ing_calamari",
       "assetFiles": [
         "ing_calamari_01.webp"
@@ -399,6 +539,10 @@
     {
       "id": "anchovy",
       "name": "أنشوجة",
+      "names": {
+        "en": "Anchovies",
+        "ar": "أنشوجة"
+      },
       "assetId": "ing_anchovy",
       "assetFiles": [
         "ing_anchovy_01.webp"
@@ -410,6 +554,10 @@
     {
       "id": "chili_red",
       "name": "فلفل حار أحمر",
+      "names": {
+        "en": "Red chili",
+        "ar": "فلفل حار أحمر"
+      },
       "assetId": "ing_chili_red",
       "assetFiles": [
         "ing_chili_red_01.webp"
@@ -421,6 +569,10 @@
     {
       "id": "capers",
       "name": "كبر",
+      "names": {
+        "en": "Capers",
+        "ar": "كبر"
+      },
       "assetId": "ing_capers",
       "assetFiles": [
         "ing_capers_01.webp"

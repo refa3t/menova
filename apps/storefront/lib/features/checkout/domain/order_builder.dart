@@ -4,6 +4,8 @@ import 'package:core/core.dart';
 import 'package:crypto/crypto.dart';
 import 'package:pricing/pricing.dart';
 
+import '../../../core/strings/app_strings.dart';
+
 import '../../cart/domain/cart.dart';
 import '../../menu/domain/menu.dart';
 
@@ -106,7 +108,9 @@ abstract final class OrderBuilder {
     String name(CartLine l) {
       for (final c in fresh.categories) {
         for (final p in c.products) {
-          if (p.id == l.selection.productId) return p.name;
+          if (p.id == l.selection.productId) {
+            return AppStrings.localized(p.name, p.names);
+          }
         }
       }
       return l.selection.productId;

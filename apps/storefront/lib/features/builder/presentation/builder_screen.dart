@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:product_builder/product_builder.dart';
 
 import '../../../core/strings/app_strings.dart';
+import '../../../core/widgets/language_button.dart';
 import '../../cart/presentation/cart_button.dart';
 import '../../cart/presentation/cart_providers.dart';
 import '../../menu/domain/menu.dart';
@@ -149,7 +150,12 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
   Widget build(BuildContext context) {
     final menu = ref.watch(menuProvider);
     return Scaffold(
-      appBar: AppBar(actions: [CartButton(key: _cartKey)]),
+      appBar: AppBar(
+        actions: [
+          const LanguageButton(),
+          CartButton(key: _cartKey),
+        ],
+      ),
       bottomNavigationBar: menu.hasValue && _exists(menu.requireValue)
           ? Consumer(
               builder: (context, ref, _) => AddBar(
@@ -164,10 +170,10 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
           : null,
       body: menu.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => const Center(child: Text(AppStrings.menuLoadError)),
+        error: (_, _) => Center(child: Text(AppStrings.menuLoadError)),
         data: (menu) {
           if (!_exists(menu)) {
-            return const Center(child: Text(AppStrings.productNotFound));
+            return Center(child: Text(AppStrings.productNotFound));
           }
           return _BuilderBody(
             menu: menu,
@@ -232,7 +238,7 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
     final strategy = placementStrategies[def.placement.strategy];
     final base = menu.assets[state.activeBase.rawAssetId];
     if (strategy == null || base == null) {
-      return const Center(child: Text(AppStrings.productNotFound));
+      return Center(child: Text(AppStrings.productNotFound));
     }
 
     List<String> urlsFor(Ingredient i) {
@@ -300,7 +306,7 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
 
     final controls = <Widget>[
       Text(
-        state.product.name,
+        AppStrings.localized(state.product.name, state.product.names),
         style: Theme.of(context).textTheme.headlineSmall,
       ),
       const SizedBox(height: 16),
@@ -328,7 +334,7 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
           for (final i in gridItems)
             IngredientTileData(
               id: i.id,
-              name: i.name,
+              name: AppStrings.localized(i.name, i.names),
               imageUrl: urlsFor(i).first,
               qty: state.qtyOf(i.id),
               defaultQty: state.defaultQtyOf(i.id),
@@ -347,7 +353,7 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
       OutlinedButton(
         onPressed: state.isModified ? controller.reset : null,
         style: OutlinedButton.styleFrom(minimumSize: const Size(44, 44)),
-        child: const Text(AppStrings.reset),
+        child: Text(AppStrings.reset),
       ),
     ];
 

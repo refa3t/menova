@@ -24,12 +24,12 @@ class OrderScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final order = ref.watch(orderProvider(orderId));
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.orderTitle)),
+      appBar: AppBar(title: Text(AppStrings.orderTitle)),
       body: order.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => const Center(child: Text(AppStrings.orderLoadError)),
+        error: (_, _) => Center(child: Text(AppStrings.orderLoadError)),
         data: (o) => o == null
-            ? const Center(child: Text(AppStrings.orderNotFound))
+            ? Center(child: Text(AppStrings.orderNotFound))
             : OrderStatusView(order: o),
       ),
     );
