@@ -121,6 +121,17 @@ class BuilderState {
     return 1;
   }
 
+  /// Piece count factor for the selected size: the area ratio to the
+  /// smallest size, so a larger pizza carries proportionally more pieces.
+  double get sizeDensity {
+    if (definition.sizes.isEmpty) return 1;
+    final smallest = definition.sizes
+        .map((s) => s.scale)
+        .reduce((a, b) => a < b ? a : b);
+    final r = sizeScale / smallest;
+    return r * r;
+  }
+
   Map<String, int> get extras => selection.extras(product.defaults);
 
   List<String> get removed => selection.removed(product.defaults);

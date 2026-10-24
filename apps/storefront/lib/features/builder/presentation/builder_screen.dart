@@ -167,6 +167,7 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
           strategy: strategy,
           placementParams: def.placement.params,
           scale: state.sizeScale,
+          density: state.sizeDensity,
           layers: [
             for (final i in available)
               CanvasLayer(

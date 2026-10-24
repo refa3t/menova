@@ -42,6 +42,7 @@ class BuilderCanvas extends StatefulWidget {
     required this.strategy,
     this.placementParams = const {},
     this.scale = 1,
+    this.density = 1,
   });
 
   final String baseImageUrl;
@@ -51,6 +52,9 @@ class BuilderCanvas extends StatefulWidget {
 
   /// Visual size factor (e.g. per size option).
   final double scale;
+
+  /// Piece count factor (larger sizes carry more pieces).
+  final double density;
 
   @override
   State<BuilderCanvas> createState() => _BuilderCanvasState();
@@ -115,6 +119,7 @@ class _BuilderCanvasState extends State<BuilderCanvas> {
                     unit: unit,
                     variantCount: layer.imageUrls.length,
                     params: widget.placementParams,
+                    density: widget.density,
                   );
                   final seed = '${layer.ingredientId}#$unit';
                   final enterDelays = staggerDelays(

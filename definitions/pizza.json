@@ -47,7 +47,7 @@
     "capers"
   ],
   "placement": {
-    "strategy": "scatter",
+    "strategy": "rings",
     "params": {
       "pieceSize": 0.13,
       "piecesPerUnit": 9,

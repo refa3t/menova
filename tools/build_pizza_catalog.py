@@ -145,7 +145,7 @@ def main() -> None:
         'base': {'shape': 'circle', 'rawAssetId': 'base_pizza_regular_raw'},
         'allowedIngredientIds': [k for k, _ in INGREDIENTS],
         # TEMP: calibrated during the P1-B00 drawing prototype.
-        'placement': {'strategy': 'scatter', 'params': {
+        'placement': {'strategy': 'rings', 'params': {
             'pieceSize': 0.13, 'piecesPerUnit': 9, 'radius': 0.74, 'minGap': 0.16,
             **{f'piecesPerUnit:{k}': v[2] for k, v in MOTION.items()},
             **{f'pieceSize:{k}': v for k, v in PIECE_SIZE.items()},
