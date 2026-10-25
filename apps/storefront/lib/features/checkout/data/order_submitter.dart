@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart'
     show FieldValue, FirebaseException, FirebaseFirestore;
 import 'package:core/core.dart';
+import 'package:flutter/foundation.dart';
 
 /// Result of sending an order (CLAUDE.md 5.2).
 sealed class SubmitResult {
@@ -90,8 +91,10 @@ class OrderSubmitter implements OrderGateway {
           })
           .timeout(timeout);
     } on TimeoutException {
+      debugPrint('checkout: submit timed out');
       return const NotConfirmed();
     } on FirebaseException catch (e) {
+      debugPrint('checkout: submit failed: ${e.code} ${e.message}');
       // permission-denied here means the id exists but belongs to someone
       // else or the payload broke the rules: treat as a conflict.
       return e.code == 'permission-denied'

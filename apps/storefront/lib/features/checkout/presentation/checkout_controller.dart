@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart' show FirebaseFirestore;
 import 'package:core/core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../cart/presentation/cart_providers.dart';
@@ -111,7 +112,8 @@ class CheckoutController extends Notifier<CheckoutState> {
     try {
       uid = await ref.read(guestUidProvider)();
       fresh = await ref.read(freshMenuProvider)();
-    } on Object {
+    } on Object catch (e) {
+      debugPrint('checkout: before send failed: $e');
       state = const CheckoutPending(); // Offline before reaching the server.
       return;
     }
