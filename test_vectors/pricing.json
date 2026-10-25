@@ -1,17 +1,41 @@
 {
-  "_note": "Golden pricing vectors (CLAUDE.md 5.1, P1-D02). The contract between the Dart and TypeScript pricing engines. TEMP amounts in piasters, illustrative only; replace with owner-approved rules before gate A.",
-  "rules": { "version": 1, "roundingStep": 50 },
+  "_note": "Golden pricing vectors (CLAUDE.md 5.1, P1-D02). The contract between the Dart and TypeScript pricing engines. Rules are owner-approved (P0-05: round to 1 EGP, maxQty 2 above the default, refunds off in data). Amounts in piasters are illustrative fixtures, not menu prices.",
+  "rules": {
+    "version": 2,
+    "roundingStep": 100
+  },
   "definition": {
     "id": "cat_v",
     "definitionVersion": 1,
     "name": "vectors",
-    "base": { "shape": "circle", "rawAssetId": "base" },
-    "allowedIngredientIds": ["cheese", "olive", "pepper", "basil"],
-    "placement": { "strategy": "scatter", "params": {} },
-    "constraints": { "maxQty": 2 },
+    "base": {
+      "shape": "circle",
+      "rawAssetId": "base"
+    },
+    "allowedIngredientIds": [
+      "cheese",
+      "olive",
+      "pepper",
+      "basil"
+    ],
+    "placement": {
+      "strategy": "scatter",
+      "params": {}
+    },
+    "constraints": {
+      "maxQty": 2
+    },
     "sizes": [
-      { "id": "s", "name": "S", "scale": 0.8 },
-      { "id": "l", "name": "L", "scale": 1.0 }
+      {
+        "id": "s",
+        "name": "S",
+        "scale": 0.8
+      },
+      {
+        "id": "l",
+        "name": "L",
+        "scale": 1.0
+      }
     ],
     "optionGroups": [
       {
@@ -19,19 +43,61 @@
         "name": "Dough",
         "defaultChoiceId": "regular",
         "choices": [
-          { "id": "regular", "name": "Regular" },
-          { "id": "thin", "name": "Thin" }
+          {
+            "id": "regular",
+            "name": "Regular"
+          },
+          {
+            "id": "thin",
+            "name": "Thin"
+          }
         ]
       }
     ],
-    "animation": [{ "step": "Oven", "weight": 1, "params": {} }],
+    "animation": [
+      {
+        "step": "Oven",
+        "weight": 1,
+        "params": {}
+      }
+    ],
     "assetSpecs": {}
   },
   "ingredients": {
-    "cheese": { "id": "cheese", "name": "Cheese", "assetId": "a", "extraPrice": 1500, "isAvailable": true, "sizeMultipliers": { "l": 1.5 } },
-    "olive": { "id": "olive", "name": "Olive", "assetId": "a", "extraPrice": 1000, "isAvailable": true, "sizeMultipliers": {} },
-    "pepper": { "id": "pepper", "name": "Pepper", "assetId": "a", "extraPrice": 733, "isAvailable": true, "sizeMultipliers": {} },
-    "basil": { "id": "basil", "name": "Basil", "assetId": "a", "extraPrice": 500, "isAvailable": true, "sizeMultipliers": {} }
+    "cheese": {
+      "id": "cheese",
+      "name": "Cheese",
+      "assetId": "a",
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {
+        "l": 1.5
+      }
+    },
+    "olive": {
+      "id": "olive",
+      "name": "Olive",
+      "assetId": "a",
+      "extraPrice": 1000,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    "pepper": {
+      "id": "pepper",
+      "name": "Pepper",
+      "assetId": "a",
+      "extraPrice": 733,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    "basil": {
+      "id": "basil",
+      "name": "Basil",
+      "assetId": "a",
+      "extraPrice": 500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    }
   },
   "products": {
     "p1": {
@@ -43,119 +109,337 @@
       "imageAssetId": "final_p1",
       "isAvailable": true,
       "defaults": [
-        { "ingredientId": "cheese", "qty": 2, "removable": false, "refundOnRemove": false, "refundAmount": 0 },
-        { "ingredientId": "olive", "qty": 1, "removable": true, "refundOnRemove": false, "refundAmount": 0 },
-        { "ingredientId": "basil", "qty": 1, "removable": true, "refundOnRemove": true, "refundAmount": 900 }
+        {
+          "ingredientId": "cheese",
+          "qty": 2,
+          "removable": false,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "olive",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "basil",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": true,
+          "refundAmount": 900
+        }
       ],
-      "sizeDeltas": { "s": 0, "l": 4000 },
-      "optionDeltas": { "regular": 0, "thin": 1000 }
+      "sizeDeltas": {
+        "s": 0,
+        "l": 4000
+      },
+      "optionDeltas": {
+        "regular": 0,
+        "thin": 1000
+      }
     }
   },
   "cases": [
     {
       "name": "unmodified = base price",
       "productId": "p1",
-      "selection": { "sizeId": "s", "options": { "dough": "regular" }, "ingredients": { "cheese": 2, "olive": 1, "basil": 1 } },
+      "selection": {
+        "sizeId": "s",
+        "options": {
+          "dough": "regular"
+        },
+        "ingredients": {
+          "cheese": 2,
+          "olive": 1,
+          "basil": 1
+        }
+      },
       "itemQty": 1,
-      "expect": { "lines": [{ "kind": "base", "qty": 1, "amount": 10000 }], "unitSubtotal": 10000, "rounding": 0, "total": 10000 }
+      "expect": {
+        "lines": [
+          {
+            "kind": "base",
+            "qty": 1,
+            "amount": 10000
+          }
+        ],
+        "unitSubtotal": 10000,
+        "rounding": 0,
+        "total": 10000
+      }
     },
     {
       "name": "one extra",
       "productId": "p1",
-      "selection": { "sizeId": "s", "options": { "dough": "regular" }, "ingredients": { "cheese": 2, "olive": 1, "basil": 1, "pepper": 1 } },
+      "selection": {
+        "sizeId": "s",
+        "options": {
+          "dough": "regular"
+        },
+        "ingredients": {
+          "cheese": 2,
+          "olive": 1,
+          "basil": 1,
+          "pepper": 1
+        }
+      },
       "itemQty": 1,
       "expect": {
         "lines": [
-          { "kind": "base", "qty": 1, "amount": 10000 },
-          { "kind": "extra", "refId": "pepper", "qty": 1, "amount": 733 }
+          {
+            "kind": "base",
+            "qty": 1,
+            "amount": 10000
+          },
+          {
+            "kind": "extra",
+            "refId": "pepper",
+            "qty": 1,
+            "amount": 733
+          }
         ],
-        "unitSubtotal": 10733, "rounding": 17, "total": 10750
+        "unitSubtotal": 10733,
+        "rounding": -33,
+        "total": 10700
       }
     },
     {
       "name": "extra above a doubled default starts at the third unit",
       "productId": "p1",
-      "selection": { "sizeId": "s", "options": { "dough": "regular" }, "ingredients": { "cheese": 3, "olive": 1, "basil": 1 } },
+      "selection": {
+        "sizeId": "s",
+        "options": {
+          "dough": "regular"
+        },
+        "ingredients": {
+          "cheese": 3,
+          "olive": 1,
+          "basil": 1
+        }
+      },
       "itemQty": 1,
       "expect": {
         "lines": [
-          { "kind": "base", "qty": 1, "amount": 10000 },
-          { "kind": "extra", "refId": "cheese", "qty": 1, "amount": 1500 }
+          {
+            "kind": "base",
+            "qty": 1,
+            "amount": 10000
+          },
+          {
+            "kind": "extra",
+            "refId": "cheese",
+            "qty": 1,
+            "amount": 1500
+          }
         ],
-        "unitSubtotal": 11500, "rounding": 0, "total": 11500
+        "unitSubtotal": 11500,
+        "rounding": 0,
+        "total": 11500
       }
     },
     {
       "name": "remove without refund",
       "productId": "p1",
-      "selection": { "sizeId": "s", "options": { "dough": "regular" }, "ingredients": { "cheese": 2, "basil": 1 } },
+      "selection": {
+        "sizeId": "s",
+        "options": {
+          "dough": "regular"
+        },
+        "ingredients": {
+          "cheese": 2,
+          "basil": 1
+        }
+      },
       "itemQty": 1,
-      "expect": { "lines": [{ "kind": "base", "qty": 1, "amount": 10000 }], "unitSubtotal": 10000, "rounding": 0, "total": 10000 }
+      "expect": {
+        "lines": [
+          {
+            "kind": "base",
+            "qty": 1,
+            "amount": 10000
+          }
+        ],
+        "unitSubtotal": 10000,
+        "rounding": 0,
+        "total": 10000
+      }
     },
     {
       "name": "remove with refund, capped at the extra price",
       "productId": "p1",
-      "selection": { "sizeId": "s", "options": { "dough": "regular" }, "ingredients": { "cheese": 2, "olive": 1 } },
+      "selection": {
+        "sizeId": "s",
+        "options": {
+          "dough": "regular"
+        },
+        "ingredients": {
+          "cheese": 2,
+          "olive": 1
+        }
+      },
       "itemQty": 1,
       "expect": {
         "lines": [
-          { "kind": "base", "qty": 1, "amount": 10000 },
-          { "kind": "refund", "refId": "basil", "qty": 1, "amount": -500 }
+          {
+            "kind": "base",
+            "qty": 1,
+            "amount": 10000
+          },
+          {
+            "kind": "refund",
+            "refId": "basil",
+            "qty": 1,
+            "amount": -500
+          }
         ],
-        "unitSubtotal": 9500, "rounding": 0, "total": 9500
+        "unitSubtotal": 9500,
+        "rounding": 0,
+        "total": 9500
       }
     },
     {
       "name": "size change applies delta and extra multiplier",
       "productId": "p1",
-      "selection": { "sizeId": "l", "options": { "dough": "regular" }, "ingredients": { "cheese": 3, "olive": 1, "basil": 1 } },
+      "selection": {
+        "sizeId": "l",
+        "options": {
+          "dough": "regular"
+        },
+        "ingredients": {
+          "cheese": 3,
+          "olive": 1,
+          "basil": 1
+        }
+      },
       "itemQty": 1,
       "expect": {
         "lines": [
-          { "kind": "base", "qty": 1, "amount": 10000 },
-          { "kind": "size", "refId": "l", "qty": 1, "amount": 4000 },
-          { "kind": "extra", "refId": "cheese", "qty": 1, "amount": 2250 }
+          {
+            "kind": "base",
+            "qty": 1,
+            "amount": 10000
+          },
+          {
+            "kind": "size",
+            "refId": "l",
+            "qty": 1,
+            "amount": 4000
+          },
+          {
+            "kind": "extra",
+            "refId": "cheese",
+            "qty": 1,
+            "amount": 2250
+          }
         ],
-        "unitSubtotal": 16250, "rounding": 0, "total": 16250
+        "unitSubtotal": 16250,
+        "rounding": 50,
+        "total": 16300
       }
     },
     {
       "name": "dough change",
       "productId": "p1",
-      "selection": { "sizeId": "s", "options": { "dough": "thin" }, "ingredients": { "cheese": 2, "olive": 1, "basil": 1 } },
+      "selection": {
+        "sizeId": "s",
+        "options": {
+          "dough": "thin"
+        },
+        "ingredients": {
+          "cheese": 2,
+          "olive": 1,
+          "basil": 1
+        }
+      },
       "itemQty": 1,
       "expect": {
         "lines": [
-          { "kind": "base", "qty": 1, "amount": 10000 },
-          { "kind": "option", "refId": "thin", "qty": 1, "amount": 1000 }
+          {
+            "kind": "base",
+            "qty": 1,
+            "amount": 10000
+          },
+          {
+            "kind": "option",
+            "refId": "thin",
+            "qty": 1,
+            "amount": 1000
+          }
         ],
-        "unitSubtotal": 11000, "rounding": 0, "total": 11000
+        "unitSubtotal": 11000,
+        "rounding": 0,
+        "total": 11000
       }
     },
     {
       "name": "exceeding maxQty is rejected",
       "productId": "p1",
-      "selection": { "sizeId": "s", "options": { "dough": "regular" }, "ingredients": { "cheese": 2, "olive": 1, "basil": 1, "pepper": 3 } },
+      "selection": {
+        "sizeId": "s",
+        "options": {
+          "dough": "regular"
+        },
+        "ingredients": {
+          "cheese": 2,
+          "olive": 1,
+          "basil": 1,
+          "pepper": 3
+        }
+      },
       "itemQty": 1,
       "expectError": "maxQty"
     },
     {
       "name": "rounding happens once on the item total, not per extra",
       "productId": "p1",
-      "selection": { "sizeId": "s", "options": { "dough": "regular" }, "ingredients": { "cheese": 2, "olive": 1, "basil": 1, "pepper": 2 } },
+      "selection": {
+        "sizeId": "s",
+        "options": {
+          "dough": "regular"
+        },
+        "ingredients": {
+          "cheese": 2,
+          "olive": 1,
+          "basil": 1,
+          "pepper": 2
+        }
+      },
       "itemQty": 3,
       "expect": {
         "lines": [
-          { "kind": "base", "qty": 1, "amount": 10000 },
-          { "kind": "extra", "refId": "pepper", "qty": 2, "amount": 1466 }
+          {
+            "kind": "base",
+            "qty": 1,
+            "amount": 10000
+          },
+          {
+            "kind": "extra",
+            "refId": "pepper",
+            "qty": 2,
+            "amount": 1466
+          }
         ],
-        "unitSubtotal": 11466, "rounding": 2, "total": 34400
+        "unitSubtotal": 11466,
+        "rounding": 2,
+        "total": 34400
       }
     },
     {
       "name": "unknown size is rejected",
       "productId": "p1",
-      "selection": { "sizeId": "xl", "options": { "dough": "regular" }, "ingredients": { "cheese": 2, "olive": 1, "basil": 1 } },
+      "selection": {
+        "sizeId": "xl",
+        "options": {
+          "dough": "regular"
+        },
+        "ingredients": {
+          "cheese": 2,
+          "olive": 1,
+          "basil": 1
+        }
+      },
       "itemQty": 1,
       "expectError": "unknownSize"
     }

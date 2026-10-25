@@ -7,11 +7,11 @@ class PricingRules {
   final int version;
 
   /// The item total is rounded once to the nearest multiple of this
-  /// (piasters). 50 = nearest 0.5 EGP.
+  /// (piasters). 100 = nearest 1 EGP.
   final Piasters roundingStep;
 
-  /// TEMP: pending owner approval of rounding (P0-05).
-  static const current = PricingRules(version: 1, roundingStep: 50);
+  /// Owner-approved (P0-05): round each item total to the nearest 1 EGP.
+  static const current = PricingRules(version: 2, roundingStep: 100);
 }
 
 /// Why an item cannot be priced. The server rejects these orders.
@@ -90,7 +90,7 @@ PriceBreakdown priceItem({
       if (!definition.allowedIngredientIds.contains(id)) {
         throw PricingException('notAllowed', id);
       }
-      // TEMP semantics: maxQty is the extra allowed above the default.
+      // maxQty is the extra allowed above the default (owner, P0-05).
       if (selected > defaultQty + definition.constraints.maxQty) {
         throw PricingException('maxQty', id);
       }
