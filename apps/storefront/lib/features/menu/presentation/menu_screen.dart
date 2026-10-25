@@ -4,9 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_drawer.dart';
 import '../../../core/widgets/credit_footer.dart';
 import '../../../core/widgets/feature_strip.dart';
 import '../../../core/widgets/top_bar.dart';
+import '../../cart/presentation/cart_fab.dart';
 import '../domain/menu.dart';
 import 'menu_providers.dart';
 import 'product_card.dart';
@@ -44,6 +46,10 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
   Widget build(BuildContext context) {
     final menu = ref.watch(menuProvider);
     return Scaffold(
+      drawer: AppDrawer(active: NavItem.home, onMenuTap: _scrollToProducts),
+      floatingActionButton: menu.hasValue
+          ? CartFab(menu: menu.requireValue)
+          : null,
       appBar: TopBar(
         active: NavItem.home,
         onSearch: (q) => setState(() => _query = q.trim().toLowerCase()),
@@ -115,6 +121,18 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                       ),
                 onOrder: _scrollToProducts,
               ),
+              if (width < AppLayout.tablet)
+                Padding(
+                  padding: EdgeInsets.fromLTRB(gutter, 20, gutter, 0),
+                  child: TextField(
+                    onChanged: (q) =>
+                        setState(() => _query = q.trim().toLowerCase()),
+                    decoration: InputDecoration(
+                      hintText: AppStrings.searchHint,
+                      prefixIcon: const Icon(Icons.search),
+                    ),
+                  ),
+                ),
               Padding(
                 padding: EdgeInsets.fromLTRB(gutter, 24, gutter, 8),
                 child: Wrap(

@@ -62,6 +62,12 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
           padding: EdgeInsets.symmetric(horizontal: gutter),
           child: Row(
             children: [
+              if (!wide && Scaffold.maybeOf(context)?.hasDrawer == true)
+                IconButton(
+                  tooltip: AppStrings.navMenu,
+                  icon: const Icon(Icons.menu),
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                ),
               InkWell(
                 onTap: () => context.go('/'),
                 borderRadius: BorderRadius.circular(8),

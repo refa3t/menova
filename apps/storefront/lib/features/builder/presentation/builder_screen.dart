@@ -7,6 +7,7 @@ import 'package:product_builder/product_builder.dart';
 
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_drawer.dart';
 import '../../../core/widgets/feature_strip.dart';
 import '../../../core/widgets/top_bar.dart';
 import '../../cart/presentation/cart_providers.dart';
@@ -151,6 +152,7 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
   Widget build(BuildContext context) {
     final menu = ref.watch(menuProvider);
     return Scaffold(
+      drawer: const AppDrawer(active: NavItem.menu),
       appBar: TopBar(active: NavItem.menu, cartKey: _cartKey),
       bottomNavigationBar: menu.hasValue && _exists(menu.requireValue)
           ? Consumer(
