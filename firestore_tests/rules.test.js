@@ -55,6 +55,10 @@ beforeEach(async () => {
     await db.doc('categoryContent/c1').set({ isVisible: true });
     await db.doc('ingredients/i1').set({ extraPrice: 10 });
     await db.doc('assets/a1').set({ secureUrl: 'x' });
+    await db.doc('settings/store').set({
+      location: { lat: 30.4468569, lng: 31.1910437 },
+      delivery: { perKm: 600, minFee: 2500, maxDistanceMeters: 15000 },
+    });
     await db.doc('orders/o1').set({
       ...newOrder('o1', 'guest1'),
       serverCreatedAt: Timestamp.now(),
@@ -109,6 +113,37 @@ test('create is refused when anything is off', async () => {
   await assertFails(g.doc('orders/r2').set(newOrder('r2', 'g2', {
     history: [entry('status', 'accepted')],
   })));
+});
+
+function delivery(distanceMeters, deliveryFee) {
+  return {
+    customer: {
+      name: 'TEMP', phone: '01012345678', fulfillment: 'delivery',
+      address: 'TEMP street 1', location: { lat: 30.46, lng: 31.18 },
+      distanceMeters,
+    },
+    deliveryFee,
+    total: 11500 + deliveryFee,
+  };
+}
+
+test('delivery fee must follow the store rules', async () => {
+  const g = guest('g3');
+  await assertSucceeds(g.doc('orders/d1').set(newOrder('d1', 'g3', delivery(4300, 3000))));
+  await assertSucceeds(g.doc('orders/d2').set(newOrder('d2', 'g3', delivery(1200, 2500))), 'minimum fee');
+  await assertSucceeds(g.doc('orders/d3').set(newOrder('d3', 'g3', delivery(15000, 9000))), 'max is inclusive');
+  await assertFails(g.doc('orders/d4').set(newOrder('d4', 'g3', delivery(4300, 2500))), 'underpaid fee');
+  await assertFails(g.doc('orders/d5').set(newOrder('d5', 'g3', delivery(15001, 9600))), 'out of range');
+  await assertFails(g.doc('orders/d6').set(newOrder('d6', 'g3', { deliveryFee: 500 })), 'pickup is free');
+  const noLocation = delivery(4300, 3000);
+  delete noLocation.customer.location;
+  await assertFails(g.doc('orders/d7').set(newOrder('d7', 'g3', noLocation)), 'delivery needs a location');
+});
+
+test('settings are public read, never written by clients', async () => {
+  await assertSucceeds(anon().doc('settings/store').get());
+  await assertFails(guest('g1').doc('settings/store').set({ x: 1 }));
+  await assertFails(staff('reception').doc('settings/store').update({ x: 1 }));
 });
 
 test('same requestId cannot be written twice (no duplicates, no edits)', async () => {

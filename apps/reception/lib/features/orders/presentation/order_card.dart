@@ -1,8 +1,10 @@
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/strings/app_strings.dart';
+import '../domain/delivery_check.dart';
 import '../domain/order_verification.dart';
 
 /// Kitchen order card (P1-F03, FR-OR-03): size and options, kept defaults,
@@ -14,8 +16,13 @@ class OrderCard extends StatelessWidget {
     required this.order,
     this.highlight = false,
     this.verification,
+    this.deliveryCheck,
     this.actions,
   });
+
+  /// Re-measured delivery distance and fee; null for pickup or while it
+  /// loads.
+  final DeliveryCheck? deliveryCheck;
 
   /// Re-pricing result (amended SEC-02); null while prices load.
   final OrderVerification? verification;
@@ -35,7 +42,9 @@ class OrderCard extends StatelessWidget {
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: verification?.matches == false
+        side:
+            verification?.matches == false ||
+                deliveryCheck?.result == DeliveryCheckResult.mismatch
             ? BorderSide(color: theme.colorScheme.error, width: 3)
             : highlight
             ? BorderSide(color: theme.colorScheme.primary, width: 3)
@@ -79,11 +88,49 @@ class OrderCard extends StatelessWidget {
                   ),
                 ),
               ),
+            if (deliveryCheck case final d?
+                when d.result == DeliveryCheckResult.mismatch)
+              Container(
+                margin: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.all(8),
+                color: theme.colorScheme.errorContainer,
+                child: Text(
+                  AppStrings.deliveryMismatch(d.expectedFee, d.roadMeters!),
+                  style: TextStyle(
+                    color: theme.colorScheme.onErrorContainer,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            if (deliveryCheck?.result == DeliveryCheckResult.unverified)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  AppStrings.deliveryUnverified,
+                  style: theme.textTheme.bodySmall,
+                ),
+              ),
             const SizedBox(height: 4),
             Text(
               '${AppStrings.fulfillment(c.fulfillment)} · ${c.name} · ${c.phone}',
             ),
             if (c.address != null) Text(c.address!),
+            if (c.distanceMeters != null)
+              Text(AppStrings.distance(c.distanceMeters!)),
+            if (c.location case final at?)
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: TextButton.icon(
+                  onPressed: () => launchUrl(
+                    Uri.parse(
+                      'https://www.google.com/maps/search/?api=1&query=${at.lat},${at.lng}',
+                    ),
+                    webOnlyWindowName: '_blank',
+                  ),
+                  icon: const Icon(Icons.map_outlined),
+                  label: const Text(AppStrings.openMap),
+                ),
+              ),
             const Divider(height: 24),
             for (final item in order.items) _Item(item: item),
             if (order.notes.isNotEmpty) ...[
@@ -94,6 +141,10 @@ class OrderCard extends StatelessWidget {
               ),
             ],
             const Divider(height: 24),
+            if (order.deliveryFee > 0) ...[
+              _Amount(AppStrings.subtotal, order.total - order.deliveryFee),
+              _Amount(AppStrings.deliveryFee, order.deliveryFee),
+            ],
             Row(
               children: [
                 const Text(AppStrings.total),
@@ -186,6 +237,20 @@ class _Chip extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(label, style: Theme.of(context).textTheme.labelMedium),
+    );
+  }
+}
+
+class _Amount extends StatelessWidget {
+  const _Amount(this.label, this.amount);
+
+  final String label;
+  final int amount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [Text(label), const Spacer(), Text(AppStrings.price(amount))],
     );
   }
 }

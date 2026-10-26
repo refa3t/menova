@@ -6,8 +6,10 @@ import 'package:core/core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pricing/pricing.dart';
 
 import '../../cart/presentation/cart_providers.dart';
+import '../../delivery/presentation/delivery_controller.dart';
 import '../../menu/domain/menu.dart';
 import '../../menu/presentation/menu_providers.dart';
 import '../data/order_submitter.dart';
@@ -81,9 +83,15 @@ class CheckoutController extends Notifier<CheckoutState> {
   @override
   CheckoutState build() => const CheckoutIdle();
 
+  /// Line id of the delivery fee in a [PriceDiff].
+  static const deliveryLineId = 'delivery';
+
+  /// [shownDeliveryFee] is the fee the guest saw; it is re-priced from
+  /// fresh store settings before sending, like the items.
   Future<void> confirm({
     required GuestCustomer customer,
     required String notes,
+    int shownDeliveryFee = 0,
   }) async {
     if (state is CheckoutSending) return; // One send at a time (scenario 6).
     final checking = state is CheckoutPending;
@@ -109,9 +117,13 @@ class CheckoutController extends Notifier<CheckoutState> {
     final shown = ref.read(menuProvider).value;
     final Menu fresh;
     final String uid;
+    StoreSettings? settings;
     try {
       uid = await ref.read(guestUidProvider)();
       fresh = await ref.read(freshMenuProvider)();
+      if (customer.fulfillment == Fulfillment.delivery) {
+        settings = await ref.read(storeSettingsLoaderProvider)();
+      }
     } on Object catch (e) {
       debugPrint('checkout: before send failed: $e');
       state = const CheckoutPending(); // Offline before reaching the server.
@@ -120,8 +132,28 @@ class CheckoutController extends Notifier<CheckoutState> {
 
     // Scenario 4: never confirm an order at an old price.
     final diffs = shown == null
-        ? const <PriceDiff>[]
+        ? <PriceDiff>[]
         : OrderBuilder.diff(cart, shown, fresh);
+    var fee = 0;
+    if (settings != null) {
+      int? current;
+      try {
+        current = deliveryFee(customer.distanceMeters ?? -1, settings.delivery);
+      } on PricingException {
+        current = null;
+      }
+      if (current != shownDeliveryFee) {
+        diffs.add(
+          PriceDiff(
+            lineId: deliveryLineId,
+            productName: deliveryLineId,
+            shown: shownDeliveryFee,
+            current: current,
+          ),
+        );
+      }
+      fee = current ?? 0;
+    }
     if (diffs.isNotEmpty) {
       state = CheckoutPriceChanged(diffs);
       return;
@@ -147,6 +179,7 @@ class CheckoutController extends Notifier<CheckoutState> {
       customer: customer,
       notes: notes,
       now: DateTime.now(),
+      deliveryFee: fee,
     );
 
     final result = await ref.read(orderGatewayProvider).submit(order);
@@ -166,6 +199,7 @@ class CheckoutController extends Notifier<CheckoutState> {
   /// the content (prices) changed.
   void acceptCorrections() {
     ref.invalidate(menuProvider);
+    ref.read(deliveryProvider.notifier).reprice();
     state = const CheckoutIdle();
   }
 

@@ -1,4 +1,5 @@
 import '../models/json.dart';
+import '../models/store_settings.dart';
 import '../models/money.dart';
 import 'price_breakdown.dart';
 import 'selection.dart';
@@ -135,6 +136,8 @@ class GuestCustomer {
     required this.phone,
     required this.fulfillment,
     this.address,
+    this.location,
+    this.distanceMeters,
   });
 
   final String name;
@@ -142,11 +145,20 @@ class GuestCustomer {
   final Fulfillment fulfillment;
   final String? address;
 
+  /// Delivery only: where the guest is, and the road distance from the
+  /// store the delivery fee was priced on.
+  final LatLng? location;
+  final int? distanceMeters;
+
   factory GuestCustomer.fromJson(Json j) => GuestCustomer(
     name: req(j, 'name'),
     phone: req(j, 'phone'),
     fulfillment: Fulfillment.values.byName(req(j, 'fulfillment')),
     address: opt(j, 'address'),
+    location: j['location'] == null
+        ? null
+        : LatLng.fromJson(req(j, 'location')),
+    distanceMeters: opt(j, 'distanceMeters'),
   );
 
   Json toJson() => {
@@ -154,6 +166,8 @@ class GuestCustomer {
     'phone': phone,
     'fulfillment': fulfillment.name,
     if (address != null) 'address': address,
+    if (location != null) 'location': location!.toJson(),
+    if (distanceMeters != null) 'distanceMeters': distanceMeters,
   };
 
   @override
@@ -162,13 +176,15 @@ class GuestCustomer {
       other.name == name &&
       other.phone == phone &&
       other.fulfillment == fulfillment &&
-      other.address == address;
+      other.address == address &&
+      other.location == location &&
+      other.distanceMeters == distanceMeters;
 
   @override
-  int get hashCode => Object.hash(name, phone, fulfillment, address);
+  int get hashCode =>
+      Object.hash(name, phone, fulfillment, address, location, distanceMeters);
 }
 
-/// Who changed an order or payment status, and when (CLAUDE.md 5.3).
 class StatusChange {
   const StatusChange({
     required this.field,

@@ -99,6 +99,16 @@ class KitchenTicket extends StatelessWidget {
             rule(),
             Text('${c.name} · ${c.phone}', textDirection: TextDirection.rtl),
             if (c.address != null) Text(c.address!),
+            if (c.distanceMeters != null)
+              Text(AppStrings.distance(c.distanceMeters!)),
+            if (order.deliveryFee > 0)
+              Row(
+                children: [
+                  const Text(AppStrings.deliveryFee),
+                  const Spacer(),
+                  Text(AppStrings.price(order.deliveryFee)),
+                ],
+              ),
             Row(
               children: [
                 Text(AppStrings.total, style: bold),

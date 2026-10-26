@@ -114,6 +114,37 @@ abstract final class AppStrings {
   static String get pickup => _t('Pick up', 'استلام من المطعم');
   static String get delivery => _t('Delivery', 'توصيل');
   static String get address => _t('Address', 'العنوان');
+  static String get useMyLocation => _t('Use my location', 'حدّد موقعي');
+  static String get locating =>
+      _t('Finding your location...', 'جارٍ تحديد موقعك...');
+  static String get relocate => _t('Update location', 'تحديث الموقع');
+  static String get deliveryFee => _t('Delivery fee', 'رسوم التوصيل');
+  static String get orderTotal => _t('Total', 'الإجمالي');
+  static String deliveryDistance(int meters) {
+    final km = (meters / 1000).toStringAsFixed(1);
+    return _t('$km km by road', '$km كم بالطريق');
+  }
+
+  static String get deliveryNeedsLocation => _t(
+    'Share your location to price the delivery',
+    'شارك موقعك لحساب رسوم التوصيل',
+  );
+  static String get locationDenied => _t(
+    'Location permission was denied. Allow it in the browser and try again.',
+    'تم رفض إذن الموقع. اسمح به من المتصفح وأعد المحاولة',
+  );
+  static String get locationUnavailable => _t(
+    'Could not get your location. Try again.',
+    'تعذّر تحديد موقعك. أعد المحاولة',
+  );
+  static String get routeFailed => _t(
+    'Could not calculate the delivery distance. Try again.',
+    'تعذّر حساب مسافة التوصيل. أعد المحاولة',
+  );
+  static String get outOfRange => _t(
+    'Sorry, your location is outside our delivery area.',
+    'عذراً، موقعك خارج نطاق التوصيل',
+  );
   static String get orderNotes => _t('Order notes', 'ملاحظات على الطلب');
   static String get paymentCash =>
       _t('Cash on delivery or pickup', 'الدفع نقداً عند الاستلام');

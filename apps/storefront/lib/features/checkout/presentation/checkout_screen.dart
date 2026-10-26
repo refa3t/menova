@@ -8,6 +8,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../cart/domain/cart_line_view.dart';
 import '../../cart/presentation/cart_providers.dart';
+import '../../delivery/domain/delivery_quote.dart';
+import '../../delivery/presentation/delivery_controller.dart';
 import '../../menu/presentation/menu_providers.dart';
 import '../domain/guest_form.dart';
 import '../domain/order_builder.dart';
@@ -69,19 +71,40 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         .setString(_guestKey, jsonEncode(g.toJson()));
   }
 
-  GuestCustomer _customer() => GuestCustomer(
+  GuestCustomer _customer(DeliveryQuote? quote) => GuestCustomer(
     name: _name.text.trim(),
     phone: GuestValidation.normalizePhone(_phone.text),
     fulfillment: _fulfillment,
     address: _fulfillment == Fulfillment.delivery ? _address.text.trim() : null,
+    location: quote?.location,
+    distanceMeters: quote?.distanceMeters,
   );
+
+  /// The priced delivery, when one is priced.
+  DeliveryQuote? _quote() => switch (ref.read(deliveryProvider)) {
+    DeliveryQuoted(:final quote) => quote,
+    _ => null,
+  };
 
   void _confirm() {
     if (!_form.currentState!.validate()) return;
+    final quote = _fulfillment == Fulfillment.delivery ? _quote() : null;
+    if (_fulfillment == Fulfillment.delivery && quote == null) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(AppStrings.deliveryNeedsLocation)),
+        );
+      return;
+    }
     _saveGuest();
     ref
         .read(checkoutProvider.notifier)
-        .confirm(customer: _customer(), notes: _notes.text.trim());
+        .confirm(
+          customer: _customer(quote),
+          notes: _notes.text.trim(),
+          shownDeliveryFee: quote?.fee ?? 0,
+        );
   }
 
   void _onState(CheckoutState? _, CheckoutState next) {
@@ -117,8 +140,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 padding: const EdgeInsets.only(bottom: 6),
                 child: Text(
                   d.current == null
-                      ? '${d.productName}: ${AppStrings.noLongerAvailable}'
-                      : '${d.productName}: '
+                      ? '${_diffName(d)}: ${_isDelivery(d) ? AppStrings.outOfRange : AppStrings.noLongerAvailable}'
+                      : '${_diffName(d)}: '
                             '${d.shown == null ? '—' : AppStrings.price(d.shown!)}'
                             ' ← ${AppStrings.price(d.current!)}',
                 ),
@@ -147,9 +170,22 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     }
   }
 
+  bool _isDelivery(PriceDiff d) =>
+      d.lineId == CheckoutController.deliveryLineId;
+
+  String _diffName(PriceDiff d) =>
+      _isDelivery(d) ? AppStrings.deliveryFee : d.productName;
+
   @override
   Widget build(BuildContext context) {
     ref.listen(checkoutProvider, _onState);
+    final delivery = ref.watch(deliveryProvider);
+    final int? fee = _fulfillment == Fulfillment.delivery
+        ? switch (delivery) {
+            DeliveryQuoted(:final quote) => quote.fee,
+            _ => null,
+          }
+        : 0;
     final checkout = ref.watch(checkoutProvider);
     final sending = checkout is CheckoutSending;
     final cart = ref.watch(cartProvider);
@@ -196,7 +232,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               style: Theme.of(context).textTheme.titleSmall,
             ),
             SizedBox(height: 8),
-            // TEMP: both methods offered until OWNER_INPUTS decision 4.
+            // Pickup and delivery (owner decision, OWNER_INPUTS 4).
             SegmentedButton<Fulfillment>(
               segments: [
                 ButtonSegment(
@@ -222,6 +258,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 validator: (v) =>
                     message(GuestValidation.address(v ?? '', _fulfillment)),
               ),
+              const SizedBox(height: 12),
+              _DeliveryLocation(state: delivery),
             ],
             const SizedBox(height: 12),
             TextFormField(
@@ -232,17 +270,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               decoration: InputDecoration(labelText: AppStrings.orderNotes),
             ),
             const SizedBox(height: 8),
-            if (subtotal != null)
-              Row(
-                children: [
-                  Text(AppStrings.subtotal),
-                  const Spacer(),
-                  Text(
-                    AppStrings.price(subtotal),
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ],
+            if (subtotal != null) ...[
+              _TotalRow(AppStrings.subtotal, subtotal),
+              if (_fulfillment == Fulfillment.delivery)
+                _TotalRow(AppStrings.deliveryFee, fee),
+              _TotalRow(
+                AppStrings.orderTotal,
+                fee == null ? null : subtotal + fee,
+                strong: true,
               ),
+            ],
             const SizedBox(height: 4),
             Text(
               AppStrings.paymentCash,
@@ -283,6 +320,97 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _TotalRow extends StatelessWidget {
+  const _TotalRow(this.label, this.amount, {this.strong = false});
+
+  final String label;
+  final int? amount;
+  final bool strong;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = strong
+        ? Theme.of(context).textTheme.titleMedium
+        : Theme.of(context).textTheme.bodyMedium;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Text(label, style: style),
+          const Spacer(),
+          Text(amount == null ? '—' : AppStrings.price(amount!), style: style),
+        ],
+      ),
+    );
+  }
+}
+
+/// Delivery pricing from the guest's location: a button, then the road
+/// distance and fee, or why it could not be priced.
+class _DeliveryLocation extends ConsumerWidget {
+  const _DeliveryLocation({required this.state});
+
+  final DeliveryState state;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final controller = ref.read(deliveryProvider.notifier);
+    final theme = Theme.of(context);
+    final (String? info, bool error) = switch (state) {
+      DeliveryQuoted(:final quote) => (
+        '${AppStrings.deliveryDistance(quote.distanceMeters)} · '
+            '${AppStrings.deliveryFee}: ${AppStrings.price(quote.fee)}',
+        false,
+      ),
+      DeliveryFailed(:final error) => (
+        switch (error) {
+          DeliveryError.denied => AppStrings.locationDenied,
+          DeliveryError.unavailable => AppStrings.locationUnavailable,
+          DeliveryError.routeFailed => AppStrings.routeFailed,
+          DeliveryError.outOfRange => AppStrings.outOfRange,
+        },
+        true,
+      ),
+      _ => (null, false),
+    };
+    final locating = state is DeliveryLocating;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        OutlinedButton.icon(
+          onPressed: locating ? null : controller.locate,
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size.fromHeight(48),
+          ),
+          icon: locating
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.my_location),
+          label: Text(
+            locating
+                ? AppStrings.locating
+                : state is DeliveryQuoted
+                ? AppStrings.relocate
+                : AppStrings.useMyLocation,
+          ),
+        ),
+        if (info != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              info,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: error ? theme.colorScheme.error : null,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

@@ -146,3 +146,18 @@ Piasters _roundToStep(Piasters amount, Piasters step) {
   if (step <= 1) return amount;
   return ((amount + step ~/ 2) ~/ step) * step;
 }
+
+/// Delivery fee for a road distance (owner rules, P0-05): every started
+/// kilometer costs [DeliverySettings.perKm], never below
+/// [DeliverySettings.minFee]. Throws `PricingException('outOfRange')`
+/// beyond [DeliverySettings.maxDistanceMeters]. Added after the items
+/// total (CLAUDE.md 5.1). Must match `deliveryFeeOk` in firestore.rules.
+Piasters deliveryFee(int distanceMeters, DeliverySettings settings) {
+  if (distanceMeters < 0) throw const PricingException('badDistance');
+  if (distanceMeters > settings.maxDistanceMeters) {
+    throw const PricingException('outOfRange');
+  }
+  final km = (distanceMeters + 999) ~/ 1000;
+  final fee = km * settings.perKm;
+  return fee < settings.minFee ? settings.minFee : fee;
+}

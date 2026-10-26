@@ -1,0 +1,6 @@
+{
+  "_note": "Owner decisions (P0-05): 6 EGP per started road km, minimum 25 EGP, up to 15 km. The location is TEMP: 'شارع الامل، بنها' geocoded with OpenStreetMap Nominatim; replace with the exact pin (admin panel later).",
+  "temp": true,
+  "location": { "lat": 30.4468569, "lng": 31.1910437 },
+  "delivery": { "perKm": 600, "minFee": 2500, "maxDistanceMeters": 15000 }
+}

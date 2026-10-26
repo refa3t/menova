@@ -62,6 +62,17 @@ abstract final class AppStrings {
   static String priceMismatch(int computed) =>
       'السعر لا يطابق الحساب: المحسوب ${price(computed)}. راجع قبل القبول';
 
+  static const subtotal = 'المنتجات';
+  static const deliveryFee = 'رسوم التوصيل';
+  static const openMap = 'الموقع على الخريطة';
+  static String distance(int meters) =>
+      '${(meters / 1000).toStringAsFixed(1)} كم بالطريق';
+  static String deliveryMismatch(int? expected, int meters) => expected == null
+      ? 'المسافة الفعلية ${distance(meters)} خارج نطاق التوصيل. راجع قبل القبول'
+      : 'رسوم التوصيل لا تطابق المسافة الفعلية (${distance(meters)}): '
+            'المحسوب ${price(expected)}. راجع قبل القبول';
+  static const deliveryUnverified = 'تعذّر التحقق من مسافة التوصيل الآن';
+
   static const actionFailed = 'تعذّر تنفيذ الإجراء، حاول مرة أخرى';
   static const cancelOrder = 'إلغاء الطلب';
   static const cancelReason = 'سبب الإلغاء';

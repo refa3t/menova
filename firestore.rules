@@ -29,6 +29,11 @@ service cloud.firestore {
       allow read: if true;
       allow write: if false;
     }
+    // Store location and delivery rules (tools/seed now, admin later).
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if false;
+    }
 
     match /orders/{orderId} {
       function orderKeys() {
@@ -40,13 +45,33 @@ service cloud.firestore {
 
       function validCustomer(c) {
         return c is map
-            && c.keys().hasOnly(['name', 'phone', 'fulfillment', 'address'])
+            && c.keys().hasOnly(['name', 'phone', 'fulfillment', 'address',
+                                 'location', 'distanceMeters'])
             && c.name is string && c.name.size() >= 2 && c.name.size() <= 60
             && c.phone is string && c.phone.matches('^01[0125][0-9]{8}$')
             && c.fulfillment in ['pickup', 'delivery']
             && (c.fulfillment == 'pickup'
                 || (c.address is string && c.address.size() >= 5
-                    && c.address.size() <= 300));
+                    && c.address.size() <= 300
+                    && c.location is map
+                    && c.location.keys().hasOnly(['lat', 'lng'])
+                    && c.location.lat is number && c.location.lng is number
+                    && c.distanceMeters is int && c.distanceMeters >= 0));
+      }
+
+      // Same formula as pricing deliveryFee(): every started km at perKm,
+      // never below minFee, refused beyond maxDistanceMeters. Pickup is free.
+      function deliveryFeeOk(d) {
+        return d.customer.fulfillment == 'pickup'
+            ? d.deliveryFee == 0
+            : roadFeeOk(d.deliveryFee, d.customer.distanceMeters,
+                get(/databases/$(database)/documents/settings/store).data.delivery);
+      }
+
+      function roadFeeOk(fee, meters, s) {
+        let km = int(math.ceil(meters / 1000.0));
+        return meters <= s.maxDistanceMeters
+            && fee == (km * s.perKm < s.minFee ? s.minFee : km * s.perKm);
       }
 
       // A guest creates their own order once, in its initial state.
@@ -62,7 +87,7 @@ service cloud.firestore {
             && d.status == 'new'
             && d.paymentStatus == 'unpaid'
             && d.paymentMethod == 'cash'
-            && d.deliveryFee is int && d.deliveryFee >= 0
+            && d.deliveryFee is int && deliveryFeeOk(d)
             && d.total is int && d.total >= 0
             && d.definitionVersions is map
             && d.rulesVersion is int

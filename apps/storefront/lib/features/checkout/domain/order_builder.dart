@@ -145,7 +145,8 @@ abstract final class OrderBuilder {
     return sha256.convert(utf8.encode(jsonEncode(canonical))).toString();
   }
 
-  /// Builds the order document. [deliveryFee] is TEMP until decision 5.
+  /// Builds the order document. [deliveryFee] comes from pricing
+  /// `deliveryFee` (0 for pickup) and is checked by the order rules.
   static Order build({
     required String requestId,
     required String customerUid,

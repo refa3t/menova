@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/strings/app_strings.dart';
+import '../data/delivery_check_provider.dart';
 import '../data/pricing_data_provider.dart';
 import '../domain/order_alerts.dart';
 import '../domain/order_verification.dart';
@@ -98,6 +99,11 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                       verification: pricing == null
                           ? null
                           : verifyOrder(list[i], pricing),
+                      deliveryCheck: switch (deliveryCheckKey(list[i])) {
+                        final key? =>
+                          ref.watch(deliveryCheckProvider(key)).value,
+                        null => null,
+                      },
                       actions: OrderActionBar(order: list[i]),
                     ),
                   ),
