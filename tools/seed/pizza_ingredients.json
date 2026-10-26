@@ -1,9 +1,5 @@
 {
-  "temp": true,
-  "_note": "TEMP: placeholder values for development only. Replace from OWNER_INPUTS.md before gate A. Must never be seeded to production.",
-  "tempFields": [
-    "extraPrice"
-  ],
+  "_note": "Extra prices: Egyptian-market estimates approved by the owner (EXTRA_PRICE in tools/build_pizza_catalog.py).",
   "ingredients": [
     {
       "id": "mozzarella",
@@ -16,7 +12,7 @@
       "assetFiles": [
         "ing_mozzarella_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 3000,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -31,7 +27,7 @@
       "assetFiles": [
         "ing_olive_black_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 1200,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -61,7 +57,7 @@
       "assetFiles": [
         "ing_bell_pepper_green_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 1000,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -76,7 +72,7 @@
       "assetFiles": [
         "ing_ham_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 3000,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -91,7 +87,7 @@
       "assetFiles": [
         "ing_chicken_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 3500,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -106,7 +102,7 @@
       "assetFiles": [
         "ing_onion_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 1000,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -121,7 +117,7 @@
       "assetFiles": [
         "ing_pepperoni_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 3500,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -136,7 +132,7 @@
       "assetFiles": [
         "ing_sausage_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 3000,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -151,7 +147,7 @@
       "assetFiles": [
         "ing_tomato_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 1000,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -166,7 +162,7 @@
       "assetFiles": [
         "ing_corn_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 1000,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -181,7 +177,7 @@
       "assetFiles": [
         "ing_basil_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 500,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -196,7 +192,7 @@
       "assetFiles": [
         "ing_oregano_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 500,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -211,7 +207,7 @@
       "assetFiles": [
         "ing_cheddar_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 2500,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -226,7 +222,7 @@
       "assetFiles": [
         "ing_feta_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 2000,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -241,7 +237,7 @@
       "assetFiles": [
         "ing_parmesan_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 3000,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -256,7 +252,7 @@
       "assetFiles": [
         "ing_bacon_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 4000,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -271,7 +267,7 @@
       "assetFiles": [
         "ing_ground_beef_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 3500,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -286,7 +282,7 @@
       "assetFiles": [
         "ing_bell_pepper_red_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 1000,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -301,7 +297,7 @@
       "assetFiles": [
         "ing_red_onion_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 1000,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -316,7 +312,7 @@
       "assetFiles": [
         "ing_cherry_tomato_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 1200,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -331,7 +327,7 @@
       "assetFiles": [
         "ing_garlic_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 500,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -346,7 +342,7 @@
       "assetFiles": [
         "ing_parsley_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 500,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -361,7 +357,7 @@
       "assetFiles": [
         "ing_roumi_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 2500,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -376,7 +372,7 @@
       "assetFiles": [
         "ing_tuna_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 3500,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -391,7 +387,7 @@
       "assetFiles": [
         "ing_olive_green_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 1200,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -421,7 +417,7 @@
       "assetFiles": [
         "ing_jalapeno_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 1200,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -436,7 +432,7 @@
       "assetFiles": [
         "ing_artichoke_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 2500,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -451,7 +447,7 @@
       "assetFiles": [
         "ing_blue_cheese_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 3500,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -466,7 +462,7 @@
       "assetFiles": [
         "ing_salami_spicy_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 3500,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -484,7 +480,7 @@
         "ing_basterma_03.webp",
         "ing_basterma_04.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 4500,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -502,7 +498,7 @@
         "ing_mortadella_03.webp",
         "ing_mortadella_04.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 2500,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -517,7 +513,7 @@
       "assetFiles": [
         "ing_shrimp_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 6000,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -532,7 +528,7 @@
       "assetFiles": [
         "ing_calamari_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 5000,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -547,7 +543,7 @@
       "assetFiles": [
         "ing_anchovy_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 4000,
       "isAvailable": true,
       "sizeMultipliers": {}
     },
@@ -562,7 +558,7 @@
       "assetFiles": [
         "ing_chili_red_01.webp"
       ],
-      "extraPrice": 1500,
+      "extraPrice": 500,
       "isAvailable": true,
       "sizeMultipliers": {}
     },

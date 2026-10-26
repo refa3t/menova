@@ -159,6 +159,22 @@
             "en": "Regular",
             "ar": "عادية"
           }
+        },
+        {
+          "id": "thin",
+          "name": "رفيعة",
+          "names": {
+            "en": "Thin",
+            "ar": "رفيعة"
+          }
+        },
+        {
+          "id": "cheese_crust",
+          "name": "حواف جبنة",
+          "names": {
+            "en": "Cheese crust",
+            "ar": "حواف جبنة"
+          }
         }
       ]
     }

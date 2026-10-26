@@ -1,6 +1,5 @@
 {
-  "_note": "Owner decisions (P0-05): 6 EGP per started road km, minimum 25 EGP, up to 15 km. The location is TEMP: 'شارع الامل، بنها' geocoded with OpenStreetMap Nominatim; replace with the exact pin (admin panel later).",
-  "temp": true,
-  "location": { "lat": 30.4468569, "lng": 31.1910437 },
+  "_note": "Owner decisions (P0-05): 6 EGP per started road km, minimum 25 EGP, up to 15 km. Location given by the owner: شارع مستشفى الأمل، بنها، القليوبية (El-Amal Hospital pin). Changeable later from the admin panel.",
+  "location": { "lat": 30.4684889, "lng": 31.1807884 },
   "delivery": { "perKm": 600, "minFee": 2500, "maxDistanceMeters": 15000 }
 }

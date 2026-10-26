@@ -2,9 +2,6 @@
   "temp": true,
   "_note": "TEMP: placeholder values for development only. Replace from OWNER_INPUTS.md before gate A. Must never be seeded to production.",
   "tempFields": [
-    "basePrice",
-    "sizeDeltas",
-    "optionDeltas",
     "defaults[].removable"
   ],
   "products": [
@@ -17,7 +14,7 @@
         "ar": "مارجريتا"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 13000,
       "imageAssetId": "final_pizza_margherita",
       "defaults": [
         {
@@ -38,11 +35,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 5000,
+        "l": 10000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 0,
       "groupId": "cheese",
@@ -57,7 +56,7 @@
         "ar": "بيبروني"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 16000,
       "imageAssetId": "final_pizza_pepperoni",
       "defaults": [
         {
@@ -78,11 +77,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 5500,
+        "l": 11000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 3,
       "groupId": "meat",
@@ -97,7 +98,7 @@
         "ar": "خضار"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 14500,
       "imageAssetId": "final_pizza_veggie",
       "defaults": [
         {
@@ -160,11 +161,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 5000,
+        "l": 10500
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 10,
       "groupId": "veggie",
@@ -179,7 +182,7 @@
         "ar": "فراخ"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 16000,
       "imageAssetId": "final_pizza_chicken",
       "defaults": [
         {
@@ -221,11 +224,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 5500,
+        "l": 11000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 14,
       "groupId": "chicken",
@@ -240,7 +245,7 @@
         "ar": "سوبريم"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 17500,
       "imageAssetId": "final_pizza_supreme",
       "defaults": [
         {
@@ -296,11 +301,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 6000,
+        "l": 12000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 16,
       "groupId": "meat",

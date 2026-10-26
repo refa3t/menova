@@ -2,9 +2,6 @@
   "temp": true,
   "_note": "TEMP: placeholder values for development only. Replace from OWNER_INPUTS.md before gate A. Must never be seeded to production.",
   "tempFields": [
-    "basePrice",
-    "sizeDeltas",
-    "optionDeltas",
     "defaults[].removable"
   ],
   "excluded": {
@@ -24,7 +21,7 @@
         "ar": "مارجريتا"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 13000,
       "imageAssetId": "final_pizza_margherita",
       "defaults": [
         {
@@ -45,11 +42,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 5000,
+        "l": 10000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 0,
       "groupId": "cheese",
@@ -64,7 +63,7 @@
         "ar": "مارينارا"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 13000,
       "imageAssetId": "final_pizza_marinara",
       "defaults": [
         {
@@ -85,11 +84,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 5000,
+        "l": 10000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 1,
       "groupId": "veggie",
@@ -104,7 +105,7 @@
         "ar": "جبنة"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 13000,
       "imageAssetId": "final_pizza_cheese",
       "defaults": [
         {
@@ -118,11 +119,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 5000,
+        "l": 10000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 2,
       "groupId": "cheese",
@@ -137,7 +140,7 @@
         "ar": "بيبروني"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 16000,
       "imageAssetId": "final_pizza_pepperoni",
       "defaults": [
         {
@@ -158,11 +161,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 5500,
+        "l": 11000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 3,
       "groupId": "meat",
@@ -177,7 +182,7 @@
         "ar": "أربعة أجبان"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 16500,
       "imageAssetId": "final_pizza_quattro_formaggi",
       "defaults": [
         {
@@ -212,11 +217,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 6000,
+        "l": 12000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 4,
       "groupId": "cheese",
@@ -231,7 +238,7 @@
         "ar": "مشكل جبن"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 16500,
       "imageAssetId": "final_pizza_egyptian_mixed_cheese",
       "defaults": [
         {
@@ -266,11 +273,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 6000,
+        "l": 12000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 5,
       "groupId": "cheese",
@@ -285,7 +294,7 @@
         "ar": "كابريتشوزا"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 17500,
       "imageAssetId": "final_pizza_capricciosa",
       "defaults": [
         {
@@ -327,11 +336,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 6000,
+        "l": 12000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 6,
       "groupId": "meat",
@@ -346,7 +357,7 @@
         "ar": "ديافولا"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 17500,
       "imageAssetId": "final_pizza_diavola",
       "defaults": [
         {
@@ -374,11 +385,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 6000,
+        "l": 12000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 7,
       "groupId": "meat",
@@ -393,7 +406,7 @@
         "ar": "هام ومشروم"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 16000,
       "imageAssetId": "final_pizza_ham_mushroom",
       "defaults": [
         {
@@ -421,11 +434,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 5500,
+        "l": 11000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 8,
       "groupId": "meat",
@@ -440,7 +455,7 @@
         "ar": "نابوليتانا"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 17500,
       "imageAssetId": "final_pizza_napoletana",
       "defaults": [
         {
@@ -482,11 +497,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 6000,
+        "l": 12000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 9,
       "groupId": "seafood",
@@ -501,7 +518,7 @@
         "ar": "خضار"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 14500,
       "imageAssetId": "final_pizza_veggie",
       "defaults": [
         {
@@ -564,11 +581,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 5000,
+        "l": 10500
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 10,
       "groupId": "veggie",
@@ -583,7 +602,7 @@
         "ar": "هاواي"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 16000,
       "imageAssetId": "final_pizza_hawaiian",
       "defaults": [
         {
@@ -611,11 +630,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 5500,
+        "l": 11000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 11,
       "groupId": "meat",
@@ -630,7 +651,7 @@
         "ar": "فراخ باربكيو"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 17500,
       "imageAssetId": "final_pizza_bbq_chicken",
       "defaults": [
         {
@@ -658,11 +679,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 6000,
+        "l": 12000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 12,
       "groupId": "chicken",
@@ -677,7 +700,7 @@
         "ar": "فراخ رانش"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 17500,
       "imageAssetId": "final_pizza_chicken_ranch",
       "defaults": [
         {
@@ -712,11 +735,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 6000,
+        "l": 12000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 13,
       "groupId": "chicken",
@@ -731,7 +756,7 @@
         "ar": "فراخ"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 16000,
       "imageAssetId": "final_pizza_chicken",
       "defaults": [
         {
@@ -773,11 +798,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 5500,
+        "l": 11000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 14,
       "groupId": "chicken",
@@ -792,7 +819,7 @@
         "ar": "فراخ فاهيتا"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 17500,
       "imageAssetId": "final_pizza_chicken_fajita",
       "defaults": [
         {
@@ -834,11 +861,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 6000,
+        "l": 12000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 15,
       "groupId": "chicken",
@@ -853,7 +882,7 @@
         "ar": "سوبريم"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 17500,
       "imageAssetId": "final_pizza_supreme",
       "defaults": [
         {
@@ -909,11 +938,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 6000,
+        "l": 12000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 16,
       "groupId": "meat",
@@ -928,7 +959,7 @@
         "ar": "ميت لافرز"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 17500,
       "imageAssetId": "final_pizza_meat_lovers",
       "defaults": [
         {
@@ -977,11 +1008,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 6000,
+        "l": 12000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 17,
       "groupId": "meat",
@@ -996,7 +1029,7 @@
         "ar": "سوسيس"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 16000,
       "imageAssetId": "final_pizza_sausage",
       "defaults": [
         {
@@ -1017,11 +1050,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 5500,
+        "l": 11000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 18,
       "groupId": "meat",
@@ -1036,7 +1071,7 @@
         "ar": "مشروم"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 14500,
       "imageAssetId": "final_pizza_mushroom",
       "defaults": [
         {
@@ -1064,11 +1099,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 5000,
+        "l": 10500
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 19,
       "groupId": "veggie",
@@ -1083,7 +1120,7 @@
         "ar": "تونة"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 16000,
       "imageAssetId": "final_pizza_tuna",
       "defaults": [
         {
@@ -1125,11 +1162,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 5500,
+        "l": 11000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 20,
       "groupId": "seafood",
@@ -1144,7 +1183,7 @@
         "ar": "مأكولات بحرية"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 21000,
       "imageAssetId": "final_pizza_seafood",
       "defaults": [
         {
@@ -1186,11 +1225,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 7000,
+        "l": 14000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 21,
       "groupId": "seafood",
@@ -1205,7 +1246,7 @@
         "ar": "مكسيكانا"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 17500,
       "imageAssetId": "final_pizza_mexican",
       "defaults": [
         {
@@ -1254,11 +1295,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 6000,
+        "l": 12000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 22,
       "groupId": "meat",
@@ -1273,7 +1316,7 @@
         "ar": "يوناني"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 14500,
       "imageAssetId": "final_pizza_greek",
       "defaults": [
         {
@@ -1322,11 +1365,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 5000,
+        "l": 10500
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 23,
       "groupId": "veggie",
@@ -1341,7 +1386,7 @@
         "ar": "فراخ بيستو"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 17500,
       "imageAssetId": "final_pizza_pesto_chicken",
       "defaults": [
         {
@@ -1376,11 +1421,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 6000,
+        "l": 12000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 24,
       "groupId": "chicken",
@@ -1395,7 +1442,7 @@
         "ar": "بسطرمة"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 17500,
       "imageAssetId": "final_pizza_basterma",
       "defaults": [
         {
@@ -1430,11 +1477,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 6000,
+        "l": 12000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 25,
       "groupId": "meat",
@@ -1449,7 +1498,7 @@
         "ar": "مرتديلا"
       },
       "description": "",
-      "basePrice": 10000,
+      "basePrice": 16000,
       "imageAssetId": "final_pizza_mortadella",
       "defaults": [
         {
@@ -1477,11 +1526,13 @@
       "isAvailable": true,
       "sizeDeltas": {
         "s": 0,
-        "m": 0,
-        "l": 0
+        "m": 5500,
+        "l": 11000
       },
       "optionDeltas": {
-        "regular": 0
+        "regular": 0,
+        "thin": 0,
+        "cheese_crust": 4500
       },
       "displayOrder": 26,
       "groupId": "meat",

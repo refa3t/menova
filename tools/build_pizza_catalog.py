@@ -168,8 +168,57 @@ TRIAL_PRODUCT_IDS = ['margherita', 'pepperoni', 'veggie', 'chicken', 'supreme']
 
 TEMP_NOTE = ('TEMP: placeholder values for development only. Replace from '
              'OWNER_INPUTS.md before gate A. Must never be seeded to production.')
-TEMP_EXTRA_PRICE = 1500   # TEMP piasters
-TEMP_BASE_PRICE = 10000   # TEMP piasters
+# Prices: Egyptian-market estimates (Banha, mid-range, 2026) set by the
+# developer at the owner's request ("make the prices based on the Egyptian
+# market"). Amounts in EGP; stored as piasters. basePrice is the small size.
+EGP = 100
+
+# Size tiers: (small, medium, large) in EGP.
+PRICE_TIERS = {
+    'basic':   (130, 180, 230),
+    'veggie':  (145, 195, 250),
+    'classic': (160, 215, 270),
+    'cheese':  (165, 225, 285),
+    'loaded':  (175, 235, 295),
+    'seafood': (210, 280, 350),
+}
+PRODUCT_TIER = {
+    'margherita': 'basic', 'marinara': 'basic', 'cheese': 'basic',
+    'veggie': 'veggie', 'mushroom': 'veggie', 'greek': 'veggie',
+    'pepperoni': 'classic', 'ham_mushroom': 'classic', 'hawaiian': 'classic',
+    'sausage': 'classic', 'mortadella': 'classic', 'chicken': 'classic',
+    'tuna': 'classic',
+    'quattro_formaggi': 'cheese', 'egyptian_mixed_cheese': 'cheese',
+    'capricciosa': 'loaded', 'diavola': 'loaded', 'bbq_chicken': 'loaded',
+    'chicken_ranch': 'loaded', 'chicken_fajita': 'loaded', 'supreme': 'loaded',
+    'meat_lovers': 'loaded', 'mexican': 'loaded', 'pesto_chicken': 'loaded',
+    'basterma': 'loaded', 'napoletana': 'loaded',
+    'seafood': 'seafood',
+}
+
+# Dough (P0-01): one base image for now; thin and cheese crust reuse it
+# until their base images exist. Flat surcharge in EGP.
+DOUGHS = [
+    ('regular', 'عادية', 'Regular', 0),
+    ('thin', 'رفيعة', 'Thin', 0),
+    ('cheese_crust', 'حواف جبنة', 'Cheese crust', 45),
+]
+
+# Extra topping price per unit in EGP (same for every size, owner P0-05).
+EXTRA_PRICE = {
+    'basil': 5, 'oregano': 5, 'parsley': 5, 'garlic': 5, 'chili_red': 5,
+    'onion': 10, 'red_onion': 10, 'tomato': 10, 'corn': 10,
+    'bell_pepper_green': 10, 'bell_pepper_red': 10,
+    'olive_black': 12, 'olive_green': 12, 'cherry_tomato': 12, 'jalapeno': 12,
+    'mushroom': 15, 'pineapple': 15, 'capers': 15,
+    'artichoke': 25, 'feta': 20,
+    'mozzarella': 30, 'cheddar': 25, 'roumi': 25, 'parmesan': 30,
+    'blue_cheese': 35,
+    'mortadella': 25, 'ham': 30, 'sausage': 30, 'pepperoni': 35,
+    'salami_spicy': 35, 'chicken': 35, 'ground_beef': 35, 'tuna': 35,
+    'bacon': 40, 'anchovy': 40, 'basterma': 45,
+    'calamari': 50, 'shrimp': 60,
+}
 
 
 def dump(path: str, data) -> None:
@@ -183,6 +232,8 @@ def main() -> None:
     keys = {k for k, _ in INGREDIENTS}
     assert set(MOTION) == keys, set(MOTION) ^ keys
     assert set(PRODUCT_GROUP) == {p[0] for p in PRODUCTS}
+    assert set(PRODUCT_TIER) == {p[0] for p in PRODUCTS}
+    assert set(EXTRA_PRICE) == keys, set(EXTRA_PRICE) ^ keys
     for pid, _, _, defaults in PRODUCTS:
         unknown = set(defaults) - keys
         assert not unknown, f'{pid}: unknown ingredients {unknown}'
@@ -213,8 +264,8 @@ def main() -> None:
         'optionGroups': [{
             'id': 'dough', 'name': 'العجينة', 'names': {'en': 'Dough', 'ar': 'العجينة'},
             'defaultChoiceId': 'regular',
-            'choices': [{'id': 'regular', 'name': 'عادية',
-                         'names': {'en': 'Regular', 'ar': 'عادية'}}],
+            'choices': [{'id': c, 'name': ar, 'names': {'en': en, 'ar': ar}}
+                        for c, ar, en, _ in DOUGHS],
         }],
         # ANIMATIONS.md 7 + OVEN.md 4 (proposed values, TEMP until G06).
         'animation': [
@@ -250,10 +301,10 @@ def main() -> None:
     # Sidecar: the definition schema stays strict, TEMP status lives here.
     dump('definitions/pizza.temp.json', {
         '_note': TEMP_NOTE,
-        'tempFields': ['constraints.maxQty', 'sizes', 'optionGroups',
-                       'placement.params', 'ingredientMotion', 'animation'],
+        'tempFields': ['placement.params', 'ingredientMotion'],
         'pendingNotes': [
-            'Only the regular dough exists (no other dough assets yet).',
+            'Thin and cheese-crust doughs reuse the regular base image until '
+            'their own base images exist.',
             'No cooked base asset yet (base.cookedAssetId).',
         ],
     })
@@ -265,33 +316,38 @@ def main() -> None:
         ingredients.append({
             'id': k, 'name': name, 'names': {'en': INGREDIENT_EN[k], 'ar': name},
             'assetId': f'ing_{k}', 'assetFiles': variants,
-            'extraPrice': TEMP_EXTRA_PRICE, 'isAvailable': True,
+            'extraPrice': EXTRA_PRICE[k] * EGP, 'isAvailable': True,
             'sizeMultipliers': {},
         })
     dump('tools/seed/pizza_ingredients.json', {
-        'temp': True, '_note': TEMP_NOTE, 'tempFields': ['extraPrice'],
+        '_note': 'Extra prices: Egyptian-market estimates approved by the '
+                 'owner (EXTRA_PRICE in tools/build_pizza_catalog.py).',
         'ingredients': ingredients,
     })
 
     products = [{
         'id': f'pizza_{pid}', 'categoryId': 'pizza', 'name': name,
         'names': {'en': PRODUCT_EN[pid], 'ar': name},
-        'description': '', 'basePrice': TEMP_BASE_PRICE,
+        'description': '',
+        'basePrice': PRICE_TIERS[PRODUCT_TIER[pid]][0] * EGP,
         'imageAssetId': f'final_pizza_{pid}',
         'defaults': [{'ingredientId': d, 'qty': 1, 'removable': True,
                       'refundOnRemove': False, 'refundAmount': 0}
                      for d in defaults],
         'isAvailable': True,
-        'sizeDeltas': {'s': 0, 'm': 0, 'l': 0},
-        'optionDeltas': {'regular': 0},
+        'sizeDeltas': {
+            size: (PRICE_TIERS[PRODUCT_TIER[pid]][t] -
+                   PRICE_TIERS[PRODUCT_TIER[pid]][0]) * EGP
+            for t, size in enumerate(('s', 'm', 'l'))
+        },
+        'optionDeltas': {c: extra * EGP for c, _, _, extra in DOUGHS},
         'displayOrder': i,
         'groupId': PRODUCT_GROUP[pid],
         'sauce': sauce,
     } for i, (pid, name, sauce, defaults) in enumerate(PRODUCTS)]
     dump('tools/seed/pizza_products.json', {
         'temp': True, '_note': TEMP_NOTE,
-        'tempFields': ['basePrice', 'sizeDeltas', 'optionDeltas',
-                       'defaults[].removable'],
+        'tempFields': ['defaults[].removable'],
         'excluded': {'quattro_stagioni': 'Needs a quartered base (half-and-half,'
                      ' CLAUDE.md section 10 Q3). Not supported in phase 1.'},
         'pendingNotes': [
@@ -306,8 +362,7 @@ def main() -> None:
     assert len(trial) == len(TRIAL_PRODUCT_IDS)
     dump('tools/seed/pizza_trial.json', {
         'temp': True, '_note': TEMP_NOTE,
-        'tempFields': ['basePrice', 'sizeDeltas', 'optionDeltas',
-                       'defaults[].removable'],
+        'tempFields': ['defaults[].removable'],
         'products': trial,
     })
     print(f'{len(ingredients)} ingredients, {len(products)} products, '
