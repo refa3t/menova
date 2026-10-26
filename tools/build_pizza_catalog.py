@@ -196,12 +196,21 @@ PRODUCT_TIER = {
     'seafood': 'seafood',
 }
 
-# Dough (P0-01): one base image for now; thin and cheese crust reuse it
-# until their base images exist. Flat surcharge in EGP.
-DOUGHS = [
-    ('regular', 'عادية', 'Regular', 0),
-    ('thin', 'رفيعة', 'Thin', 0),
-    ('cheese_crust', 'حواف جبنة', 'Cheese crust', 45),
+# Option groups: (id, ar, en, [(choiceId, ar, en, extraEGP, baseAssetId)]).
+# Choice ids are unique across groups (product optionDeltas are keyed by
+# choice id). Thin dough reuses the regular base until it has its own image;
+# stuffed crust has its own base (tools/process_stuffed_crust.py), so the
+# rim visibly thickens when chosen (owner request).
+OPTION_GROUPS = [
+    ('dough', 'العجينة', 'Dough', 'regular', [
+        ('regular', 'عادية', 'Regular', 0, None),
+        ('thin', 'رفيعة', 'Thin', 0, None),
+    ]),
+    ('crust', 'الحواف', 'Crust', 'classic_crust', [
+        ('classic_crust', 'عادية', 'Classic', 0, None),
+        ('stuffed_crust', 'ستافت كراست', 'Stuffed crust', 45,
+         'base_pizza_stuffed_raw'),
+    ]),
 ]
 
 # Extra topping price per unit in EGP (same for every size, owner P0-05).
@@ -262,11 +271,14 @@ def main() -> None:
             {'id': 'l', 'name': 'كبير', 'names': {'en': 'Large', 'ar': 'كبير'}, 'scale': 1.0},
         ],
         'optionGroups': [{
-            'id': 'dough', 'name': 'العجينة', 'names': {'en': 'Dough', 'ar': 'العجينة'},
-            'defaultChoiceId': 'regular',
-            'choices': [{'id': c, 'name': ar, 'names': {'en': en, 'ar': ar}}
-                        for c, ar, en, _ in DOUGHS],
-        }],
+            'id': gid, 'name': gar, 'names': {'en': gen, 'ar': gar},
+            'defaultChoiceId': default,
+            'choices': [{
+                'id': c, 'name': ar, 'names': {'en': en, 'ar': ar},
+                **({'base': {'shape': 'circle', 'rawAssetId': base}}
+                   if base else {}),
+            } for c, ar, en, _, base in choices],
+        } for gid, gar, gen, default, choices in OPTION_GROUPS],
         # ANIMATIONS.md 7 + OVEN.md 4 (proposed values, TEMP until G06).
         'animation': [
             # Durations requested by the owner (longer oven); weights match.
@@ -303,8 +315,9 @@ def main() -> None:
         '_note': TEMP_NOTE,
         'tempFields': ['placement.params', 'ingredientMotion'],
         'pendingNotes': [
-            'Thin and cheese-crust doughs reuse the regular base image until '
-            'their own base images exist.',
+            'Thin dough reuses the regular base image until it has its own.',
+            'Stuffed crust base is derived from the regular base '
+            '(tools/process_stuffed_crust.py) until a photographed one exists.',
             'No cooked base asset yet (base.cookedAssetId).',
         ],
     })
@@ -340,7 +353,8 @@ def main() -> None:
                    PRICE_TIERS[PRODUCT_TIER[pid]][0]) * EGP
             for t, size in enumerate(('s', 'm', 'l'))
         },
-        'optionDeltas': {c: extra * EGP for c, _, _, extra in DOUGHS},
+        'optionDeltas': {c: extra * EGP for *_, choices in OPTION_GROUPS
+                         for c, _, _, extra, _ in choices},
         'displayOrder': i,
         'groupId': PRODUCT_GROUP[pid],
         'sauce': sauce,

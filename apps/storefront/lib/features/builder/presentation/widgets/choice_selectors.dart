@@ -37,9 +37,13 @@ class OptionGroupSelector extends StatelessWidget {
     required this.group,
     required this.selectedId,
     required this.onSelected,
+    this.extraOf,
   });
 
   final OptionGroup group;
+
+  /// The product's extra price for a choice (piasters); shown when > 0.
+  final int Function(String choiceId)? extraOf;
   final String? selectedId;
   final ValueChanged<String> onSelected;
 
@@ -57,7 +61,14 @@ class OptionGroupSelector extends StatelessWidget {
         _Chips(
           items: [
             for (final c in group.choices)
-              (c.id, AppStrings.localized(c.name, c.names)),
+              (
+                c.id,
+                switch (extraOf?.call(c.id) ?? 0) {
+                  > 0 && final extra =>
+                    '${AppStrings.localized(c.name, c.names)} · +${AppStrings.price(extra)}',
+                  _ => AppStrings.localized(c.name, c.names),
+                },
+              ),
           ],
           selectedId: selectedId,
           onSelected: onSelected,

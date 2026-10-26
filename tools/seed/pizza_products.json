@@ -48,7 +48,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 0,
       "groupId": "cheese",
@@ -90,7 +91,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 1,
       "groupId": "veggie",
@@ -125,7 +127,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 2,
       "groupId": "cheese",
@@ -167,7 +170,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 3,
       "groupId": "meat",
@@ -223,7 +227,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 4,
       "groupId": "cheese",
@@ -279,7 +284,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 5,
       "groupId": "cheese",
@@ -342,7 +348,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 6,
       "groupId": "meat",
@@ -391,7 +398,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 7,
       "groupId": "meat",
@@ -440,7 +448,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 8,
       "groupId": "meat",
@@ -503,7 +512,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 9,
       "groupId": "seafood",
@@ -587,7 +597,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 10,
       "groupId": "veggie",
@@ -636,7 +647,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 11,
       "groupId": "meat",
@@ -685,7 +697,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 12,
       "groupId": "chicken",
@@ -741,7 +754,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 13,
       "groupId": "chicken",
@@ -804,7 +818,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 14,
       "groupId": "chicken",
@@ -867,7 +882,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 15,
       "groupId": "chicken",
@@ -944,7 +960,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 16,
       "groupId": "meat",
@@ -1014,7 +1031,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 17,
       "groupId": "meat",
@@ -1056,7 +1074,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 18,
       "groupId": "meat",
@@ -1105,7 +1124,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 19,
       "groupId": "veggie",
@@ -1168,7 +1188,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 20,
       "groupId": "seafood",
@@ -1231,7 +1252,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 21,
       "groupId": "seafood",
@@ -1301,7 +1323,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 22,
       "groupId": "meat",
@@ -1371,7 +1394,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 23,
       "groupId": "veggie",
@@ -1427,7 +1451,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 24,
       "groupId": "chicken",
@@ -1483,7 +1508,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 25,
       "groupId": "meat",
@@ -1532,7 +1558,8 @@
       "optionDeltas": {
         "regular": 0,
         "thin": 0,
-        "cheese_crust": 4500
+        "classic_crust": 0,
+        "stuffed_crust": 4500
       },
       "displayOrder": 26,
       "groupId": "meat",

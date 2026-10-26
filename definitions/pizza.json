@@ -167,13 +167,36 @@
             "en": "Thin",
             "ar": "رفيعة"
           }
+        }
+      ]
+    },
+    {
+      "id": "crust",
+      "name": "الحواف",
+      "names": {
+        "en": "Crust",
+        "ar": "الحواف"
+      },
+      "defaultChoiceId": "classic_crust",
+      "choices": [
+        {
+          "id": "classic_crust",
+          "name": "عادية",
+          "names": {
+            "en": "Classic",
+            "ar": "عادية"
+          }
         },
         {
-          "id": "cheese_crust",
-          "name": "حواف جبنة",
+          "id": "stuffed_crust",
+          "name": "ستافت كراست",
           "names": {
-            "en": "Cheese crust",
-            "ar": "حواف جبنة"
+            "en": "Stuffed crust",
+            "ar": "ستافت كراست"
+          },
+          "base": {
+            "shape": "circle",
+            "rawAssetId": "base_pizza_stuffed_raw"
           }
         }
       ]

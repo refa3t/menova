@@ -392,6 +392,7 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
               child: OptionGroupSelector(
                 group: g,
                 selectedId: state.selection.options[g.id],
+                extraOf: (id) => state.product.optionDeltas[id] ?? 0,
                 onSelected: (id) => report(controller.selectOption(g.id, id)),
               ),
             ),

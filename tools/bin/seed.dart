@@ -57,6 +57,25 @@ Future<void> main(List<String> args) async {
     allowedCategoryIds: [definition.id],
   ).toJson();
 
+  // Bases that replace the category base when an option is chosen.
+  for (final g in definition.optionGroups) {
+    for (final c in g.choices) {
+      final b = c.base;
+      if (b == null) continue;
+      final e = manifestEntry('${b.rawAssetId}.webp');
+      docs['assets/${b.rawAssetId}'] = Asset(
+        id: b.rawAssetId,
+        kind: 'base',
+        name: b.rawAssetId,
+        publicId: '${e['publicId']}',
+        secureUrl: '${e['secureUrl']}',
+        version: (e['version'] as int?) ?? 0,
+        layerOrder: 0,
+        allowedCategoryIds: [definition.id],
+      ).toJson();
+    }
+  }
+
   // Animation assets (e.g. oven layers). Files named <id>_<NN> are frames
   // of one asset, kept in order as its variants.
   final animFile = File('../assets_src/animation/cloudinary_manifest.json');
