@@ -17,8 +17,8 @@ void main() {
       Product.fromJson(p as Map<String, dynamic>),
   ];
   final ingredients = {
-    for (final i in read('tools/seed/pizza_ingredients.json')['ingredients']
-        as List)
+    for (final i
+        in read('tools/seed/pizza_ingredients.json')['ingredients'] as List)
       i['id'] as String: Ingredient.fromJson(i as Map<String, dynamic>),
   };
 

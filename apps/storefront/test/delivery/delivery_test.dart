@@ -88,22 +88,25 @@ void main() {
     expect(quote.location, locator.here);
   });
 
-  test('denied permission, route failure and out of range are reported', () async {
-    locator.error = const LocationDenied();
-    await c.read(deliveryProvider.notifier).locate();
-    expect((state() as DeliveryFailed).error, DeliveryError.denied);
+  test(
+    'denied permission, route failure and out of range are reported',
+    () async {
+      locator.error = const LocationDenied();
+      await c.read(deliveryProvider.notifier).locate();
+      expect((state() as DeliveryFailed).error, DeliveryError.denied);
 
-    locator.error = null;
-    route.fail = true;
-    await c.read(deliveryProvider.notifier).locate();
-    expect((state() as DeliveryFailed).error, DeliveryError.routeFailed);
+      locator.error = null;
+      route.fail = true;
+      await c.read(deliveryProvider.notifier).locate();
+      expect((state() as DeliveryFailed).error, DeliveryError.routeFailed);
 
-    route
-      ..fail = false
-      ..meters = 15001;
-    await c.read(deliveryProvider.notifier).locate();
-    expect((state() as DeliveryFailed).error, DeliveryError.outOfRange);
-  });
+      route
+        ..fail = false
+        ..meters = 15001;
+      await c.read(deliveryProvider.notifier).locate();
+      expect((state() as DeliveryFailed).error, DeliveryError.outOfRange);
+    },
+  );
 
   Future<GuestCustomer> quotedGuest() async {
     await c.read(menuProvider.future);
@@ -136,20 +139,23 @@ void main() {
     expect(order.customer.location, locator.here);
   });
 
-  test('a changed delivery rate is shown before sending, then re-priced', () async {
-    final guest = await quotedGuest();
-    settings = settingsWith(perKm: 700); // Admin changed the rate.
-    await c
-        .read(checkoutProvider.notifier)
-        .confirm(customer: guest, notes: '', shownDeliveryFee: 3000);
-    final changed = c.read(checkoutProvider) as CheckoutPriceChanged;
-    final d = changed.diffs.single;
-    expect(d.lineId, CheckoutController.deliveryLineId);
-    expect((d.shown, d.current), (3000, 3500));
-    expect(gateway.orders, isEmpty);
+  test(
+    'a changed delivery rate is shown before sending, then re-priced',
+    () async {
+      final guest = await quotedGuest();
+      settings = settingsWith(perKm: 700); // Admin changed the rate.
+      await c
+          .read(checkoutProvider.notifier)
+          .confirm(customer: guest, notes: '', shownDeliveryFee: 3000);
+      final changed = c.read(checkoutProvider) as CheckoutPriceChanged;
+      final d = changed.diffs.single;
+      expect(d.lineId, CheckoutController.deliveryLineId);
+      expect((d.shown, d.current), (3000, 3500));
+      expect(gateway.orders, isEmpty);
 
-    c.read(checkoutProvider.notifier).acceptCorrections();
-    await Future<void>.delayed(Duration.zero);
-    expect((state() as DeliveryQuoted).quote.fee, 3500);
-  });
+      c.read(checkoutProvider.notifier).acceptCorrections();
+      await Future<void>.delayed(Duration.zero);
+      expect((state() as DeliveryQuoted).quote.fee, 3500);
+    },
+  );
 }
