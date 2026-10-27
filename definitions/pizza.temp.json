@@ -5,7 +5,6 @@
     "ingredientMotion"
   ],
   "pendingNotes": [
-    "Thin dough reuses the regular base image until it has its own.",
     "Stuffed crust base is derived from the regular base (tools/process_stuffed_crust.py) until a photographed one exists.",
     "No cooked base asset yet (base.cookedAssetId)."
   ]

@@ -1,6 +1,6 @@
-import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/app_theme.dart';
@@ -11,11 +11,12 @@ import '../../../core/widgets/top_bar.dart';
 import '../../cart/presentation/cart_fab.dart';
 import '../domain/menu.dart';
 import 'menu_providers.dart';
-import 'product_card.dart';
+import 'menu_widgets.dart';
 import 'product_preview.dart';
 
-/// Home page (reference design, P1-A13..A20): header, hero, category and
-/// group chips, product cards, features and footer. Generic over categories.
+/// Home page (reference design): header, hero, the menu's categories, the
+/// features and the footer. A category opens its own page with its groups
+/// and products (owner request). Generic over categories.
 class MenuScreen extends ConsumerStatefulWidget {
   const MenuScreen({super.key});
 
@@ -24,14 +25,11 @@ class MenuScreen extends ConsumerStatefulWidget {
 }
 
 class _MenuScreenState extends ConsumerState<MenuScreen> {
-  final _productsKey = GlobalKey();
-  String? _categoryId;
-  String? _groupId; // null = all
-  String _query = '';
+  final _categoriesKey = GlobalKey();
   Menu? _precached;
 
-  void _scrollToProducts() {
-    final ctx = _productsKey.currentContext;
+  void _scrollToCategories() {
+    final ctx = _categoriesKey.currentContext;
     if (ctx == null) return;
     Scrollable.ensureVisible(
       ctx,
@@ -46,19 +44,15 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
   Widget build(BuildContext context) {
     final menu = ref.watch(menuProvider);
     return Scaffold(
-      drawer: AppDrawer(active: NavItem.home, onMenuTap: _scrollToProducts),
+      drawer: AppDrawer(active: NavItem.home, onMenuTap: _scrollToCategories),
       floatingActionButton: menu.hasValue
           ? CartFab(menu: menu.requireValue)
           : null,
-      appBar: TopBar(
-        active: NavItem.home,
-        onSearch: (q) => setState(() => _query = q.trim().toLowerCase()),
-        onMenuTap: _scrollToProducts,
-      ),
+      appBar: TopBar(active: NavItem.home, onMenuTap: _scrollToCategories),
       body: menu.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) =>
-            _ErrorView(onRetry: () => ref.invalidate(menuProvider)),
+            MenuErrorView(onRetry: () => ref.invalidate(menuProvider)),
         data: (menu) {
           if (!identical(_precached, menu)) {
             _precached = menu;
@@ -67,42 +61,17 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
           if (menu.categories.isEmpty) {
             return Center(child: Text(AppStrings.menuEmpty));
           }
-          final category = menu.categories.firstWhere(
-            (c) => c.definition.id == _categoryId,
-            orElse: () => menu.categories.first,
-          );
-          return _body(context, menu, category);
+          return _body(context, menu);
         },
       ),
     );
   }
 
-  bool _matches(Product p, Menu menu) {
-    if (_query.isEmpty) return true;
-    final names = [
-      p.name,
-      AppStrings.localized(p.name, p.names),
-      for (final d in p.defaults)
-        if (menu.ingredients[d.ingredientId] case final i?) ...[
-          i.name,
-          AppStrings.localized(i.name, i.names),
-        ],
-    ];
-    return names.any((n) => n.toLowerCase().contains(_query));
-  }
-
-  Widget _body(BuildContext context, Menu menu, MenuCategory category) {
+  Widget _body(BuildContext context, Menu menu) {
     final width = MediaQuery.sizeOf(context).width;
     final gutter = AppLayout.gutter(width);
-    final groups = [
-      for (final g in category.definition.productGroups)
-        if (category.products.any((p) => p.groupId == g.id)) g,
-    ];
-    final products = [
-      for (final p in category.products)
-        if ((_groupId == null || p.groupId == _groupId) && _matches(p, menu)) p,
-    ];
-    final featured = category.products.firstOrNull;
+    final first = menu.categories.first;
+    final featured = first.products.firstOrNull;
 
     return SingleChildScrollView(
       child: Center(
@@ -116,112 +85,121 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                     ? null
                     : ProductPreview(
                         menu: menu,
-                        definition: category.definition,
+                        definition: first.definition,
                         product: featured,
                       ),
-                onOrder: _scrollToProducts,
+                // One category: go straight to it; several: show them.
+                onOrder: menu.categories.length == 1
+                    ? () => context.push('/category/${first.definition.id}')
+                    : _scrollToCategories,
               ),
-              if (width < AppLayout.tablet)
-                Padding(
-                  padding: EdgeInsets.fromLTRB(gutter, 20, gutter, 0),
-                  child: TextField(
-                    onChanged: (q) =>
-                        setState(() => _query = q.trim().toLowerCase()),
-                    decoration: InputDecoration(
-                      hintText: AppStrings.searchHint,
-                      prefixIcon: const Icon(Icons.search),
-                    ),
-                  ),
-                ),
               Padding(
-                padding: EdgeInsets.fromLTRB(gutter, 24, gutter, 8),
-                child: Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: [
-                    _CategoryPill(
-                      categories: menu.categories,
-                      selected: category,
-                      onSelected: (id) => setState(() {
-                        _categoryId = id;
-                        _groupId = null;
-                      }),
-                    ),
-                    if (groups.isNotEmpty) ...[
-                      _GroupChip(
-                        label: AppStrings.allGroups,
-                        icon: Icons.grid_view_rounded,
-                        selected: _groupId == null,
-                        onTap: () => setState(() => _groupId = null),
-                      ),
-                      for (final g in groups)
-                        _GroupChip(
-                          label: AppStrings.localized(g.name, g.names),
-                          icon: Icons.local_pizza_outlined,
-                          selected: _groupId == g.id,
-                          onTap: () => setState(() => _groupId = g.id),
-                        ),
-                    ],
-                  ],
+                key: _categoriesKey,
+                padding: EdgeInsets.fromLTRB(gutter, 32, gutter, 16),
+                child: Text(
+                  AppStrings.ourMenu,
+                  style: const TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
               Padding(
-                key: _productsKey,
-                padding: EdgeInsets.fromLTRB(gutter, 24, gutter, 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        AppStrings.ourPizzas,
-                        style: const TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                    TextButton.icon(
-                      onPressed: () => setState(() {
-                        _groupId = null;
-                        _query = '';
-                      }),
-                      icon: const Icon(Icons.arrow_forward, size: 18),
-                      iconAlignment: IconAlignment.end,
-                      label: Text(AppStrings.viewAll),
-                    ),
-                  ],
+                padding: EdgeInsets.symmetric(horizontal: gutter),
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 300,
+                    mainAxisSpacing: 18,
+                    crossAxisSpacing: 18,
+                    childAspectRatio: 0.82,
+                  ),
+                  itemCount: menu.categories.length,
+                  itemBuilder: (context, i) =>
+                      _CategoryCard(menu: menu, category: menu.categories[i]),
                 ),
               ),
-              if (products.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(48),
-                  child: Center(child: Text(AppStrings.noResults)),
-                )
-              else
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: gutter),
-                  child: GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 230,
-                          mainAxisSpacing: 18,
-                          crossAxisSpacing: 18,
-                          childAspectRatio: 0.66,
-                        ),
-                    itemCount: products.length,
-                    itemBuilder: (context, i) => ProductCard(
-                      menu: menu,
-                      category: category,
-                      product: products[i],
-                    ),
-                  ),
-                ),
               Padding(
                 padding: EdgeInsets.fromLTRB(gutter, 40, gutter, 24),
                 child: const FeatureStrip(),
               ),
               const CreditFooter(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A category on the home page: a preview, its name, how many products and
+/// the lowest price. Opens the category page.
+class _CategoryCard extends StatelessWidget {
+  const _CategoryCard({required this.menu, required this.category});
+
+  final Menu menu;
+  final MenuCategory category;
+
+  @override
+  Widget build(BuildContext context) {
+    final def = category.definition;
+    final featured = category.products.firstOrNull;
+    final prices = [for (final p in category.products) p.basePrice];
+    return Material(
+      color: AppColors.card,
+      borderRadius: BorderRadius.circular(AppRadii.card),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push('/category/${def.id}'),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(AppRadii.card),
+          ),
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: Center(
+                  child: featured == null
+                      ? const Icon(Icons.restaurant_menu, size: 64)
+                      : PreviewBoard(
+                          child: ProductPreview(
+                            menu: menu,
+                            definition: def,
+                            product: featured,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                AppStrings.localized(def.name, def.names),
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                [
+                  AppStrings.productCount(category.products.length),
+                  if (prices.isNotEmpty)
+                    AppStrings.priceFrom(
+                      prices.reduce((a, b) => a < b ? a : b),
+                    ),
+                ].join(' · '),
+                style: const TextStyle(color: AppColors.textMuted),
+              ),
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                onPressed: () => context.push('/category/${def.id}'),
+                icon: const Icon(Icons.arrow_forward, size: 18),
+                iconAlignment: IconAlignment.end,
+                label: Text(AppStrings.browse),
+              ),
             ],
           ),
         ),
@@ -287,7 +265,7 @@ class _Hero extends StatelessWidget {
     );
     final image = featured == null
         ? const SizedBox.shrink()
-        : _Board(child: featured!);
+        : PreviewBoard(child: featured!);
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -310,148 +288,6 @@ class _Hero extends StatelessWidget {
                 text,
               ],
             ),
-    );
-  }
-}
-
-/// A wooden board under the featured pizza (drawn in code; no photo yet).
-class _Board extends StatelessWidget {
-  const _Board({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 1,
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [Color(0xFFB98552), Color(0xFF8A5A33)],
-          ),
-          boxShadow: AppShadows.soft,
-        ),
-        child: Padding(padding: const EdgeInsets.all(14), child: child),
-      ),
-    );
-  }
-}
-
-class _CategoryPill extends StatelessWidget {
-  const _CategoryPill({
-    required this.categories,
-    required this.selected,
-    required this.onSelected,
-  });
-
-  final List<MenuCategory> categories;
-  final MenuCategory selected;
-  final ValueChanged<String> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final pill = Container(
-      height: 46,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.circular(AppRadii.pill),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.local_pizza_outlined, color: Colors.white),
-          const SizedBox(width: 10),
-          Text(
-            AppStrings.localized(
-              selected.definition.name,
-              selected.definition.names,
-            ),
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          if (categories.length > 1) ...[
-            const SizedBox(width: 8),
-            const Icon(Icons.keyboard_arrow_down, color: Colors.white),
-          ],
-        ],
-      ),
-    );
-    if (categories.length < 2) return pill;
-    return PopupMenuButton<String>(
-      onSelected: onSelected,
-      itemBuilder: (_) => [
-        for (final c in categories)
-          PopupMenuItem(
-            value: c.definition.id,
-            child: Text(
-              AppStrings.localized(c.definition.name, c.definition.names),
-            ),
-          ),
-      ],
-      child: pill,
-    );
-  }
-}
-
-class _GroupChip extends StatelessWidget {
-  const _GroupChip({
-    required this.label,
-    required this.icon,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final IconData icon;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final fg = selected ? Colors.white : AppColors.text;
-    return Material(
-      color: selected ? AppColors.primary : AppColors.surface,
-      shape: const StadiumBorder(),
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const StadiumBorder(),
-        child: Container(
-          height: 46,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 20, color: fg),
-              const SizedBox(width: 10),
-              Text(label, style: TextStyle(color: fg)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.onRetry});
-
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(AppStrings.menuLoadError),
-          const SizedBox(height: 12),
-          FilledButton(onPressed: onRetry, child: Text(AppStrings.retry)),
-        ],
-      ),
     );
   }
 }

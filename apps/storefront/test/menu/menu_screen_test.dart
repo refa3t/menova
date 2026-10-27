@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:storefront/features/cart/presentation/cart_providers.dart';
 import 'package:storefront/core/strings/app_strings.dart';
 import 'package:storefront/features/menu/domain/menu.dart';
+import 'package:storefront/features/menu/presentation/category_screen.dart';
 import 'package:storefront/features/menu/presentation/menu_providers.dart';
 import 'package:storefront/features/menu/presentation/menu_screen.dart';
 
@@ -13,15 +14,16 @@ import 'menu_test.dart' show def, product;
 
 late SharedPreferences prefs;
 
-Widget app(Future<Menu> Function() load) => ProviderScope(
-  overrides: [
-    menuProvider.overrideWith((ref) => load()),
-    sharedPreferencesProvider.overrideWithValue(prefs),
-  ],
-  child: const MaterialApp(
-    home: Directionality(textDirection: TextDirection.rtl, child: MenuScreen()),
-  ),
-);
+Widget app(Future<Menu> Function() load, {Widget home = const MenuScreen()}) =>
+    ProviderScope(
+      overrides: [
+        menuProvider.overrideWith((ref) => load()),
+        sharedPreferencesProvider.overrideWithValue(prefs),
+      ],
+      child: MaterialApp(
+        home: Directionality(textDirection: TextDirection.rtl, child: home),
+      ),
+    );
 
 void main() {
   setUp(() async {
@@ -29,25 +31,52 @@ void main() {
     prefs = await SharedPreferences.getInstance();
   });
 
-  testWidgets('shows category chip and product cards with price', (
+  Menu twoProducts() => Menu.assemble(
+    definitions: {'cat_a': def},
+    contents: const [
+      CategoryContent(categoryId: 'cat_a', isVisible: true, displayOrder: 0),
+    ],
+    products: [product('p1'), product('p2', order: 1)],
+    ingredients: const [],
+    assets: const [],
+  );
+
+  testWidgets('home lists categories only, not their products', (tester) async {
+    await tester.pumpWidget(app(() async => twoProducts()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('A'), findsOneWidget);
+    expect(find.textContaining(AppStrings.productCount(2)), findsOneWidget);
+    expect(find.text('p1'), findsNothing);
+    expect(find.text(AppStrings.addToCart), findsNothing);
+  });
+
+  testWidgets('category page shows its product cards with price', (
     tester,
   ) async {
-    final menu = Menu.assemble(
-      definitions: {'cat_a': def},
-      contents: const [
-        CategoryContent(categoryId: 'cat_a', isVisible: true, displayOrder: 0),
-      ],
-      products: [product('p1'), product('p2', order: 1)],
-      ingredients: const [],
-      assets: const [],
+    await tester.pumpWidget(
+      app(
+        () async => twoProducts(),
+        home: const CategoryScreen(categoryId: 'cat_a'),
+      ),
     );
-    await tester.pumpWidget(app(() async => menu));
     await tester.pumpAndSettle();
 
     expect(find.text('A'), findsOneWidget);
     expect(find.text('p1'), findsOneWidget);
     expect(find.text('p2'), findsOneWidget);
     expect(find.text(AppStrings.price(100)), findsNWidgets(2));
+  });
+
+  testWidgets('unknown category shows a way home', (tester) async {
+    await tester.pumpWidget(
+      app(
+        () async => twoProducts(),
+        home: const CategoryScreen(categoryId: 'nope'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.categoryNotFound), findsOneWidget);
   });
 
   testWidgets('shows retry on load error', (tester) async {

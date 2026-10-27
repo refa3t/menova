@@ -39,8 +39,6 @@
         "l": 10000
       },
       "optionDeltas": {
-        "regular": 0,
-        "thin": 0,
         "classic_crust": 0,
         "stuffed_crust": 4500
       },
@@ -82,8 +80,6 @@
         "l": 11000
       },
       "optionDeltas": {
-        "regular": 0,
-        "thin": 0,
         "classic_crust": 0,
         "stuffed_crust": 4500
       },
@@ -167,8 +163,6 @@
         "l": 10500
       },
       "optionDeltas": {
-        "regular": 0,
-        "thin": 0,
         "classic_crust": 0,
         "stuffed_crust": 4500
       },
@@ -231,8 +225,6 @@
         "l": 11000
       },
       "optionDeltas": {
-        "regular": 0,
-        "thin": 0,
         "classic_crust": 0,
         "stuffed_crust": 4500
       },
@@ -309,8 +301,6 @@
         "l": 12000
       },
       "optionDeltas": {
-        "regular": 0,
-        "thin": 0,
         "classic_crust": 0,
         "stuffed_crust": 4500
       },

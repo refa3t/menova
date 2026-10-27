@@ -33,7 +33,7 @@ void main() {
   test('choosing stuffed crust swaps the base and adds its price', () {
     final product = products.first;
     final plain = BuilderState.open(definition: def, product: product);
-    final stuffed = plain.selectOption('crust', 'stuffed_crust').state!;
+    final stuffed = plain.selectOption('crust', 'stuffed_crust').state;
     expect(plain.activeBase.rawAssetId, 'base_pizza_regular_raw');
     expect(stuffed.activeBase.rawAssetId, 'base_pizza_stuffed_raw');
 

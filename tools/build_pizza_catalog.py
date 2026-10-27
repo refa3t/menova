@@ -198,14 +198,10 @@ PRODUCT_TIER = {
 
 # Option groups: (id, ar, en, [(choiceId, ar, en, extraEGP, baseAssetId)]).
 # Choice ids are unique across groups (product optionDeltas are keyed by
-# choice id). Thin dough reuses the regular base until it has its own image;
-# stuffed crust has its own base (tools/process_stuffed_crust.py), so the
+# choice id). Dough type was removed at the owner's request; stuffed crust
+# has its own base (tools/process_stuffed_crust.py), so the
 # rim visibly thickens when chosen (owner request).
 OPTION_GROUPS = [
-    ('dough', 'العجينة', 'Dough', 'regular', [
-        ('regular', 'عادية', 'Regular', 0, None),
-        ('thin', 'رفيعة', 'Thin', 0, None),
-    ]),
     ('crust', 'الحواف', 'Crust', 'classic_crust', [
         ('classic_crust', 'عادية', 'Classic', 0, None),
         ('stuffed_crust', 'ستافت كراست', 'Stuffed crust', 45,
@@ -315,7 +311,6 @@ def main() -> None:
         '_note': TEMP_NOTE,
         'tempFields': ['placement.params', 'ingredientMotion'],
         'pendingNotes': [
-            'Thin dough reuses the regular base image until it has its own.',
             'Stuffed crust base is derived from the regular base '
             '(tools/process_stuffed_crust.py) until a photographed one exists.',
             'No cooked base asset yet (base.cookedAssetId).',

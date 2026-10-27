@@ -144,33 +144,6 @@
   ],
   "optionGroups": [
     {
-      "id": "dough",
-      "name": "العجينة",
-      "names": {
-        "en": "Dough",
-        "ar": "العجينة"
-      },
-      "defaultChoiceId": "regular",
-      "choices": [
-        {
-          "id": "regular",
-          "name": "عادية",
-          "names": {
-            "en": "Regular",
-            "ar": "عادية"
-          }
-        },
-        {
-          "id": "thin",
-          "name": "رفيعة",
-          "names": {
-            "en": "Thin",
-            "ar": "رفيعة"
-          }
-        }
-      ]
-    },
-    {
       "id": "crust",
       "name": "الحواف",
       "names": {

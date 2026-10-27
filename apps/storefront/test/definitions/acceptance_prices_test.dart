@@ -38,7 +38,7 @@ void main() {
         categoryId: product.categoryId,
         definitionVersion: def.definitionVersion,
         sizeId: size,
-        options: {'dough': 'regular', 'crust': 'classic_crust', ...options},
+        options: {'crust': 'classic_crust', ...options},
         ingredients: {
           for (final d in product.defaults) d.ingredientId: d.qty,
           ...change,
@@ -72,9 +72,6 @@ void main() {
       price('pizza_margherita', size: 'l', options: {'crust': 'stuffed_crust'}),
       27500,
     );
-  });
-  test('B6 thin dough costs the same', () {
-    expect(price('pizza_margherita', options: {'dough': 'thin'}), 13000);
   });
   test('B7 medium pepperoni with two extra pepperoni', () {
     expect(

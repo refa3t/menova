@@ -6,6 +6,7 @@ import '../features/builder/presentation/builder_screen.dart';
 import '../features/cart/presentation/cart_screen.dart';
 import '../features/checkout/presentation/checkout_screen.dart';
 import '../features/order/presentation/order_screen.dart';
+import '../features/menu/presentation/category_screen.dart';
 import '../features/menu/presentation/menu_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -16,6 +17,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/order/:id',
         builder: (context, state) =>
             OrderScreen(orderId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/category/:id',
+        builder: (context, state) =>
+            CategoryScreen(categoryId: state.pathParameters['id']!),
       ),
       GoRoute(path: '/cart', builder: (context, state) => const CartScreen()),
       GoRoute(

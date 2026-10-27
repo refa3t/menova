@@ -441,7 +441,9 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
     final back = Align(
       alignment: AlignmentDirectional.centerStart,
       child: TextButton.icon(
-        onPressed: () => context.canPop() ? context.pop() : context.go('/'),
+        onPressed: () => context.canPop()
+            ? context.pop()
+            : context.go('/category/${state.definition.id}'),
         icon: const BackButtonIcon(),
         label: Text(AppStrings.backToMenu),
         style: TextButton.styleFrom(foregroundColor: AppColors.text),

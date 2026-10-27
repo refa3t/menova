@@ -100,14 +100,16 @@ class _BuilderCanvasState extends State<BuilderCanvas> {
                     child: Image.network(
                       widget.baseImageUrl,
                       fit: BoxFit.contain,
+                      // Keep the previous base on screen while a new one
+                      // (another option's base) loads.
+                      gaplessPlayback: true,
+                      // Until the base arrives, toppings sit on a plain
+                      // disc instead of floating over the page.
+                      frameBuilder: (_, child, frame, sync) =>
+                          frame == null && !sync ? _plainDisc : child,
                       // A missing base never breaks the screen; toppings
                       // still show on a plain disc.
-                      errorBuilder: (_, _, _) => const DecoratedBox(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color(0xFFE9C9A0),
-                        ),
-                      ),
+                      errorBuilder: (_, _, _) => _plainDisc,
                     ),
                   ),
                 ),
@@ -340,3 +342,8 @@ class _PieceState extends State<_Piece> with TickerProviderStateMixin {
     );
   }
 }
+
+/// Stand-in for the base while it loads or when it fails.
+const _plainDisc = DecoratedBox(
+  decoration: BoxDecoration(shape: BoxShape.circle, color: Color(0xFFE9C9A0)),
+);
