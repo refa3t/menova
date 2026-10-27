@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +13,7 @@ import '../../cart/presentation/cart_fab.dart';
 import '../domain/menu.dart';
 import 'menu_providers.dart';
 import 'menu_widgets.dart';
+import 'product_card.dart';
 import 'product_preview.dart';
 
 /// Home page (reference design): header, hero, the menu's categories, the
@@ -93,33 +95,9 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                     ? () => context.push('/category/${first.definition.id}')
                     : _scrollToCategories,
               ),
-              Padding(
-                key: _categoriesKey,
-                padding: EdgeInsets.fromLTRB(gutter, 32, gutter, 16),
-                child: Text(
-                  AppStrings.ourMenu,
-                  style: const TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: gutter),
-                child: GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 300,
-                    mainAxisSpacing: 18,
-                    crossAxisSpacing: 18,
-                    childAspectRatio: 0.82,
-                  ),
-                  itemCount: menu.categories.length,
-                  itemBuilder: (context, i) =>
-                      _CategoryCard(menu: menu, category: menu.categories[i]),
-                ),
-              ),
+              SizedBox(key: _categoriesKey, height: 16),
+              for (final c in menu.categories)
+                _CategoryStrip(menu: menu, category: c, gutter: gutter),
               Padding(
                 padding: EdgeInsets.fromLTRB(gutter, 40, gutter, 24),
                 child: const FeatureStrip(),
@@ -133,77 +111,116 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
   }
 }
 
-/// A category on the home page: a preview, its name, how many products and
-/// the lowest price. Opens the category page.
-class _CategoryCard extends StatelessWidget {
-  const _CategoryCard({required this.menu, required this.category});
+/// A category on the home page (owner request): its name, which opens the
+/// category's full menu, and a horizontal strip of its first products.
+class _CategoryStrip extends StatefulWidget {
+  const _CategoryStrip({
+    required this.menu,
+    required this.category,
+    required this.gutter,
+  });
+
+  /// How many products the home strip shows before "View All".
+  static const _shown = 10;
 
   final Menu menu;
   final MenuCategory category;
+  final double gutter;
+
+  @override
+  State<_CategoryStrip> createState() => _CategoryStripState();
+}
+
+class _CategoryStripState extends State<_CategoryStrip> {
+  final _controller = ScrollController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final menu = widget.menu;
+    final category = widget.category;
+    final gutter = widget.gutter;
     final def = category.definition;
-    final featured = category.products.firstOrNull;
-    final prices = [for (final p in category.products) p.basePrice];
-    return Material(
-      color: AppColors.card,
-      borderRadius: BorderRadius.circular(AppRadii.card),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push('/category/${def.id}'),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.border),
-            borderRadius: BorderRadius.circular(AppRadii.card),
-          ),
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    void open() => context.push('/category/${def.id}');
+    final products = category.products.take(_CategoryStrip._shown).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(gutter, 16, gutter, 12),
+          child: Row(
             children: [
               Expanded(
-                child: Center(
-                  child: featured == null
-                      ? const Icon(Icons.restaurant_menu, size: 64)
-                      : PreviewBoard(
-                          child: ProductPreview(
-                            menu: menu,
-                            definition: def,
-                            product: featured,
+                child: InkWell(
+                  onTap: open,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppStrings.localized(def.name, def.names),
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
-                ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                AppStrings.localized(def.name, def.names),
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                [
-                  AppStrings.productCount(category.products.length),
-                  if (prices.isNotEmpty)
-                    AppStrings.priceFrom(
-                      prices.reduce((a, b) => a < b ? a : b),
+                        Text(
+                          AppStrings.productCount(category.products.length),
+                          style: const TextStyle(color: AppColors.textMuted),
+                        ),
+                      ],
                     ),
-                ].join(' · '),
-                style: const TextStyle(color: AppColors.textMuted),
+                  ),
+                ),
               ),
-              const SizedBox(height: 12),
-              FilledButton.icon(
-                onPressed: () => context.push('/category/${def.id}'),
+              TextButton.icon(
+                onPressed: open,
                 icon: const Icon(Icons.arrow_forward, size: 18),
                 iconAlignment: IconAlignment.end,
-                label: Text(AppStrings.browse),
+                label: Text(AppStrings.viewAll),
               ),
             ],
           ),
         ),
-      ),
+        SizedBox(
+          height: 312,
+          // Mouse users can drag the strip too (Flutter drags only touch by
+          // default); the scrollbar shows there is more.
+          child: ScrollConfiguration(
+            behavior: ScrollConfiguration.of(
+              context,
+            ).copyWith(dragDevices: PointerDeviceKind.values.toSet()),
+            child: Scrollbar(
+              controller: _controller,
+              child: ListView.separated(
+                controller: _controller,
+                scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.symmetric(horizontal: gutter),
+                itemCount: products.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 14),
+                itemBuilder: (context, i) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: SizedBox(
+                    width: 190,
+                    child: ProductCard(
+                      menu: menu,
+                      category: category,
+                      product: products[i],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

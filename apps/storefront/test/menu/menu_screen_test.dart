@@ -41,14 +41,17 @@ void main() {
     assets: const [],
   );
 
-  testWidgets('home lists categories only, not their products', (tester) async {
+  testWidgets('home shows each category with a strip of its products', (
+    tester,
+  ) async {
     await tester.pumpWidget(app(() async => twoProducts()));
     await tester.pumpAndSettle();
 
     expect(find.text('A'), findsOneWidget);
-    expect(find.textContaining(AppStrings.productCount(2)), findsOneWidget);
-    expect(find.text('p1'), findsNothing);
-    expect(find.text(AppStrings.addToCart), findsNothing);
+    expect(find.text(AppStrings.productCount(2)), findsOneWidget);
+    expect(find.text(AppStrings.viewAll), findsOneWidget);
+    expect(find.text('p1'), findsOneWidget);
+    expect(find.text('p2'), findsOneWidget);
   });
 
   testWidgets('category page shows its product cards with price', (

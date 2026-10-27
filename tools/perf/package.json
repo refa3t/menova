@@ -1,0 +1,8 @@
+{
+  "name": "menova-perf",
+  "private": true,
+  "type": "module",
+  "description": "P1-B06/P1-H04: frame timing of the builder under mobile emulation and CPU throttling.",
+  "scripts": { "measure": "node measure.mjs" },
+  "dependencies": { "puppeteer-core": "^23.0.0" }
+}

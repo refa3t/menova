@@ -1,6 +1,9 @@
+import 'dart:ui' as ui;
+
 import 'package:animation/animation.dart';
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:product_builder/product_builder.dart';
@@ -39,6 +42,9 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
   final _canvasKey = GlobalKey();
   final _cartKey = GlobalKey();
   OverlayEntry? _animation;
+
+  /// Raster of the canvas shown by the running animation.
+  ui.Image? _snapshot;
   AddStatus _status = AddStatus.idle;
 
   BuilderKey get _key => (productId: widget.productId, lineId: widget.lineId);
@@ -51,6 +57,7 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
   void dispose() {
     // Leaving mid-animation cancels it; the cart item is already committed.
     _animation?.remove();
+    _snapshot?.dispose();
     _animation = null;
     super.dispose();
   }
@@ -101,13 +108,21 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
     final cartBox = _cartKey.currentContext?.findRenderObject() as RenderBox?;
     final def = state.definition;
 
-    // The customer's product exactly as built, frozen at the press.
-    final snapshot = ProductPreview(
-      menu: menu,
-      definition: def,
-      product: state.product,
-      selection: state.selection,
-    );
+    // The customer's product exactly as built, frozen at the press: one
+    // raster of the canvas, so the per-frame cooking filter recolours a
+    // single image instead of every piece (P1-B06). Falls back to drawing
+    // the selection again if the raster is unavailable.
+    final raster = _rasterize(canvasBox);
+    _snapshot?.dispose();
+    _snapshot = raster;
+    final Widget snapshot = raster != null
+        ? RawImage(image: raster, fit: BoxFit.contain)
+        : ProductPreview(
+            menu: menu,
+            definition: def,
+            product: state.product,
+            selection: state.selection,
+          );
     final images = <String, List<String>>{
       for (final s in def.animation)
         if (s.params['images'] case final Map roles)
@@ -138,6 +153,8 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
           if (e == AnimEvent.completed) {
             _animation?.remove();
             _animation = null;
+            _snapshot?.dispose();
+            _snapshot = null;
             _finish();
           }
         },
@@ -146,6 +163,19 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
     _animation = entry;
     overlay.insert(entry);
     return true;
+  }
+
+  /// The canvas as an image at screen resolution, or null when it cannot
+  /// be captured (e.g. not painted yet).
+  ui.Image? _rasterize(RenderBox canvasBox) {
+    if (canvasBox is! RenderRepaintBoundary) return null;
+    try {
+      return canvasBox.toImageSync(
+        pixelRatio: MediaQuery.devicePixelRatioOf(context),
+      );
+    } on Object {
+      return null;
+    }
   }
 
   @override

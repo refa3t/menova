@@ -73,8 +73,6 @@ abstract final class AppStrings {
   );
   static String get orderNow => _t('Order Now', 'اطلب الآن');
   static String get ourPizzas => _t('Our Pizzas', 'البيتزا');
-  static String get ourMenu => _t('Our Menu', 'المنيو');
-  static String get browse => _t('Browse', 'تصفّح');
   static String get categoryNotFound =>
       _t('This section is not available', 'هذا القسم غير متاح');
   static String productCount(int n) => _t('$n items', '$n صنف');

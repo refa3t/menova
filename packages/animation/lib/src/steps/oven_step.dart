@@ -68,17 +68,17 @@ class OvenStep implements AnimStep {
 
     Widget layer(String? url, double opacity, {double scale = 1}) {
       if (url == null || opacity <= 0) return const SizedBox.shrink();
-      return Opacity(
-        opacity: opacity.clamp(0.0, 1.0),
-        child: Transform.scale(
-          scale: scale,
-          child: Image.network(
-            url,
-            width: scene,
-            height: scene,
-            gaplessPlayback: true,
-            errorBuilder: (_, _, _) => const SizedBox.shrink(),
-          ),
+      // Image.opacity paints with alpha directly; an Opacity widget would
+      // allocate an offscreen layer per image per frame (P1-B06).
+      return Transform.scale(
+        scale: scale,
+        child: Image.network(
+          url,
+          width: scene,
+          height: scene,
+          opacity: AlwaysStoppedAnimation(opacity.clamp(0.0, 1.0)),
+          gaplessPlayback: true,
+          errorBuilder: (_, _, _) => const SizedBox.shrink(),
         ),
       );
     }
