@@ -152,3 +152,90 @@ ColorFilter cookedFilter(double a, double saturation) {
     0, 0, 0, 1, 0, //
   ]);
 }
+
+/// A round product folded [folds] times, seen from above (P2-06): 1 is a
+/// half moon (top folded down over the bottom), 2 a quarter (left folded
+/// over the right). The outside of a folded crepe is its back, so the
+/// visible face is [back] when given, else the product itself.
+class Folded extends StatelessWidget {
+  const Folded({
+    super.key,
+    required this.folds,
+    required this.product,
+    this.back,
+  });
+
+  final int folds;
+  final Widget product;
+  final Widget? back;
+
+  @override
+  Widget build(BuildContext context) {
+    if (folds <= 0) return product;
+    return ClipPath(clipper: FoldClip(folds), child: back ?? product);
+  }
+}
+
+/// The disc after [folds] folds: bottom half, then bottom-right quarter.
+class FoldClip extends CustomClipper<Path> {
+  const FoldClip(this.folds);
+
+  final int folds;
+
+  @override
+  Path getClip(Size size) {
+    final disc = Path()..addOval(Offset.zero & size);
+    final keep = folds == 1
+        ? Rect.fromLTWH(0, size.height / 2, size.width, size.height / 2)
+        : Rect.fromLTWH(
+            size.width / 2,
+            size.height / 2,
+            size.width / 2,
+            size.height / 2,
+          );
+    return Path.combine(PathOperation.intersect, disc, Path()..addRect(keep));
+  }
+
+  @override
+  bool shouldReclip(FoldClip oldClipper) => oldClipper.folds != folds;
+}
+
+/// The back image a step was given (role `back`), if any.
+Widget? backImage(AnimStepInput input) {
+  final url = input.images['back']?.firstOrNull;
+  if (url == null) return null;
+  return Image.network(
+    url,
+    fit: BoxFit.contain,
+    gaplessPlayback: true,
+    errorBuilder: (_, _, _) => const SizedBox.shrink(),
+  );
+}
+
+/// The product as the sequence has shaped it so far: baked and flat, or
+/// folded `folds` times (step param) showing its back.
+Widget shapedProduct(AnimStepInput input) {
+  final folds = (input.params['folds'] as num?)?.toInt() ?? 0;
+  if (folds <= 0) return Cooked(amount: 1, child: input.product);
+  return Folded(folds: folds, product: input.product, back: backImage(input));
+}
+
+/// The cooking surface (role `surface`) under the product, slightly larger.
+Widget? surfaceUnder(AnimStepInput input, {double opacity = 1}) {
+  final url = input.images['surface']?.firstOrNull;
+  if (url == null || opacity <= 0) return null;
+  return Positioned.fromRect(
+    rect: Rect.fromCenter(
+      center: input.productRect.center,
+      width: input.productRect.width * 1.16,
+      height: input.productRect.height * 1.16,
+    ),
+    child: Image.network(
+      url,
+      fit: BoxFit.contain,
+      opacity: AlwaysStoppedAnimation(opacity.clamp(0.0, 1.0)),
+      gaplessPlayback: true,
+      errorBuilder: (_, _, _) => const SizedBox.shrink(),
+    ),
+  );
+}

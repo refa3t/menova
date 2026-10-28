@@ -62,6 +62,9 @@
 | 5 | P2-04 | `packages/core/lib/src/models/category_definition.dart` (`PlacementSpec.byIngredient`) | مقبول (حقل اختياري) | استراتيجية لكل مكوّن داخل الكاتيجوري؛ فارغ افتراضياً فلا يتغير شيء في البيتزا | core 12 ناجحة | `3c866c1` |
 | 6 | P2-04 | `packages/category_definitions/lib/src/validator.dart` + اختباره | يستدعي مراجعة (المُتحقِّق) | يرفض `byIngredient` لمكوّن غير مسموح أو استراتيجية غير مسجلة (fail-closed). معمَّم | 8 ناجحة؛ واختبار «الرفض» صار يقبل أكثر من تعريف | `3c866c1` |
 | 7 | P2-04 | `packages/product_builder/lib/src/builder_canvas.dart` (`strategyByIngredient`)، `builder_screen.dart`، `product_preview.dart` | يستدعي مراجعة (البناء والمنسِّق) | اللوحة تأخذ استراتيجية المكوّن إن وُجدت وإلا العامة. معمَّم، بلا ذكر للكريب | متجر 63 ناجحة، والبيتزا كما هي على الموقع | `3c866c1` |
+| 8 | P2-05..07 | `packages/animation/lib/src/steps/griddle_step.dart`، `fold_step.dart`، `shrink_step.dart` + تسجيلها في `animSteps` | مقبول (خطوات حركة جديدة) | الجريل (السطح والتسوية والبخار)، والطي بمنظور مع ظهر المنتج بعد 90°، والتصغير | 13 اختبار حركة ناجحة | (commit P2-07) |
+| 9 | P2-06..08 | `packages/animation/lib/src/anim_step.dart` (`Folded`، `FoldClip`، `shapedProduct`، `surfaceUnder`، `backImage`)، و`swap_step.dart` و`fly_to_cart_step.dart` تعرض `shapedProduct` | يستدعي مراجعة (خطوات قائمة) | معامل اختياري `folds` (0 افتراضياً = نفس سلوك البيتزا حرفياً) لعرض المنتج مطوياً، والأدوار `back`/`surface` من التعريف. معمَّم | إطارات البيتزا (الفرن، Swap، الطيران) كما هي، والاختبارات ناجحة | (commit P2-07) |
+| 10 | P2-07 | `apps/storefront/lib/features/builder/presentation/builder_screen.dart` (`productHidden`) | يستدعي مراجعة (المنسِّق) | يخفي المنتج من الصفحة (مع حفظ مكانه) أثناء حركة الإضافة، لأن المنتج «غادر» إلى الفرن/الجريل؛ بدونه ظهرت الكريبة المفرودة تحت المطوية. معمَّم، ويُحسّن البيتزا أيضاً | 63 اختبار متجر ناجحة، وإطارات البيتزا سليمة | (commit P2-07) |
 
 ## 5. تقرير P2-03 («بلا كود مكرر»)
 

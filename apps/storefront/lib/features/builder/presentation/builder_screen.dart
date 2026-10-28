@@ -225,6 +225,7 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
             menu: menu,
             builderKey: _key,
             canvasKey: _canvasKey,
+            productHidden: _status == AddStatus.busy,
           );
         },
       ),
@@ -237,10 +238,15 @@ class _BuilderBody extends ConsumerStatefulWidget {
     required this.menu,
     required this.builderKey,
     required this.canvasKey,
+    this.productHidden = false,
   });
 
   final Menu menu;
   final BuilderKey builderKey;
+
+  /// While the add sequence runs, the product has left the page (it is in
+  /// the oven, on the griddle, flying to the cart); its place stays.
+  final bool productHidden;
 
   /// Marks the canvas so the orchestrator can start the animation from it.
   final GlobalKey canvasKey;
@@ -342,15 +348,21 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),
-          child: BuilderCanvas(
-            key: widget.canvasKey,
-            baseImageUrl: base.secureUrl,
-            strategy: strategy,
-            strategyByIngredient: strategiesByIngredient(def.placement),
-            placementParams: def.placement.params,
-            scale: state.sizeScale,
-            density: state.sizeDensity,
-            layers: layers,
+          child: Visibility(
+            visible: !widget.productHidden,
+            maintainSize: true,
+            maintainAnimation: true,
+            maintainState: true,
+            child: BuilderCanvas(
+              key: widget.canvasKey,
+              baseImageUrl: base.secureUrl,
+              strategy: strategy,
+              strategyByIngredient: strategiesByIngredient(def.placement),
+              placementParams: def.placement.params,
+              scale: state.sizeScale,
+              density: state.sizeDensity,
+              layers: layers,
+            ),
           ),
         ),
       ),

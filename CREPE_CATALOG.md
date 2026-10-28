@@ -95,7 +95,7 @@
 | --- | --- |
 | `assets_src/crepe/bases/base_crepe_raw.webp` | عجينة نيئة |
 | `assets_src/crepe/bases/base_crepe_cooked.webp` | كريب مسوّى (بعد الجريل) |
-| `assets_src/crepe/bases/base_crepe_back.webp` | ظهر الكريب (لحركة الطي P2-06) |
+| `assets_src/animation/crepe_back.webp` | ظهر الكريب (الوجه الخارجي بعد الطي، P2-06) |
 | `assets_src/animation/griddle_surface.webp` | سطح الجريل (لحركة الجريل P2-05) |
 | `assets_src/crepe/ingredients/ing_<id>_0N.webp` | المكونات الحلوة الجديدة، 3 تنويعات لكل مكوّن |
 

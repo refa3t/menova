@@ -92,20 +92,65 @@
   "optionGroups": [],
   "animation": [
     {
+      "step": "Griddle",
+      "weight": 1300,
+      "params": {
+        "durationMs": 1300,
+        "saturation": 1.25,
+        "images": {
+          "surface": "griddle_surface",
+          "steam": "oven_steam"
+        }
+      }
+    },
+    {
+      "step": "Fold",
+      "weight": 700,
+      "params": {
+        "durationMs": 700,
+        "stage": 1,
+        "images": {
+          "surface": "griddle_surface",
+          "back": "crepe_back"
+        }
+      }
+    },
+    {
       "step": "Swap",
       "weight": 300,
       "params": {
-        "durationMs": 300
+        "durationMs": 300,
+        "folds": 1,
+        "images": {
+          "back": "crepe_back"
+        }
+      }
+    },
+    {
+      "step": "Shrink",
+      "weight": 350,
+      "params": {
+        "durationMs": 350,
+        "folds": 1,
+        "shrinkTo": 0.8,
+        "images": {
+          "back": "crepe_back",
+          "surface": "griddle_surface"
+        }
       }
     },
     {
       "step": "FlyToCart",
-      "weight": 900,
+      "weight": 800,
       "params": {
-        "durationMs": 900,
+        "durationMs": 800,
+        "folds": 1,
         "shrinkTo": 0.18,
         "arcControlPct": 20,
-        "rotateDeg": -12
+        "rotateDeg": -12,
+        "images": {
+          "back": "crepe_back"
+        }
       }
     }
   ],

@@ -48,10 +48,7 @@ class FlyToCartStep implements AnimStep {
           height: h,
           child: Transform.rotate(
             angle: angle,
-            child: Transform.scale(
-              scale: scale,
-              child: Cooked(amount: 1, child: input.product),
-            ),
+            child: Transform.scale(scale: scale, child: shapedProduct(input)),
           ),
         ),
       ],

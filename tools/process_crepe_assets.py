@@ -9,7 +9,7 @@ Usage (from the repo root):
 Writes:
     assets_src/crepe/bases/base_crepe_raw.webp
     assets_src/crepe/bases/base_crepe_cooked.webp
-    assets_src/crepe/bases/base_crepe_back.webp
+    assets_src/animation/crepe_back.webp (the back, for the fold)
     assets_src/animation/griddle_surface.webp
     assets_src/crepe/ingredients/ing_<id>_<n>.webp
 """
@@ -275,7 +275,7 @@ def main() -> None:
     save(crepe(11, 0.0), 'assets_src/crepe/bases/base_crepe_raw.webp', BASE_MAX)
     save(crepe(11, 1.0), 'assets_src/crepe/bases/base_crepe_cooked.webp', BASE_MAX)
     save(crepe(11, 1.0, back=True).transpose(Image.FLIP_LEFT_RIGHT),
-         'assets_src/crepe/bases/base_crepe_back.webp', BASE_MAX)
+         'assets_src/animation/crepe_back.webp', BASE_MAX)
     save(griddle(), 'assets_src/animation/griddle_surface.webp', BASE_MAX)
     for key, draw in SWEETS.items():
         for v in range(3):

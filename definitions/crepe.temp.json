@@ -6,7 +6,6 @@
     "animation"
   ],
   "pendingNotes": [
-    "Animation is Swap + FlyToCart until Griddle, Fold and Shrink exist (P2-05..07).",
     "Bases and sweet ingredient images are drawn in code (tools/process_crepe_assets.py) until photos exist."
   ]
 }

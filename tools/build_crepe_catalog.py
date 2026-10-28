@@ -132,13 +132,29 @@ def main() -> None:
         'constraints': {'maxQty': 2},
         'sizes': [],
         'optionGroups': [],
-        # Phase 2 builds Griddle, Fold and Shrink (P2-05..07); until then
-        # the crepe uses the existing steps.
+        # P2-07: cooked on the griddle, folded once into a half moon (owner:
+        # a crepe is served folded in half), then to the cart. Image roles:
+        # surface (griddle), steam, back (the browned outside once folded).
         'animation': [
-            {'step': 'Swap', 'weight': 300, 'params': {'durationMs': 300}},
-            {'step': 'FlyToCart', 'weight': 900, 'params': {
-                'durationMs': 900, 'shrinkTo': 0.18, 'arcControlPct': 20,
-                'rotateDeg': -12}},
+            {'step': 'Griddle', 'weight': 1300, 'params': {
+                'durationMs': 1300, 'saturation': 1.25,
+                'images': {'surface': 'griddle_surface',
+                           'steam': 'oven_steam'}}},
+            {'step': 'Fold', 'weight': 700, 'params': {
+                'durationMs': 700, 'stage': 1,
+                'images': {'surface': 'griddle_surface',
+                           'back': 'crepe_back'}}},
+            {'step': 'Swap', 'weight': 300, 'params': {
+                'durationMs': 300, 'folds': 1,
+                'images': {'back': 'crepe_back'}}},
+            {'step': 'Shrink', 'weight': 350, 'params': {
+                'durationMs': 350, 'folds': 1, 'shrinkTo': 0.8,
+                'images': {'back': 'crepe_back',
+                           'surface': 'griddle_surface'}}},
+            {'step': 'FlyToCart', 'weight': 800, 'params': {
+                'durationMs': 800, 'folds': 1, 'shrinkTo': 0.18,
+                'arcControlPct': 20, 'rotateDeg': -12,
+                'images': {'back': 'crepe_back'}}},
         ],
         'productGroups': [{'id': g, 'name': ar, 'names': {'en': en, 'ar': ar}}
                           for g, ar, en in GROUPS],
@@ -149,8 +165,6 @@ def main() -> None:
         '_note': 'Calibration values, not owner data.',
         'tempFields': ['placement.params', 'ingredientMotion', 'animation'],
         'pendingNotes': [
-            'Animation is Swap + FlyToCart until Griddle, Fold and Shrink '
-            'exist (P2-05..07).',
             'Bases and sweet ingredient images are drawn in code '
             '(tools/process_crepe_assets.py) until photos exist.',
         ],
@@ -233,7 +247,7 @@ def main() -> None:
               '| الملف | الوصف |', '| --- | --- |',
               '| `assets_src/crepe/bases/base_crepe_raw.webp` | عجينة نيئة |',
               '| `assets_src/crepe/bases/base_crepe_cooked.webp` | كريب مسوّى (بعد الجريل) |',
-              '| `assets_src/crepe/bases/base_crepe_back.webp` | ظهر الكريب (لحركة الطي P2-06) |',
+              '| `assets_src/animation/crepe_back.webp` | ظهر الكريب (الوجه الخارجي بعد الطي، P2-06) |',
               '| `assets_src/animation/griddle_surface.webp` | سطح الجريل (لحركة الجريل P2-05) |',
               '| `assets_src/crepe/ingredients/ing_<id>_0N.webp` | المكونات الحلوة الجديدة، 3 تنويعات لكل مكوّن |',
               '', 'كل الصور مرسومة بالكود (`tools/process_crepe_assets.py`) وتُستبدل بصور حقيقية بنفس الاسم دون تعديل كود.', '']
