@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pricing/pricing.dart';
 
+import '../../../core/analytics/analytics.dart';
 import '../../cart/presentation/cart_providers.dart';
 import '../../delivery/presentation/delivery_controller.dart';
 import '../../menu/domain/menu.dart';
@@ -185,7 +186,7 @@ class CheckoutController extends Notifier<CheckoutState> {
     final result = await ref.read(orderGatewayProvider).submit(order);
     switch (result) {
       case Submitted(:final orderId):
-        _complete(orderId);
+        _complete(orderId, order: order);
       case NotConfirmed():
         state = const CheckoutPending();
       case Conflict():
@@ -205,7 +206,19 @@ class CheckoutController extends Notifier<CheckoutState> {
 
   void dismiss() => state = const CheckoutIdle();
 
-  void _complete(String orderId) {
+  /// The order is confirmed on this device: counted once here, whichever
+  /// path confirmed it (first send, or a retry that found it). [order] is
+  /// known when this device just built it, and gives the value.
+  void _complete(String orderId, {Order? order}) {
+    ref.read(analyticsProvider).event('purchase', {
+      'transaction_id': orderId,
+      'currency': AppEvents.currency,
+      if (order != null) ...{
+        'value': AppEvents.pounds(order.total),
+        'shipping': AppEvents.pounds(order.deliveryFee),
+        'fulfillment': order.customer.fulfillment.name,
+      },
+    });
     _clearRequest();
     ref.read(cartProvider.notifier).clear();
     state = CheckoutDone(orderId);

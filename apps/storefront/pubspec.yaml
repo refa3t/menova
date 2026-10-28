@@ -31,6 +31,7 @@ dependencies:
     path: ../../packages/animation
   category_definitions:
     path: ../../packages/category_definitions
+  firebase_analytics: ^12.6.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

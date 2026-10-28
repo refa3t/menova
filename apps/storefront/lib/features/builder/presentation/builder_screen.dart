@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:product_builder/product_builder.dart';
 
+import '../../../core/analytics/analytics.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_drawer.dart';
@@ -54,6 +55,16 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
   );
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.lineId == null) {
+      ref.read(analyticsProvider).event('view_item', {
+        'item_id': widget.productId,
+      });
+    }
+  }
+
+  @override
   void dispose() {
     // Leaving mid-animation cancels it; the cart item is already committed.
     _animation?.remove();
@@ -76,6 +87,13 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
       return;
     }
     cart.add(state.selection);
+    final total = ref.read(priceProvider(_key))?.total;
+    ref.read(analyticsProvider).event('add_to_cart', {
+      ...AppEvents.item(state.selection.productId, state.selection.categoryId),
+      'currency': AppEvents.currency,
+      if (total != null) 'value': AppEvents.pounds(total),
+      'source': 'builder',
+    });
     setState(() => _status = AddStatus.busy);
     if (!_playSequence(state)) _finish();
   }

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/analytics/analytics.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../cart/domain/cart_line_view.dart';
 import '../../cart/presentation/cart_providers.dart';
@@ -36,6 +37,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   @override
   void initState() {
     super.initState();
+    ref.read(analyticsProvider).event('begin_checkout', {
+      'items': ref.read(cartProvider).lines.length,
+    });
     final raw = ref.read(sharedPreferencesProvider).getString(_guestKey);
     if (raw == null) return;
     try {

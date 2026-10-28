@@ -1,5 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'dart:ui' show PlatformDispatcher;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart' show SemanticsBinding, SemanticsHandle;
 import 'package:flutter_web_plugins/url_strategy.dart';
@@ -8,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/app.dart';
+import 'core/analytics/analytics.dart';
 import 'features/cart/presentation/cart_providers.dart';
 import 'firebase_options.dart';
 
@@ -32,9 +36,30 @@ Future<void> main() async {
     persistenceEnabled: true,
   );
   final prefs = await SharedPreferences.getInstance();
+  final analytics = FirebaseAppAnalytics(FirebaseAnalytics.instance);
+  // Error logging for the trial (P1-H07): Crashlytics has no web support,
+  // so unexpected errors are reported as an analytics event.
+  final previousOnError = FlutterError.onError;
+  FlutterError.onError = (details) {
+    analytics.event('app_error', {
+      'kind': 'flutter',
+      'message': AppEvents.clip(details.exception),
+    });
+    previousOnError?.call(details);
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    analytics.event('app_error', {
+      'kind': 'async',
+      'message': AppEvents.clip(error),
+    });
+    return false;
+  };
   runApp(
     ProviderScope(
-      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        analyticsProvider.overrideWithValue(analytics),
+      ],
       child: const App(),
     ),
   );

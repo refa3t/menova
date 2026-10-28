@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:product_builder/product_builder.dart';
 
+import '../../../core/analytics/analytics.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../cart/presentation/cart_providers.dart';
@@ -31,6 +32,12 @@ class ProductCard extends ConsumerWidget {
       product: product,
     ).selection;
     ref.read(cartProvider.notifier).add(selection);
+    ref.read(analyticsProvider).event('add_to_cart', {
+      ...AppEvents.item(product.id, product.categoryId),
+      'currency': AppEvents.currency,
+      'value': AppEvents.pounds(product.basePrice),
+      'source': 'card',
+    });
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
