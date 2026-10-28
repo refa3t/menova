@@ -1,0 +1,615 @@
+{
+  "temp": true,
+  "_note": "Market-estimate prices approved by the owner. temp marks the code-drawn images and missing final product images.",
+  "categoryOrder": 1,
+  "tempFields": [
+    "defaults[].removable"
+  ],
+  "products": [
+    {
+      "id": "crepe_chicken",
+      "categoryId": "crepe",
+      "name": "كريب فراخ",
+      "names": {
+        "en": "Chicken crepe",
+        "ar": "كريب فراخ"
+      },
+      "description": "",
+      "basePrice": 11500,
+      "imageAssetId": "final_crepe_chicken",
+      "defaults": [
+        {
+          "ingredientId": "chicken",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "bell_pepper_green",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 0,
+      "groupId": "savory"
+    },
+    {
+      "id": "crepe_chicken_mushroom",
+      "categoryId": "crepe",
+      "name": "كريب فراخ ومشروم",
+      "names": {
+        "en": "Chicken & mushroom crepe",
+        "ar": "كريب فراخ ومشروم"
+      },
+      "description": "",
+      "basePrice": 12500,
+      "imageAssetId": "final_crepe_chicken_mushroom",
+      "defaults": [
+        {
+          "ingredientId": "chicken",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "mushroom",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 1,
+      "groupId": "savory"
+    },
+    {
+      "id": "crepe_meat",
+      "categoryId": "crepe",
+      "name": "كريب لحمة",
+      "names": {
+        "en": "Minced beef crepe",
+        "ar": "كريب لحمة"
+      },
+      "description": "",
+      "basePrice": 12500,
+      "imageAssetId": "final_crepe_meat",
+      "defaults": [
+        {
+          "ingredientId": "ground_beef",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "onion",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "bell_pepper_green",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 2,
+      "groupId": "savory"
+    },
+    {
+      "id": "crepe_sausage",
+      "categoryId": "crepe",
+      "name": "كريب سجق",
+      "names": {
+        "en": "Sausage crepe",
+        "ar": "كريب سجق"
+      },
+      "description": "",
+      "basePrice": 10500,
+      "imageAssetId": "final_crepe_sausage",
+      "defaults": [
+        {
+          "ingredientId": "sausage",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "tomato",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 3,
+      "groupId": "savory"
+    },
+    {
+      "id": "crepe_basterma",
+      "categoryId": "crepe",
+      "name": "كريب بسطرمة",
+      "names": {
+        "en": "Basterma crepe",
+        "ar": "كريب بسطرمة"
+      },
+      "description": "",
+      "basePrice": 13500,
+      "imageAssetId": "final_crepe_basterma",
+      "defaults": [
+        {
+          "ingredientId": "basterma",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "roumi",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 4,
+      "groupId": "savory"
+    },
+    {
+      "id": "crepe_tuna",
+      "categoryId": "crepe",
+      "name": "كريب تونة",
+      "names": {
+        "en": "Tuna crepe",
+        "ar": "كريب تونة"
+      },
+      "description": "",
+      "basePrice": 11500,
+      "imageAssetId": "final_crepe_tuna",
+      "defaults": [
+        {
+          "ingredientId": "tuna",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "corn",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "olive_black",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 5,
+      "groupId": "savory"
+    },
+    {
+      "id": "crepe_mixed_cheese",
+      "categoryId": "crepe",
+      "name": "كريب مشكل جبن",
+      "names": {
+        "en": "Mixed cheese crepe",
+        "ar": "كريب مشكل جبن"
+      },
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_crepe_mixed_cheese",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "cheddar",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "roumi",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "feta",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 6,
+      "groupId": "savory"
+    },
+    {
+      "id": "crepe_mortadella",
+      "categoryId": "crepe",
+      "name": "كريب رومي ومرتديلا",
+      "names": {
+        "en": "Roumi & mortadella crepe",
+        "ar": "كريب رومي ومرتديلا"
+      },
+      "description": "",
+      "basePrice": 9500,
+      "imageAssetId": "final_crepe_mortadella",
+      "defaults": [
+        {
+          "ingredientId": "mortadella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "roumi",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 7,
+      "groupId": "savory"
+    },
+    {
+      "id": "crepe_shrimp",
+      "categoryId": "crepe",
+      "name": "كريب جمبري",
+      "names": {
+        "en": "Shrimp crepe",
+        "ar": "كريب جمبري"
+      },
+      "description": "",
+      "basePrice": 16000,
+      "imageAssetId": "final_crepe_shrimp",
+      "defaults": [
+        {
+          "ingredientId": "shrimp",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "garlic",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 8,
+      "groupId": "savory"
+    },
+    {
+      "id": "crepe_nutella",
+      "categoryId": "crepe",
+      "name": "كريب نوتيلا",
+      "names": {
+        "en": "Nutella crepe",
+        "ar": "كريب نوتيلا"
+      },
+      "description": "",
+      "basePrice": 8500,
+      "imageAssetId": "final_crepe_nutella",
+      "defaults": [
+        {
+          "ingredientId": "nutella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 9,
+      "groupId": "sweet"
+    },
+    {
+      "id": "crepe_nutella_banana",
+      "categoryId": "crepe",
+      "name": "كريب نوتيلا وموز",
+      "names": {
+        "en": "Nutella & banana crepe",
+        "ar": "كريب نوتيلا وموز"
+      },
+      "description": "",
+      "basePrice": 9500,
+      "imageAssetId": "final_crepe_nutella_banana",
+      "defaults": [
+        {
+          "ingredientId": "nutella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "banana",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 10,
+      "groupId": "sweet"
+    },
+    {
+      "id": "crepe_nutella_strawberry",
+      "categoryId": "crepe",
+      "name": "كريب نوتيلا وفراولة",
+      "names": {
+        "en": "Nutella & strawberry crepe",
+        "ar": "كريب نوتيلا وفراولة"
+      },
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_crepe_nutella_strawberry",
+      "defaults": [
+        {
+          "ingredientId": "nutella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "strawberry",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 11,
+      "groupId": "sweet"
+    },
+    {
+      "id": "crepe_lotus",
+      "categoryId": "crepe",
+      "name": "كريب لوتس",
+      "names": {
+        "en": "Lotus crepe",
+        "ar": "كريب لوتس"
+      },
+      "description": "",
+      "basePrice": 9500,
+      "imageAssetId": "final_crepe_lotus",
+      "defaults": [
+        {
+          "ingredientId": "lotus",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 12,
+      "groupId": "sweet"
+    },
+    {
+      "id": "crepe_lotus_banana",
+      "categoryId": "crepe",
+      "name": "كريب لوتس وموز",
+      "names": {
+        "en": "Lotus & banana crepe",
+        "ar": "كريب لوتس وموز"
+      },
+      "description": "",
+      "basePrice": 10500,
+      "imageAssetId": "final_crepe_lotus_banana",
+      "defaults": [
+        {
+          "ingredientId": "lotus",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "banana",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 13,
+      "groupId": "sweet"
+    },
+    {
+      "id": "crepe_two_chocolates",
+      "categoryId": "crepe",
+      "name": "كريب شوكولاتتين",
+      "names": {
+        "en": "Two chocolates crepe",
+        "ar": "كريب شوكولاتتين"
+      },
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_crepe_two_chocolates",
+      "defaults": [
+        {
+          "ingredientId": "nutella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "white_chocolate",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 14,
+      "groupId": "sweet"
+    },
+    {
+      "id": "crepe_fruit",
+      "categoryId": "crepe",
+      "name": "كريب فواكه بالنوتيلا",
+      "names": {
+        "en": "Fruit & Nutella crepe",
+        "ar": "كريب فواكه بالنوتيلا"
+      },
+      "description": "",
+      "basePrice": 11000,
+      "imageAssetId": "final_crepe_fruit",
+      "defaults": [
+        {
+          "ingredientId": "nutella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "banana",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "strawberry",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 15,
+      "groupId": "sweet"
+    }
+  ]
+}

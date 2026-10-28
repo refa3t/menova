@@ -156,7 +156,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                       for (final g in groups)
                         GroupChip(
                           label: AppStrings.localized(g.name, g.names),
-                          icon: Icons.local_pizza_outlined,
+                          icon: Icons.restaurant_menu,
                           selected: _groupId == g.id,
                           onTap: () => setState(() => _groupId = g.id),
                         ),

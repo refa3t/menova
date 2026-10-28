@@ -1,0 +1,13 @@
+{
+  "_note": "Calibration values, not owner data.",
+  "tempFields": [
+    "placement.params",
+    "ingredientMotion",
+    "animation"
+  ],
+  "pendingNotes": [
+    "Fillings are scattered over the whole crepe until Band and Drizzle placement exist (P2-04).",
+    "Animation is Swap + FlyToCart until Griddle, Fold and Shrink exist (P2-05..07).",
+    "Bases and sweet ingredient images are drawn in code (tools/process_crepe_assets.py) until photos exist."
+  ]
+}

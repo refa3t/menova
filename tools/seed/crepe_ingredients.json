@@ -1,0 +1,90 @@
+{
+  "_note": "Ingredients the crepe introduces. Savoury fillings reuse the pizza records (tools/seed/pizza_ingredients.json).",
+  "ingredients": [
+    {
+      "id": "nutella",
+      "name": "نوتيلا",
+      "names": {
+        "en": "Nutella",
+        "ar": "نوتيلا"
+      },
+      "assetId": "ing_nutella",
+      "assetFiles": [
+        "ing_nutella_01.webp",
+        "ing_nutella_02.webp",
+        "ing_nutella_03.webp"
+      ],
+      "extraPrice": 2000,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "white_chocolate",
+      "name": "شوكولاتة بيضاء",
+      "names": {
+        "en": "White chocolate",
+        "ar": "شوكولاتة بيضاء"
+      },
+      "assetId": "ing_white_chocolate",
+      "assetFiles": [
+        "ing_white_chocolate_01.webp",
+        "ing_white_chocolate_02.webp",
+        "ing_white_chocolate_03.webp"
+      ],
+      "extraPrice": 2000,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "lotus",
+      "name": "لوتس",
+      "names": {
+        "en": "Lotus",
+        "ar": "لوتس"
+      },
+      "assetId": "ing_lotus",
+      "assetFiles": [
+        "ing_lotus_01.webp",
+        "ing_lotus_02.webp",
+        "ing_lotus_03.webp"
+      ],
+      "extraPrice": 2500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "banana",
+      "name": "موز",
+      "names": {
+        "en": "Banana",
+        "ar": "موز"
+      },
+      "assetId": "ing_banana",
+      "assetFiles": [
+        "ing_banana_01.webp",
+        "ing_banana_02.webp",
+        "ing_banana_03.webp"
+      ],
+      "extraPrice": 1000,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "strawberry",
+      "name": "فراولة",
+      "names": {
+        "en": "Strawberry",
+        "ar": "فراولة"
+      },
+      "assetId": "ing_strawberry",
+      "assetFiles": [
+        "ing_strawberry_01.webp",
+        "ing_strawberry_02.webp",
+        "ing_strawberry_03.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    }
+  ]
+}

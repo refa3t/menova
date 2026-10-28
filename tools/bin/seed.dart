@@ -30,6 +30,51 @@ Future<void> main(List<String> args) async {
     '../assets_src/$category/cloudinary_manifest.json',
   );
   final ingredientsFile = _readJson('seed/${category}_ingredients.json');
+
+  // Every category's definition and ingredient records: an ingredient is
+  // defined once (in the file of the category that introduced it) and other
+  // categories reuse it by id, so prices and images keep one source.
+  final allDefinitions = [
+    for (final f in Directory('../definitions').listSync().whereType<File>())
+      if (f.path.endsWith('.json') && !f.path.endsWith('.temp.json'))
+        CategoryDefinition.fromJson(
+          jsonDecode(f.readAsStringSync()) as Map<String, dynamic>,
+        ),
+  ];
+  final ingredientRecords =
+      <String, ({Map<String, dynamic> json, Map<String, dynamic> manifest})>{};
+  for (final d in allDefinitions) {
+    final file = File('seed/${d.id}_ingredients.json');
+    final folder = File('../assets_src/${d.id}/cloudinary_manifest.json');
+    if (!file.existsSync() || !folder.existsSync()) continue;
+    final m = jsonDecode(folder.readAsStringSync()) as Map<String, dynamic>;
+    for (final raw
+        in (jsonDecode(file.readAsStringSync())
+                as Map<String, dynamic>)['ingredients']
+            as List) {
+      final json = raw as Map<String, dynamic>;
+      ingredientRecords[json['id'] as String] = (json: json, manifest: m);
+    }
+  }
+
+  /// Categories whose definition uses [assetId] (as a base, an option base,
+  /// an animation image or an allowed ingredient's image).
+  List<String> usedBy(String assetId, {String? ingredientId}) => [
+    for (final d in allDefinitions)
+      if (d.base.rawAssetId == assetId ||
+          d.base.cookedAssetId == assetId ||
+          d.optionGroups.any(
+            (g) => g.choices.any(
+              (c) =>
+                  c.base?.rawAssetId == assetId ||
+                  c.base?.cookedAssetId == assetId,
+            ),
+          ) ||
+          d.animation.any((s) => '${s.params['images']}'.contains(assetId)) ||
+          (ingredientId != null &&
+              d.allowedIngredientIds.contains(ingredientId)))
+        d.id,
+  ];
   final productsFile = _readJson(productsPath);
   final isTemp =
       ingredientsFile['temp'] == true || productsFile['temp'] == true;
@@ -54,7 +99,7 @@ Future<void> main(List<String> args) async {
     secureUrl: '${base['secureUrl']}',
     version: (base['version'] as int?) ?? 0,
     layerOrder: 0,
-    allowedCategoryIds: [definition.id],
+    allowedCategoryIds: usedBy(definition.base.rawAssetId),
   ).toJson();
 
   // Bases that replace the category base when an option is chosen.
@@ -71,7 +116,7 @@ Future<void> main(List<String> args) async {
         secureUrl: '${e['secureUrl']}',
         version: (e['version'] as int?) ?? 0,
         layerOrder: 0,
-        allowedCategoryIds: [definition.id],
+        allowedCategoryIds: usedBy(b.rawAssetId),
       ).toJson();
     }
   }
@@ -89,6 +134,8 @@ Future<void> main(List<String> args) async {
     (groups[id] ??= []).add(f);
   }
   for (final g in groups.entries) {
+    final users = usedBy(g.key);
+    if (users.isEmpty) continue; // Not used by any category.
     final entries = [
       for (final f in g.value) animManifest[f] as Map<String, dynamic>,
     ];
@@ -101,22 +148,39 @@ Future<void> main(List<String> args) async {
       version: (entries.first['version'] as int?) ?? 0,
       variants: [for (final e in entries.skip(1)) '${e['secureUrl']}'],
       layerOrder: 0,
-      allowedCategoryIds: [definition.id],
+      allowedCategoryIds: users,
     ).toJson();
   }
 
-  // Ingredients and their assets.
+  // Ingredients and their assets: this category's own records, plus the
+  // ones it reuses from other categories (same record, same images).
   final ingredientIds = <String>{};
   for (final raw in ingredientsFile['ingredients'] as List) {
-    final json = raw as Map<String, dynamic>;
-    final ingredient = Ingredient.fromJson(json);
-    ingredientIds.add(ingredient.id);
-    if (!definition.allowedIngredientIds.contains(ingredient.id)) {
-      errors.add('ingredient ${ingredient.id} not allowed by definition');
+    final id = (raw as Map<String, dynamic>)['id'] as String;
+    if (!definition.allowedIngredientIds.contains(id)) {
+      errors.add('ingredient $id not allowed by definition');
     }
-    final files = (json['assetFiles'] as List).cast<String>();
-    if (files.isEmpty) errors.add('ingredient ${ingredient.id} has no assets');
-    final entries = files.map(manifestEntry).toList();
+  }
+  for (final id in definition.allowedIngredientIds) {
+    final record = ingredientRecords[id];
+    if (record == null) {
+      errors.add('allowed ingredient $id has no ingredient record');
+      continue;
+    }
+    final ingredient = Ingredient.fromJson(record.json);
+    ingredientIds.add(id);
+    final files = (record.json['assetFiles'] as List).cast<String>();
+    if (files.isEmpty) errors.add('ingredient $id has no assets');
+    final entries = [
+      for (final f in files)
+        if (record.manifest[f] case final Map<String, dynamic> e)
+          e
+        else
+          (() {
+            errors.add('asset file not uploaded: $f');
+            return const <String, dynamic>{};
+          })(),
+    ];
     if (entries.isEmpty) continue;
     docs['assets/${ingredient.assetId}'] = Asset(
       id: ingredient.assetId,
@@ -128,14 +192,9 @@ Future<void> main(List<String> args) async {
       variants: [for (final e in entries.skip(1)) '${e['secureUrl']}'],
       // TEMP: uniform layer order until P1-B00 calibrates layering.
       layerOrder: 20,
-      allowedCategoryIds: [definition.id],
+      allowedCategoryIds: usedBy(ingredient.assetId, ingredientId: id),
     ).toJson();
     docs['ingredients/${ingredient.id}'] = ingredient.toJson();
-  }
-  for (final id in definition.allowedIngredientIds) {
-    if (!ingredientIds.contains(id)) {
-      errors.add('allowed ingredient $id has no ingredient record');
-    }
   }
 
   // Products.
@@ -186,7 +245,7 @@ Future<void> main(List<String> args) async {
   docs['categoryContent/${definition.id}'] = CategoryContent(
     categoryId: definition.id,
     isVisible: true,
-    displayOrder: 0,
+    displayOrder: (productsFile['categoryOrder'] as int?) ?? 0,
   ).toJson();
 
   if (errors.isNotEmpty) {

@@ -62,7 +62,7 @@ abstract final class AppStrings {
   static String get navAbout => _t('About', 'عن منوفا');
   static String get navContact => _t('Contact', 'تواصل معنا');
   static String get searchHint =>
-      _t('Search for your favorite pizza...', 'ابحث عن البيتزا المفضلة...');
+      _t('Search the menu...', 'ابحث في المنيو...');
   static String get heroEyebrow =>
       _t('FRESH INGREDIENTS  •  BETTER PIZZA', 'مكونات طازجة  •  بيتزا أفضل');
   static String get heroTitle1 => _t('Real Pizza,', 'بيتزا حقيقية،');
@@ -72,7 +72,6 @@ abstract final class AppStrings {
     'محضّرة بأطزج المكونات، خصيصاً لك.',
   );
   static String get orderNow => _t('Order Now', 'اطلب الآن');
-  static String get ourPizzas => _t('Our Pizzas', 'البيتزا');
   static String get categoryNotFound =>
       _t('This section is not available', 'هذا القسم غير متاح');
   static String productCount(int n) => _t('$n items', '$n صنف');
