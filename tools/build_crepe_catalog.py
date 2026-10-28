@@ -73,6 +73,9 @@ PRODUCTS = [
      ['nutella', 'banana', 'strawberry']),
 ]
 
+# Sauces drizzled in lines over the filling: id, pieces per unit, size.
+DRIZZLED = [('nutella', 48, 0.085), ('white_chocolate', 27, 0.12)]
+
 # Shown on the home page after the pizza.
 CATEGORY_ORDER = 1
 
@@ -97,13 +100,18 @@ def main() -> None:
                    glob.glob('assets_src/crepe/ingredients/*.webp'))
 
     pp = pizza_def['placement']['params']
-    params = {'pieceSize': 0.13, 'piecesPerUnit': 7, 'radius': 0.62,
-              'minGap': 0.15}
+    # Fillings lie in a band across the middle (where the crepe is folded
+    # over them); chocolate sauces are drizzled in lines (P2-04).
+    params = {'pieceSize': 0.13, 'piecesPerUnit': 7, 'radius': 0.82,
+              'bandWidth': 0.3, 'minGap': 0.12, 'lines': 3, 'wave': 0.06}
     for k in SHARED:
         for p in ('piecesPerUnit', 'pieceSize'):
             if f'{p}:{k}' in pp:
                 params[f'{p}:{k}'] = pp[f'{p}:{k}']
     for k, _, _, _, per, size, _ in NEW_INGREDIENTS:
+        params[f'piecesPerUnit:{k}'] = per
+        params[f'pieceSize:{k}'] = size
+    for k, per, size in DRIZZLED:
         params[f'piecesPerUnit:{k}'] = per
         params[f'pieceSize:{k}'] = size
     motion = {k: pizza_def['ingredientMotion'][k] for k in SHARED
@@ -119,7 +127,8 @@ def main() -> None:
         'base': {'shape': 'circle', 'rawAssetId': 'base_crepe_raw',
                  'cookedAssetId': 'base_crepe_cooked'},
         'allowedIngredientIds': allowed,
-        'placement': {'strategy': 'scatter', 'params': params},
+        'placement': {'strategy': 'band', 'params': params,
+                      'byIngredient': {k: 'drizzle' for k, *_ in DRIZZLED}},
         'constraints': {'maxQty': 2},
         'sizes': [],
         'optionGroups': [],
@@ -140,8 +149,6 @@ def main() -> None:
         '_note': 'Calibration values, not owner data.',
         'tempFields': ['placement.params', 'ingredientMotion', 'animation'],
         'pendingNotes': [
-            'Fillings are scattered over the whole crepe until Band and '
-            'Drizzle placement exist (P2-04).',
             'Animation is Swap + FlyToCart until Griddle, Fold and Shrink '
             'exist (P2-05..07).',
             'Bases and sweet ingredient images are drawn in code '

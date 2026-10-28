@@ -173,26 +173,46 @@ class BaseSpec {
 
 /// Registered placement strategy key plus its parameters (e.g. `scatter`).
 class PlacementSpec {
-  const PlacementSpec({required this.strategy, this.params = const {}});
+  const PlacementSpec({
+    required this.strategy,
+    this.params = const {},
+    this.byIngredient = const {},
+  });
 
+  /// Default strategy for every ingredient of the category.
   final String strategy;
   final Map<String, num> params;
+
+  /// Optional per-ingredient strategy (e.g. sauces drizzled in lines while
+  /// fillings sit in a band). Empty keeps every ingredient on [strategy].
+  final Map<String, String> byIngredient;
+
+  /// The strategy key for [ingredientId].
+  String strategyFor(String ingredientId) =>
+      byIngredient[ingredientId] ?? strategy;
 
   factory PlacementSpec.fromJson(Json j) => PlacementSpec(
     strategy: req(j, 'strategy'),
     params: mapOf(j, 'params', (v) => v as num),
+    byIngredient: mapOf(j, 'byIngredient', (v) => v as String),
   );
 
-  Json toJson() => {'strategy': strategy, 'params': params};
+  Json toJson() => {
+    'strategy': strategy,
+    'params': params,
+    if (byIngredient.isNotEmpty) 'byIngredient': byIngredient,
+  };
 
   @override
   bool operator ==(Object other) =>
       other is PlacementSpec &&
       other.strategy == strategy &&
-      mapEq(other.params, params);
+      mapEq(other.params, params) &&
+      mapEq(other.byIngredient, byIngredient);
 
   @override
-  int get hashCode => Object.hash(strategy, mapHash(params));
+  int get hashCode =>
+      Object.hash(strategy, mapHash(params), mapHash(byIngredient));
 }
 
 class CustomizationConstraints {

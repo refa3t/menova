@@ -49,6 +49,15 @@ List<DefinitionIssue> validateDefinition(
       !placementStrategies.contains(d.placement.strategy)) {
     issue('placement.strategy', 'unregistered "${d.placement.strategy}"');
   }
+  for (final e in d.placement.byIngredient.entries) {
+    final path = 'placement.byIngredient.${e.key}';
+    if (!d.allowedIngredientIds.contains(e.key)) {
+      issue(path, 'ingredient not allowed by the category');
+    }
+    if (placementStrategies != null && !placementStrategies.contains(e.value)) {
+      issue(path, 'unregistered "${e.value}"');
+    }
+  }
   for (final e in d.placement.params.entries) {
     if (e.value < 0) issue('placement.params.${e.key}', 'must be >= 0');
   }

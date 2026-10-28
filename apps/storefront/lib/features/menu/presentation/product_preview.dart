@@ -36,6 +36,7 @@ class ProductPreview extends StatelessWidget {
       child: BuilderCanvas(
         baseImageUrl: base.secureUrl,
         strategy: strategy,
+        strategyByIngredient: strategiesByIngredient(definition.placement),
         placementParams: definition.placement.params,
         density: state.sizeDensity,
         layers: [

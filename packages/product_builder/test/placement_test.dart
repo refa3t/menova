@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:core/core.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:product_builder/product_builder.dart';
 
@@ -67,5 +68,80 @@ void main() {
       final b = ring('olive', 1).map((p) => p.dx).toSet();
       expect(b.intersection(a.toSet()), isEmpty);
     });
+  });
+
+  group('band (P2-04)', () {
+    const b = BandPlacement();
+    const params = {'piecesPerUnit': 10, 'radius': 0.8, 'bandWidth': 0.3};
+    List<PiecePlacement> band(String id, int unit) =>
+        b.place(ingredientId: id, unit: unit, variantCount: 3, params: params);
+
+    test('pieces sit in the central strip, inside the radius', () {
+      final pieces = band('chicken', 0);
+      expect(pieces, hasLength(10));
+      for (final p in pieces) {
+        expect(p.dy.abs(), lessThanOrEqualTo(0.3 + 1e-9));
+        expect(p.dx * p.dx + p.dy * p.dy, lessThanOrEqualTo(0.64 + 1e-9));
+      }
+    });
+
+    test('stable per unit, and extras use another seed', () {
+      expect(band('chicken', 0).first.dx, band('chicken', 0).first.dx);
+      expect(band('chicken', 1).first.dx, isNot(band('chicken', 0).first.dx));
+    });
+  });
+
+  group('drizzle (P2-04)', () {
+    const d = DrizzlePlacement();
+    const params = {'piecesPerUnit': 12, 'radius': 0.78, 'lines': 3};
+    List<PiecePlacement> drizzle(String id, int unit) =>
+        d.place(ingredientId: id, unit: unit, variantCount: 3, params: params);
+
+    test('pieces follow lines across the disc, turned along them', () {
+      final pieces = drizzle('nutella', 0);
+      expect(pieces, hasLength(12));
+      for (final p in pieces) {
+        expect(
+          p.dx * p.dx + p.dy * p.dy,
+          lessThanOrEqualTo(0.78 * 0.78 + 1e-6),
+        );
+        expect(p.rotation.abs(), lessThan(pi / 2)); // along a near-flat line
+      }
+      // Three lines: pieces cluster around three distinct heights.
+      final rows = pieces.map((p) => (p.dy * 4).round()).toSet();
+      expect(rows.length, greaterThanOrEqualTo(3));
+    });
+
+    test('every unit and ingredient stays inside the radius', () {
+      for (final id in ['nutella', 'white_chocolate', 'caramel', 'x', 'y']) {
+        for (var unit = 0; unit < 3; unit++) {
+          for (final p in drizzle(id, unit)) {
+            expect(
+              p.dx * p.dx + p.dy * p.dy,
+              lessThanOrEqualTo(0.78 * 0.78 + 1e-6),
+              reason: '$id unit $unit',
+            );
+          }
+        }
+      }
+    });
+
+    test('an extra unit draws its lines between the previous ones', () {
+      final a = drizzle('nutella', 0).map((p) => p.dy).toList();
+      final b = drizzle('nutella', 1).map((p) => p.dy).toList();
+      expect(b.first, isNot(a.first));
+    });
+  });
+
+  test('a definition can give single ingredients their own strategy', () {
+    const spec = PlacementSpec(
+      strategy: 'band',
+      byIngredient: {'nutella': 'drizzle', 'x': 'unknown'},
+    );
+    expect(spec.strategyFor('nutella'), 'drizzle');
+    expect(spec.strategyFor('banana'), 'band');
+    final map = strategiesByIngredient(spec);
+    expect(map['nutella'], isA<DrizzlePlacement>());
+    expect(map.containsKey('x'), isFalse);
   });
 }

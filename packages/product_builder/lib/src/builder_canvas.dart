@@ -40,6 +40,7 @@ class BuilderCanvas extends StatefulWidget {
     required this.baseImageUrl,
     required this.layers,
     required this.strategy,
+    this.strategyByIngredient = const {},
     this.placementParams = const {},
     this.scale = 1,
     this.density = 1,
@@ -48,6 +49,10 @@ class BuilderCanvas extends StatefulWidget {
   final String baseImageUrl;
   final List<CanvasLayer> layers;
   final PlacementStrategy strategy;
+
+  /// Per-ingredient strategies that replace [strategy] (e.g. drizzled
+  /// sauces over a band of fillings).
+  final Map<String, PlacementStrategy> strategyByIngredient;
   final Map<String, num> placementParams;
 
   /// Visual size factor (e.g. per size option).
@@ -124,7 +129,10 @@ class _BuilderCanvasState extends State<BuilderCanvas> {
                 final size = side * pieceSizeOf(layer.ingredientId);
                 final units = _shownUnits[layer.ingredientId] ?? 0;
                 for (var unit = 0; unit < units; unit++) {
-                  final pieces = widget.strategy.place(
+                  final strategy =
+                      widget.strategyByIngredient[layer.ingredientId] ??
+                      widget.strategy;
+                  final pieces = strategy.place(
                     ingredientId: layer.ingredientId,
                     unit: unit,
                     variantCount: layer.imageUrls.length,

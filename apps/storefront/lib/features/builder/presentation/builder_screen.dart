@@ -346,6 +346,7 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
             key: widget.canvasKey,
             baseImageUrl: base.secureUrl,
             strategy: strategy,
+            strategyByIngredient: strategiesByIngredient(def.placement),
             placementParams: def.placement.params,
             scale: state.sizeScale,
             density: state.sizeDensity,

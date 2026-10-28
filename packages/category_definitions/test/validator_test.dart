@@ -12,13 +12,14 @@ CategoryDefinition def({
   List<OptionGroup> groups = const [],
   String baseAsset = 'base',
   Map<String, int> layerOverrides = const {},
+  Map<String, String> byIngredient = const {},
 }) => CategoryDefinition(
   id: 'cat',
   definitionVersion: 1,
   name: 'TEMP',
   base: BaseSpec(shape: 'circle', rawAssetId: baseAsset),
   allowedIngredientIds: allowed,
-  placement: PlacementSpec(strategy: strategy),
+  placement: PlacementSpec(strategy: strategy, byIngredient: byIngredient),
   constraints: CustomizationConstraints(maxQty: maxQty),
   sizes: sizes,
   optionGroups: groups,
@@ -67,6 +68,16 @@ void main() {
     expect(check(def(animation: const [])), ['animation']);
   });
 
+  test('per-ingredient strategy must be registered and allowed', () {
+    expect(check(def(byIngredient: {'i1': 'scatter'})), isEmpty);
+    expect(check(def(byIngredient: {'i1': 'nope'})), [
+      'placement.byIngredient.i1',
+    ]);
+    expect(check(def(byIngredient: {'i9': 'scatter'})), [
+      'placement.byIngredient.i9',
+    ]);
+  });
+
   test('allowed ingredient that is not defined is rejected', () {
     expect(check(def(allowed: const ['i1', 'ghost'])), [
       'allowedIngredientIds',
@@ -102,6 +113,9 @@ void main() {
       animationSteps: const {'Oven', 'Swap', 'FlyToCart'},
     );
     expect(r.definitions, isEmpty);
-    expect(r.rejected.values.single, contains('placement.strategy'));
+    expect(r.rejected, isNotEmpty);
+    for (final reasons in r.rejected.values) {
+      expect(reasons, contains('placement.strategy'));
+    }
   });
 }

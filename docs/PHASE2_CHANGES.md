@@ -55,9 +55,13 @@
 
 | # | المهمة | الملفات | الفئة | السبب ولماذا هو معمَّم | انحدار البيتزا | commit |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | P2-02/03 | `tools/bin/seed.dart` | مقبول (أدوات) | المكوّن المعرَّف في ملف كاتيجوري تعيد استخدامه كاتيجوري أخرى بالمعرّف، و`allowedCategoryIds` لكل أصل تُحسب من كل التعريفات بدل كاتيجوري التشغيل. معمَّم: لا يذكر الكريب | seed البيتزا 112 وثيقة كما هي | (commit هذه الدفعة) |
-| 2 | P2-03 | `apps/storefront/test/definitions/definitions_test.dart` (كان `pizza_definition_test`) | مقبول (اختبار) | يتحقق من **كل** ملف في `definitions/` بأصول ومكونات كل الكاتيجوري | ناجح | (commit هذه الدفعة) |
-| 3 | P2-03 | `apps/storefront/lib/core/strings/app_strings.dart` (`searchHint`)، `features/menu/presentation/category_screen.dart` (أيقونة المجموعة) | يستدعي مراجعة (نص/واجهة عامة) | نص البحث كان «ابحث عن البيتزا» وأيقونة المجموعات بيتزا؛ صارا عامين («ابحث في المنيو»، أيقونة منيو). لا منطق جديد | 60 اختبار متجر ناجحة | (commit هذه الدفعة) |
+| 1 | P2-02/03 | `tools/bin/seed.dart` | مقبول (أدوات) | المكوّن المعرَّف في ملف كاتيجوري تعيد استخدامه كاتيجوري أخرى بالمعرّف، و`allowedCategoryIds` لكل أصل تُحسب من كل التعريفات بدل كاتيجوري التشغيل. معمَّم: لا يذكر الكريب | seed البيتزا 112 وثيقة كما هي | `d5f0786` |
+| 2 | P2-03 | `apps/storefront/test/definitions/definitions_test.dart` (كان `pizza_definition_test`) | مقبول (اختبار) | يتحقق من **كل** ملف في `definitions/` بأصول ومكونات كل الكاتيجوري | ناجح | `d5f0786` |
+| 3 | P2-03 | `apps/storefront/lib/core/strings/app_strings.dart` (`searchHint`)، `features/menu/presentation/category_screen.dart` (أيقونة المجموعة) | يستدعي مراجعة (نص/واجهة عامة) | نص البحث كان «ابحث عن البيتزا» وأيقونة المجموعات بيتزا؛ صارا عامين («ابحث في المنيو»، أيقونة منيو). لا منطق جديد | 60 اختبار متجر ناجحة | `d5f0786` |
+| 4 | P2-04 | `packages/product_builder/lib/src/placement.dart` (`BandPlacement`، `DrizzlePlacement`، `strategiesByIngredient`) | مقبول (نمط توزيع جديد + تسجيل) | الشريط للحشو والخطوط للصوصات، عبر نقطة التوسع نفسها | 26 اختبار توزيع ناجحة، والبيتزا على `rings` كما هي | (commit P2-04) |
+| 5 | P2-04 | `packages/core/lib/src/models/category_definition.dart` (`PlacementSpec.byIngredient`) | مقبول (حقل اختياري) | استراتيجية لكل مكوّن داخل الكاتيجوري؛ فارغ افتراضياً فلا يتغير شيء في البيتزا | core 12 ناجحة | (commit P2-04) |
+| 6 | P2-04 | `packages/category_definitions/lib/src/validator.dart` + اختباره | يستدعي مراجعة (المُتحقِّق) | يرفض `byIngredient` لمكوّن غير مسموح أو استراتيجية غير مسجلة (fail-closed). معمَّم | 8 ناجحة؛ واختبار «الرفض» صار يقبل أكثر من تعريف | (commit P2-04) |
+| 7 | P2-04 | `packages/product_builder/lib/src/builder_canvas.dart` (`strategyByIngredient`)، `builder_screen.dart`، `product_preview.dart` | يستدعي مراجعة (البناء والمنسِّق) | اللوحة تأخذ استراتيجية المكوّن إن وُجدت وإلا العامة. معمَّم، بلا ذكر للكريب | متجر 63 ناجحة، والبيتزا كما هي على الموقع | (commit P2-04) |
 
 ## 5. تقرير P2-03 («بلا كود مكرر»)
 

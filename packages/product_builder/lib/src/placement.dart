@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:core/core.dart';
+
 /// One piece of an ingredient on the canvas, in normalized base coordinates:
 /// (0,0) is the base center, radius 1 is the base edge.
 class PiecePlacement {
@@ -149,6 +151,112 @@ class RingsPlacement implements PlacementStrategy {
   }
 }
 
+/// Band (P2-04): pieces fill a horizontal strip across the middle, where a
+/// crepe's filling sits before folding. `bandWidth` is the strip height as a
+/// fraction of the diameter; pieces stay inside `radius`. Extra units use
+/// their own seed, so they land between the default pieces.
+class BandPlacement implements PlacementStrategy {
+  const BandPlacement();
+
+  @override
+  List<PiecePlacement> place({
+    required String ingredientId,
+    required int unit,
+    required int variantCount,
+    required Map<String, num> params,
+    double density = 1,
+  }) {
+    num? param(String key) => params['$key:$ingredientId'] ?? params[key];
+    final count = ((param('piecesPerUnit') ?? 8) * density).round();
+    final radius = (param('radius') ?? 0.8).toDouble();
+    final half = (param('bandWidth') ?? 0.42).toDouble(); // of the diameter
+    final minGap = (param('minGap') ?? 0.14).toDouble();
+    final rnd = StableRandom(stableSeed('$ingredientId#band#$unit'));
+    final pieces = <PiecePlacement>[];
+    var attempts = 0;
+    while (pieces.length < count && attempts < count * 40) {
+      attempts++;
+      final y = (rnd.nextDouble() * 2 - 1) * half;
+      final span = sqrt(max(0.0, radius * radius - y * y));
+      final x = (rnd.nextDouble() * 2 - 1) * span;
+      final gap = minGap * (1 - attempts / (count * 40));
+      if (pieces.any((p) => ScatterPlacement._dist(p.dx, p.dy, x, y) < gap)) {
+        continue;
+      }
+      pieces.add(
+        PiecePlacement(
+          dx: x,
+          dy: y,
+          rotation: rnd.nextDouble() * 2 * pi,
+          scale: 0.85 + rnd.nextDouble() * 0.3,
+          variant: variantCount <= 1 ? 0 : rnd.nextInt(variantCount),
+        ),
+      );
+    }
+    return pieces;
+  }
+}
+
+/// Drizzle (P2-04): pieces follow gentle wavy lines across the surface, each
+/// piece turned along its line, like a sauce poured from a bottle. `lines`
+/// sets how many lines one unit draws, `wave` their amplitude; each extra
+/// unit draws its lines between the previous ones.
+class DrizzlePlacement implements PlacementStrategy {
+  const DrizzlePlacement();
+
+  @override
+  List<PiecePlacement> place({
+    required String ingredientId,
+    required int unit,
+    required int variantCount,
+    required Map<String, num> params,
+    double density = 1,
+  }) {
+    num? param(String key) => params['$key:$ingredientId'] ?? params[key];
+    final count = ((param('piecesPerUnit') ?? 12) * density).round();
+    final lines = max(1, (param('lines') ?? 3).round());
+    if (count <= 0) return const [];
+    final radius = (param('radius') ?? 0.78).toDouble();
+    final wave = (param('wave') ?? 0.07).toDouble();
+    final rnd = StableRandom(stableSeed('$ingredientId#drizzle#$unit'));
+    // Lines spread over the disc; extra units sit half a spacing apart.
+    final spacing = 2 * radius / (lines + 1);
+    // Each ingredient gets its own stable offset, so two sauces interleave
+    // instead of covering each other; extra units sit between earlier lines.
+    final own =
+        ((stableSeed('$ingredientId#lines') % 1000) / 1000 - 0.5) *
+        spacing *
+        0.9;
+    final shift = own + unit * spacing / (unit + 1);
+    final perLine = max(2, (count / lines).round());
+    final phase = (stableSeed(ingredientId) % 628) / 100;
+    final pieces = <PiecePlacement>[];
+    for (var l = 0; l < lines; l++) {
+      final y0 = -radius + spacing * (l + 1) + shift - spacing / 2;
+      // Leave room for the wave so no piece crosses the edge.
+      final yMax = min(radius, y0.abs() + wave);
+      final span = sqrt(max(0.0, radius * radius - yMax * yMax)) * 0.92;
+      for (var i = 0; i < perLine; i++) {
+        final t = perLine == 1 ? 0.5 : i / (perLine - 1);
+        final x = -span + 2 * span * t;
+        const freq = 7.0;
+        final y = y0 + wave * sin(freq * x + phase + l);
+        final slope = wave * freq * cos(freq * x + phase + l);
+        pieces.add(
+          PiecePlacement(
+            dx: x,
+            dy: y,
+            rotation: atan(slope),
+            scale: 0.9 + rnd.nextDouble() * 0.2,
+            variant: variantCount <= 1 ? 0 : rnd.nextInt(variantCount),
+          ),
+        );
+      }
+    }
+    return pieces;
+  }
+}
+
 /// Small deterministic PRNG (mulberry32). `dart:math` Random is not
 /// guaranteed identical across VM and web, and on web its first outputs are
 /// correlated for nearby seeds, which made pieces line up in a band.
@@ -191,4 +299,14 @@ int stableSeed(String s) {
 const placementStrategies = <String, PlacementStrategy>{
   'scatter': ScatterPlacement(),
   'rings': RingsPlacement(),
+  'band': BandPlacement(),
+  'drizzle': DrizzlePlacement(),
+};
+
+/// The registered strategies a definition assigns to single ingredients
+/// (`placement.byIngredient`); unknown keys are left out (the validator
+/// rejects them first).
+Map<String, PlacementStrategy> strategiesByIngredient(PlacementSpec spec) => {
+  for (final e in spec.byIngredient.entries)
+    e.key: ?placementStrategies[e.value],
 };

@@ -61,8 +61,7 @@ abstract final class AppStrings {
   static String get navMenu => _t('Menu', 'المنيو');
   static String get navAbout => _t('About', 'عن منوفا');
   static String get navContact => _t('Contact', 'تواصل معنا');
-  static String get searchHint =>
-      _t('Search the menu...', 'ابحث في المنيو...');
+  static String get searchHint => _t('Search the menu...', 'ابحث في المنيو...');
   static String get heroEyebrow =>
       _t('FRESH INGREDIENTS  •  BETTER PIZZA', 'مكونات طازجة  •  بيتزا أفضل');
   static String get heroTitle1 => _t('Real Pizza,', 'بيتزا حقيقية،');

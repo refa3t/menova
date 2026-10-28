@@ -37,12 +37,15 @@
     "strawberry"
   ],
   "placement": {
-    "strategy": "scatter",
+    "strategy": "band",
     "params": {
       "pieceSize": 0.13,
       "piecesPerUnit": 7,
-      "radius": 0.62,
-      "minGap": 0.15,
+      "radius": 0.82,
+      "bandWidth": 0.3,
+      "minGap": 0.12,
+      "lines": 3,
+      "wave": 0.06,
       "piecesPerUnit:mozzarella": 14,
       "pieceSize:mozzarella": 0.2,
       "piecesPerUnit:cheddar": 14,
@@ -66,16 +69,20 @@
       "pieceSize:corn": 0.08,
       "piecesPerUnit:olive_black": 14,
       "piecesPerUnit:garlic": 14,
-      "piecesPerUnit:nutella": 5,
-      "pieceSize:nutella": 0.2,
-      "piecesPerUnit:white_chocolate": 3,
-      "pieceSize:white_chocolate": 0.24,
+      "piecesPerUnit:nutella": 48,
+      "pieceSize:nutella": 0.085,
+      "piecesPerUnit:white_chocolate": 27,
+      "pieceSize:white_chocolate": 0.12,
       "piecesPerUnit:lotus": 6,
       "pieceSize:lotus": 0.16,
       "piecesPerUnit:banana": 8,
       "pieceSize:banana": 0.12,
       "piecesPerUnit:strawberry": 7,
       "pieceSize:strawberry": 0.13
+    },
+    "byIngredient": {
+      "nutella": "drizzle",
+      "white_chocolate": "drizzle"
     }
   },
   "constraints": {
