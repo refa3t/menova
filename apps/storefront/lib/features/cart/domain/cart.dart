@@ -50,13 +50,33 @@ class Cart {
     return null;
   }
 
-  Cart add(CartLine line) => Cart([...lines, line]);
+  /// Adds [line]; the same product with exactly the same choices (size,
+  /// options, ingredients, notes) only raises the existing line's quantity
+  /// (owner request), so the cart never holds two identical lines.
+  Cart add(CartLine line) {
+    for (final l in lines) {
+      if (l.selection == line.selection) {
+        return setQty(l.lineId, l.qty + line.qty);
+      }
+    }
+    return Cart([...lines, line]);
+  }
 
-  /// Replaces a line's selection in place, keeping its id and position.
-  Cart replace(String lineId, Selection selection) => Cart([
-    for (final l in lines)
-      l.lineId == lineId ? l.copyWith(selection: selection) : l,
-  ]);
+  /// Replaces a line's selection in place, keeping its id and position. If
+  /// the edit makes it identical to another line, the two merge into that
+  /// other line.
+  Cart replace(String lineId, Selection selection) {
+    final edited = line(lineId);
+    for (final l in lines) {
+      if (l.lineId != lineId && l.selection == selection && edited != null) {
+        return setQty(l.lineId, l.qty + edited.qty).remove(lineId);
+      }
+    }
+    return Cart([
+      for (final l in lines)
+        l.lineId == lineId ? l.copyWith(selection: selection) : l,
+    ]);
+  }
 
   Cart setQty(String lineId, int qty) => qty < 1
       ? remove(lineId)

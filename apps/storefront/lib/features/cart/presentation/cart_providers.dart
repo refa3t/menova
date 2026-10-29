@@ -44,7 +44,8 @@ class CartController extends Notifier<Cart> {
     final id =
         '${DateTime.now().microsecondsSinceEpoch}-${_random.nextInt(0x7fffffff)}';
     state = state.add(CartLine(lineId: id, selection: selection, qty: qty));
-    return id;
+    // An identical line absorbs the new one: return the line that holds it.
+    return state.lines.firstWhere((l) => l.selection == selection).lineId;
   }
 
   /// Updates an existing line without duplicating it (AC-18).

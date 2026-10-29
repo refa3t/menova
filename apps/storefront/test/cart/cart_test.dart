@@ -105,6 +105,30 @@ void main() {
     expect(lines.single.selection.qtyOf('olive'), 0);
   });
 
+  test('the same product with the same choices adds to its quantity', () async {
+    final c = await container();
+    addTearDown(c.dispose);
+    final cart = c.read(cartProvider.notifier);
+    final first = cart.add(sel({'cheese': 2}));
+    final again = cart.add(sel({'cheese': 2}));
+    expect(again, first);
+    expect(c.read(cartProvider).lines, hasLength(1));
+    expect(c.read(cartProvider).lines.single.qty, 2);
+    // Any difference in ingredients is a separate line.
+    cart.add(sel({'cheese': 3}));
+    expect(c.read(cartProvider).lines, hasLength(2));
+  });
+
+  test('editing a line into a copy of another merges them', () {
+    var cart = Cart.empty
+        .add(CartLine(lineId: 'a', selection: sel({'cheese': 2}), qty: 1))
+        .add(CartLine(lineId: 'b', selection: sel({'cheese': 3}), qty: 2));
+    cart = cart.replace('b', sel({'cheese': 2}));
+    expect(cart.lines, hasLength(1));
+    expect(cart.lines.single.lineId, 'a');
+    expect(cart.lines.single.qty, 3);
+  });
+
   test('qty below one removes the line', () {
     final cart = Cart.empty.add(
       CartLine(lineId: 'l', selection: sel({}), qty: 2),
