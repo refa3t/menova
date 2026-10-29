@@ -76,6 +76,14 @@ PRODUCTS = [
 # Sauces drizzled in lines over the filling: id, pieces per unit, size.
 DRIZZLED = [('nutella', 48, 0.085), ('white_chocolate', 27, 0.12)]
 
+# Fold lines of the cone, in fractions of the product box: each folds the
+# part on its outer side (left, then right) over the filling. They meet
+# near the bottom and open towards the top, where the filling shows.
+CONE = [[0.36, 0.77, 0.16, 0.25], [0.84, 0.25, 0.64, 0.77]]
+# The open top of the cone, between the fold lines down to the middle of the
+# filling: the inside (and the filling) shows there over the folds.
+REVEAL = [[0.16, 0.25], [0.84, 0.25], [0.692, 0.64], [0.308, 0.64]]
+
 # Shown on the home page after the pizza.
 CATEGORY_ORDER = 1
 
@@ -102,8 +110,12 @@ def main() -> None:
     pp = pizza_def['placement']['params']
     # Fillings lie in a band across the middle (where the crepe is folded
     # over them); chocolate sauces are drizzled in lines (P2-04).
-    params = {'pieceSize': 0.13, 'piecesPerUnit': 7, 'radius': 0.82,
-              'bandWidth': 0.3, 'minGap': 0.12, 'lines': 3, 'wave': 0.06}
+    # The crepe is a half moon (owner request): curved side up, straight
+    # edge at 3/4 of the height. The filling sits in its middle (offsetY),
+    # in a short band, with the sauces drizzled over it.
+    params = {'pieceSize': 0.12, 'piecesPerUnit': 7, 'radius': 0.42,
+              'bandWidth': 0.13, 'offsetY': 0.16, 'minGap': 0.09,
+              'lines': 2, 'wave': 0.035}
     for k in SHARED:
         for p in ('piecesPerUnit', 'pieceSize'):
             if f'{p}:{k}' in pp:
@@ -132,28 +144,34 @@ def main() -> None:
         'constraints': {'maxQty': 2},
         'sizes': [],
         'optionGroups': [],
-        # P2-07: cooked on the griddle, folded once into a half moon (owner:
-        # a crepe is served folded in half), then to the cart. Image roles:
-        # surface (griddle), steam, back (the browned outside once folded).
+        # P2-07 (owner request): the half moon cooks on the griddle, then
+        # its left and right sides fold over the filling into a cone, the
+        # filling showing at the open top. Image roles: surface (griddle),
+        # steam, back (the browned outside of a folded part).
         'animation': [
-            {'step': 'Griddle', 'weight': 1300, 'params': {
-                'durationMs': 1300, 'saturation': 1.25,
+            {'step': 'Griddle', 'weight': 1100, 'params': {
+                'durationMs': 1100, 'saturation': 1.25,
                 'images': {'surface': 'griddle_surface',
                            'steam': 'oven_steam'}}},
-            {'step': 'Fold', 'weight': 700, 'params': {
-                'durationMs': 700, 'stage': 1,
+            {'step': 'Fold', 'weight': 650, 'params': {
+                'durationMs': 650, 'stage': 1, 'lines': CONE, 'reveal': REVEAL,
+                'images': {'surface': 'griddle_surface',
+                           'back': 'crepe_back'}}},
+            {'step': 'Fold', 'weight': 650, 'params': {
+                'durationMs': 650, 'stage': 2, 'lines': CONE, 'reveal': REVEAL,
                 'images': {'surface': 'griddle_surface',
                            'back': 'crepe_back'}}},
             {'step': 'Swap', 'weight': 300, 'params': {
-                'durationMs': 300, 'folds': 1,
+                'durationMs': 300, 'folds': 2, 'lines': CONE, 'reveal': REVEAL,
                 'images': {'back': 'crepe_back'}}},
             {'step': 'Shrink', 'weight': 350, 'params': {
-                'durationMs': 350, 'folds': 1, 'shrinkTo': 0.8,
+                'durationMs': 350, 'folds': 2, 'lines': CONE, 'reveal': REVEAL,
+                'shrinkTo': 0.85,
                 'images': {'back': 'crepe_back',
                            'surface': 'griddle_surface'}}},
             {'step': 'FlyToCart', 'weight': 800, 'params': {
-                'durationMs': 800, 'folds': 1, 'shrinkTo': 0.18,
-                'arcControlPct': 20, 'rotateDeg': -12,
+                'durationMs': 800, 'folds': 2, 'lines': CONE, 'reveal': REVEAL,
+                'shrinkTo': 0.2, 'arcControlPct': 20, 'rotateDeg': -12,
                 'images': {'back': 'crepe_back'}}},
         ],
         'productGroups': [{'id': g, 'name': ar, 'names': {'en': en, 'ar': ar}}

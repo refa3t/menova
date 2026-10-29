@@ -171,6 +171,9 @@ class BandPlacement implements PlacementStrategy {
     final radius = (param('radius') ?? 0.8).toDouble();
     final half = (param('bandWidth') ?? 0.42).toDouble(); // of the diameter
     final minGap = (param('minGap') ?? 0.14).toDouble();
+    // Optional centre of the strip (e.g. the middle of a half-moon base).
+    final ox = (param('offsetX') ?? 0).toDouble();
+    final oy = (param('offsetY') ?? 0).toDouble();
     final rnd = StableRandom(stableSeed('$ingredientId#band#$unit'));
     final pieces = <PiecePlacement>[];
     var attempts = 0;
@@ -180,13 +183,15 @@ class BandPlacement implements PlacementStrategy {
       final span = sqrt(max(0.0, radius * radius - y * y));
       final x = (rnd.nextDouble() * 2 - 1) * span;
       final gap = minGap * (1 - attempts / (count * 40));
-      if (pieces.any((p) => ScatterPlacement._dist(p.dx, p.dy, x, y) < gap)) {
+      if (pieces.any(
+        (p) => ScatterPlacement._dist(p.dx - ox, p.dy - oy, x, y) < gap,
+      )) {
         continue;
       }
       pieces.add(
         PiecePlacement(
-          dx: x,
-          dy: y,
+          dx: x + ox,
+          dy: y + oy,
           rotation: rnd.nextDouble() * 2 * pi,
           scale: 0.85 + rnd.nextDouble() * 0.3,
           variant: variantCount <= 1 ? 0 : rnd.nextInt(variantCount),
@@ -218,6 +223,8 @@ class DrizzlePlacement implements PlacementStrategy {
     if (count <= 0) return const [];
     final radius = (param('radius') ?? 0.78).toDouble();
     final wave = (param('wave') ?? 0.07).toDouble();
+    final ox = (param('offsetX') ?? 0).toDouble();
+    final oy = (param('offsetY') ?? 0).toDouble();
     final rnd = StableRandom(stableSeed('$ingredientId#drizzle#$unit'));
     // Lines spread over the disc; extra units sit half a spacing apart.
     final spacing = 2 * radius / (lines + 1);
@@ -244,8 +251,8 @@ class DrizzlePlacement implements PlacementStrategy {
         final slope = wave * freq * cos(freq * x + phase + l);
         pieces.add(
           PiecePlacement(
-            dx: x,
-            dy: y,
+            dx: x + ox,
+            dy: y + oy,
             rotation: atan(slope),
             scale: 0.9 + rnd.nextDouble() * 0.2,
             variant: variantCount <= 1 ? 0 : rnd.nextInt(variantCount),

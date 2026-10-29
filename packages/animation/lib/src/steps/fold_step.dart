@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 
 import '../anim_step.dart';
 
-/// Fold (P2-06): one fold with perspective (Matrix4). `stage` 1 folds the
-/// top half down over the bottom (half moon); `stage` 2 folds the left half
-/// of the half moon over the right (quarter). Past 90° the moving part
-/// shows the product's back (role `back`, FR-AN-03). The cooking surface
-/// (role `surface`) stays underneath.
+/// Fold (P2-06): folds the product along one of its fold `lines` (param, in
+/// fractions of the product box), the line given by `stage` (1-based); the
+/// earlier lines are already folded. The part on the line's folding side
+/// turns about the line in 3D (perspective) and lands mirrored over the
+/// rest; past 90° it shows the product's back (role `back`, FR-AN-03). The
+/// cooking surface (role `surface`) stays underneath.
 class FoldStep implements AnimStep {
   const FoldStep();
 
@@ -17,99 +18,29 @@ class FoldStep implements AnimStep {
   @override
   Widget build(BuildContext context, AnimFrame frame, AnimStepInput input) {
     final p = input.params;
-    final stage = (p['stage'] as num?)?.toInt() == 2 ? 2 : 1;
+    final lines = FoldLine.listFrom(p['lines']);
+    final stage = ((p['stage'] as num?)?.toInt() ?? 1)
+        .clamp(1, max(1, lines.length))
+        .toInt();
     final scrim = ((p['scrimMaxPct'] as num?)?.toDouble() ?? 30) / 100;
     final perspective = (p['perspective'] as num?)?.toDouble() ?? 0.0015;
+    final rect = input.productRect;
+    final back = backImage(input);
+    final reveal = revealFrom(p['reveal']);
+    final baked = Cooked(amount: 1, child: input.product);
+    if (lines.isEmpty) {
+      return Stack(
+        children: [Positioned.fromRect(rect: rect, child: baked)],
+      );
+    }
+    final line = lines[stage - 1];
+    final done = lines.take(stage - 1).toList();
     final t = input.reduceMotion
         ? 1.0
         : Curves.easeInOutCubic.transform(frame.t);
     final angle = pi * t;
-    final rect = input.productRect;
-    final back = backImage(input);
-    // Before this fold: flat (cooked) for stage 1, half moon for stage 2.
-    final before = stage == 1
-        ? Cooked(amount: 1, child: input.product)
-        : Folded(folds: 1, product: input.product, back: back);
-    // The moving part shows its front until edge-on, then the back. After
-    // the first fold the outside is already the back on both faces.
-    final movingFace = angle > pi / 2 && back != null && stage == 1
-        ? back
-        : before;
-
-    // The [keep] side of the full-size product, inside a half-size box.
-    Widget part(Widget child, Alignment keep) => ClipRect(
-      child: OverflowBox(
-        alignment: keep,
-        minWidth: rect.width,
-        maxWidth: rect.width,
-        minHeight: rect.height,
-        maxHeight: rect.height,
-        child: child,
-      ),
-    );
-
-    // Darken the moving part as it turns away from the light.
-    Widget shaded(Widget child) => Stack(
-      fit: StackFit.passthrough,
-      children: [
-        child,
-        Positioned.fill(
-          child: IgnorePointer(
-            child: ColoredBox(
-              color: Colors.black.withValues(alpha: 0.28 * sin(angle)),
-            ),
-          ),
-        ),
-      ],
-    );
-
-    final Widget staying;
-    final Widget moving;
-    if (stage == 1) {
-      // Bottom half stays; top half turns about the horizontal diameter.
-      staying = Positioned(
-        left: rect.left,
-        top: rect.center.dy,
-        width: rect.width,
-        height: rect.height / 2,
-        child: part(before, Alignment.bottomCenter),
-      );
-      moving = Positioned(
-        left: rect.left,
-        top: rect.top,
-        width: rect.width,
-        height: rect.height / 2,
-        child: Transform(
-          alignment: Alignment.bottomCenter,
-          transform: Matrix4.identity()
-            ..setEntry(3, 2, perspective)
-            ..rotateX(-angle),
-          child: shaded(part(movingFace, Alignment.topCenter)),
-        ),
-      );
-    } else {
-      // Right quarter stays; left quarter turns about the vertical radius.
-      staying = Positioned(
-        left: rect.center.dx,
-        top: rect.top,
-        width: rect.width / 2,
-        height: rect.height,
-        child: part(before, Alignment.centerRight),
-      );
-      moving = Positioned(
-        left: rect.left,
-        top: rect.top,
-        width: rect.width / 2,
-        height: rect.height,
-        child: Transform(
-          alignment: Alignment.centerRight,
-          transform: Matrix4.identity()
-            ..setEntry(3, 2, perspective)
-            ..rotateY(angle),
-          child: shaded(part(movingFace, Alignment.centerLeft)),
-        ),
-      );
-    }
+    // The moving part shows its front until edge-on, then the back.
+    final face = angle > pi / 2 && back != null ? back : baked;
 
     return Stack(
       children: [
@@ -117,9 +48,77 @@ class FoldStep implements AnimStep {
           child: ColoredBox(color: _scrimColor.withValues(alpha: scrim)),
         ),
         ?surfaceUnder(input),
-        staying,
-        moving,
+        Positioned.fromRect(
+          rect: rect,
+          child: LayoutBuilder(
+            builder: (context, box) {
+              final size = box.biggest;
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Everything that is not moving in this fold.
+                  Folded(
+                    lines: lines,
+                    count: done.length,
+                    product: baked,
+                    back: back,
+                    without: line,
+                  ),
+                  // The part folding now, turning about the line.
+                  Transform(
+                    transform: line.turn(size, angle, perspective),
+                    child: ClipPath(
+                      clipper: _MovingClip(line, done),
+                      // Darker as it turns away from the light; srcATop
+                      // shades only the product's own pixels.
+                      child: ColorFiltered(
+                        colorFilter: ColorFilter.mode(
+                          Colors.black.withValues(alpha: 0.25 * sin(angle)),
+                          BlendMode.srcATop,
+                        ),
+                        child: face,
+                      ),
+                    ),
+                  ),
+                  // After the last fold the open end shows the inside.
+                  if (stage == lines.length && reveal.length >= 3)
+                    Opacity(
+                      opacity: interval(t, 0.8, 1),
+                      child: ClipPath(
+                        clipper: revealClip(reveal),
+                        child: baked,
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ),
       ],
     );
   }
+}
+
+/// The part of the product on [line]'s folding side that earlier folds left.
+class _MovingClip extends CustomClipper<Path> {
+  const _MovingClip(this.line, this.done);
+
+  final FoldLine line;
+  final List<FoldLine> done;
+
+  @override
+  Path getClip(Size size) {
+    var p = line.foldingSide(size);
+    for (final d in done) {
+      p = Path.combine(PathOperation.difference, p, d.foldingSide(size));
+    }
+    return Path.combine(
+      PathOperation.intersect,
+      p,
+      Path()..addRect(Offset.zero & size),
+    );
+  }
+
+  @override
+  bool shouldReclip(_MovingClip oldClipper) => true;
 }

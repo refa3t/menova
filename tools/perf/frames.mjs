@@ -17,7 +17,7 @@ await new Promise((r) => setTimeout(r, 4000));
 await p.screenshot({ path: `${out}/f_before.png`, clip: { x: 0, y: 60, width: 375, height: 480 } });
 const t0 = Date.now();
 await p.touchscreen.tap(187, 773);
-for (const at of [250, 1000, 1450, 1650, 1850, 2050, 2350, 2700, 3100]) {
+for (const at of [300, 1000, 1350, 1550, 1900, 2200, 2550, 2950, 3500]) {
   const wait = at - (Date.now() - t0);
   if (wait > 0) await new Promise((r) => setTimeout(r, wait));
   await p.screenshot({ path: `${out}/f_${at}.png`, clip: { x: 0, y: 60, width: 375, height: 480 } });

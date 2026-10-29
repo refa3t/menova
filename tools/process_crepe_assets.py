@@ -271,10 +271,28 @@ SWEETS = {
 }
 
 
+def half_moon(img: Image.Image) -> Image.Image:
+    """The crepe as served (owner request): a half circle, curved side up and
+    the straight edge at 3/4 of the height, so the filling sits in its middle
+    and the sides fold over it."""
+    w, h = img.size
+    top = img.crop((0, 0, w, h // 2))
+    out = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+    out.alpha_composite(top, (0, h // 4))
+    # A soft straight edge (the batter folded under).
+    edge = Image.new('L', (w, h), 0)
+    ImageDraw.Draw(edge).rectangle((0, h // 4, w, h * 3 // 4 - 3), fill=255)
+    alpha = Image.fromarray(np.minimum(
+        np.asarray(out.getchannel('A')),
+        np.asarray(edge.filter(ImageFilter.GaussianBlur(1.5)))))
+    out.putalpha(alpha)
+    return out
+
+
 def main() -> None:
-    save(crepe(11, 0.0), 'assets_src/crepe/bases/base_crepe_raw.webp', BASE_MAX)
-    save(crepe(11, 1.0), 'assets_src/crepe/bases/base_crepe_cooked.webp', BASE_MAX)
-    save(crepe(11, 1.0, back=True).transpose(Image.FLIP_LEFT_RIGHT),
+    save(half_moon(crepe(11, 0.0)), 'assets_src/crepe/bases/base_crepe_raw.webp', BASE_MAX)
+    save(half_moon(crepe(11, 1.0)), 'assets_src/crepe/bases/base_crepe_cooked.webp', BASE_MAX)
+    save(half_moon(crepe(11, 1.0, back=True).transpose(Image.FLIP_LEFT_RIGHT)),
          'assets_src/animation/crepe_back.webp', BASE_MAX)
     save(griddle(), 'assets_src/animation/griddle_surface.webp', BASE_MAX)
     for key, draw in SWEETS.items():

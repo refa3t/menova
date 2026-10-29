@@ -91,6 +91,27 @@ void main() {
     });
   });
 
+  test('band and drizzle can be centred elsewhere (half-moon base)', () {
+    const params = {
+      'piecesPerUnit': 10,
+      'radius': 0.4,
+      'bandWidth': 0.1,
+      'offsetY': 0.2,
+      'lines': 2,
+    };
+    for (final s in const [BandPlacement(), DrizzlePlacement()]) {
+      for (final p in s.place(
+        ingredientId: 'x',
+        unit: 0,
+        variantCount: 1,
+        params: params,
+      )) {
+        expect(p.dy, greaterThan(0.2 - 0.4 - 1e-6));
+        expect(p.dy, lessThan(0.2 + 0.4 + 1e-6));
+      }
+    }
+  });
+
   group('drizzle (P2-04)', () {
     const d = DrizzlePlacement();
     const params = {'piecesPerUnit': 12, 'radius': 0.78, 'lines': 3};

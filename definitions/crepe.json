@@ -39,13 +39,14 @@
   "placement": {
     "strategy": "band",
     "params": {
-      "pieceSize": 0.13,
+      "pieceSize": 0.12,
       "piecesPerUnit": 7,
-      "radius": 0.82,
-      "bandWidth": 0.3,
-      "minGap": 0.12,
-      "lines": 3,
-      "wave": 0.06,
+      "radius": 0.42,
+      "bandWidth": 0.13,
+      "offsetY": 0.16,
+      "minGap": 0.09,
+      "lines": 2,
+      "wave": 0.035,
       "piecesPerUnit:mozzarella": 14,
       "pieceSize:mozzarella": 0.2,
       "piecesPerUnit:cheddar": 14,
@@ -93,9 +94,9 @@
   "animation": [
     {
       "step": "Griddle",
-      "weight": 1300,
+      "weight": 1100,
       "params": {
-        "durationMs": 1300,
+        "durationMs": 1100,
         "saturation": 1.25,
         "images": {
           "surface": "griddle_surface",
@@ -105,10 +106,86 @@
     },
     {
       "step": "Fold",
-      "weight": 700,
+      "weight": 650,
       "params": {
-        "durationMs": 700,
+        "durationMs": 650,
         "stage": 1,
+        "lines": [
+          [
+            0.36,
+            0.77,
+            0.16,
+            0.25
+          ],
+          [
+            0.84,
+            0.25,
+            0.64,
+            0.77
+          ]
+        ],
+        "reveal": [
+          [
+            0.16,
+            0.25
+          ],
+          [
+            0.84,
+            0.25
+          ],
+          [
+            0.692,
+            0.64
+          ],
+          [
+            0.308,
+            0.64
+          ]
+        ],
+        "images": {
+          "surface": "griddle_surface",
+          "back": "crepe_back"
+        }
+      }
+    },
+    {
+      "step": "Fold",
+      "weight": 650,
+      "params": {
+        "durationMs": 650,
+        "stage": 2,
+        "lines": [
+          [
+            0.36,
+            0.77,
+            0.16,
+            0.25
+          ],
+          [
+            0.84,
+            0.25,
+            0.64,
+            0.77
+          ]
+        ],
+        "reveal": [
+          [
+            0.16,
+            0.25
+          ],
+          [
+            0.84,
+            0.25
+          ],
+          [
+            0.692,
+            0.64
+          ],
+          [
+            0.308,
+            0.64
+          ]
+        ],
         "images": {
           "surface": "griddle_surface",
           "back": "crepe_back"
@@ -120,7 +197,39 @@
       "weight": 300,
       "params": {
         "durationMs": 300,
-        "folds": 1,
+        "folds": 2,
+        "lines": [
+          [
+            0.36,
+            0.77,
+            0.16,
+            0.25
+          ],
+          [
+            0.84,
+            0.25,
+            0.64,
+            0.77
+          ]
+        ],
+        "reveal": [
+          [
+            0.16,
+            0.25
+          ],
+          [
+            0.84,
+            0.25
+          ],
+          [
+            0.692,
+            0.64
+          ],
+          [
+            0.308,
+            0.64
+          ]
+        ],
         "images": {
           "back": "crepe_back"
         }
@@ -131,8 +240,40 @@
       "weight": 350,
       "params": {
         "durationMs": 350,
-        "folds": 1,
-        "shrinkTo": 0.8,
+        "folds": 2,
+        "lines": [
+          [
+            0.36,
+            0.77,
+            0.16,
+            0.25
+          ],
+          [
+            0.84,
+            0.25,
+            0.64,
+            0.77
+          ]
+        ],
+        "reveal": [
+          [
+            0.16,
+            0.25
+          ],
+          [
+            0.84,
+            0.25
+          ],
+          [
+            0.692,
+            0.64
+          ],
+          [
+            0.308,
+            0.64
+          ]
+        ],
+        "shrinkTo": 0.85,
         "images": {
           "back": "crepe_back",
           "surface": "griddle_surface"
@@ -144,8 +285,40 @@
       "weight": 800,
       "params": {
         "durationMs": 800,
-        "folds": 1,
-        "shrinkTo": 0.18,
+        "folds": 2,
+        "lines": [
+          [
+            0.36,
+            0.77,
+            0.16,
+            0.25
+          ],
+          [
+            0.84,
+            0.25,
+            0.64,
+            0.77
+          ]
+        ],
+        "reveal": [
+          [
+            0.16,
+            0.25
+          ],
+          [
+            0.84,
+            0.25
+          ],
+          [
+            0.692,
+            0.64
+          ],
+          [
+            0.308,
+            0.64
+          ]
+        ],
+        "shrinkTo": 0.2,
         "arcControlPct": 20,
         "rotateDeg": -12,
         "images": {

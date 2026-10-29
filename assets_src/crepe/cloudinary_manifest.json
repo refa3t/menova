@@ -1,22 +1,4 @@
 {
-  "base_crepe_back.webp": {
-    "publicId": "menova/assets/vrpk22zgm6vjhmr9lhll",
-    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1793180273/menova/assets/vrpk22zgm6vjhmr9lhll.webp",
-    "version": 1793180273,
-    "bytes": 59196
-  },
-  "base_crepe_cooked.webp": {
-    "publicId": "menova/assets/ktpsto91jhnz7vxrnjyp",
-    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1793180275/menova/assets/ktpsto91jhnz7vxrnjyp.webp",
-    "version": 1793180275,
-    "bytes": 53624
-  },
-  "base_crepe_raw.webp": {
-    "publicId": "menova/assets/ep5ttyonbyc8upg0ee1j",
-    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1793180276/menova/assets/ep5ttyonbyc8upg0ee1j.webp",
-    "version": 1793180276,
-    "bytes": 24664
-  },
   "ing_banana_01.webp": {
     "publicId": "menova/assets/jsrvuyhjdz3osdqfuaxn",
     "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1793180278/menova/assets/jsrvuyhjdz3osdqfuaxn.webp",
@@ -106,5 +88,17 @@
     "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1793180297/menova/assets/j2tjuodavdaa7gyc0kqk.webp",
     "version": 1793180297,
     "bytes": 11550
+  },
+  "base_crepe_cooked.webp": {
+    "publicId": "menova/assets/rko20zayj0qjljscjhke",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1793246298/menova/assets/rko20zayj0qjljscjhke.webp",
+    "version": 1793246298,
+    "bytes": 30592
+  },
+  "base_crepe_raw.webp": {
+    "publicId": "menova/assets/i09yk46il3gqwdf0dpan",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1793246301/menova/assets/i09yk46il3gqwdf0dpan.webp",
+    "version": 1793246301,
+    "bytes": 16980
   }
 }
