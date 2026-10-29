@@ -137,9 +137,10 @@ try {
     }
     await page.close();
   };
-  await twice('heavy veggie L max (504 pieces)', '/product/pizza_veggie', buildHeavy);
-  await twice('veggie default (8 toppings)', '/product/pizza_veggie');
   await twice('margherita default', '/product/pizza_margherita');
+  // P2-09: the crepe (griddle, fold, shrink) on the same harness.
+  await twice('crepe fruit (drizzle + band)', '/product/crepe_fruit');
+  await twice('crepe tuna (band)', '/product/crepe_tuna');
 
   console.log(JSON.stringify({ site, cpuThrottle: `${cpu}x`, results }, null, 2));
 } finally {
