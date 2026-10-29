@@ -164,4 +164,40 @@ void main() {
       expect(file('png', 1000, false), ['transparent']);
     });
   });
+
+  test('the catalog check lists every product and ingredient problem', () {
+    const ok = Ingredient(
+      id: 'i1',
+      name: 'TEMP',
+      assetId: 'ing_i1',
+      extraPrice: 1500,
+      isAvailable: true,
+    );
+    final findings = checkCatalog(
+      definitions: {'cat': def},
+      products: [
+        product(),
+        Product.fromJson({...product().toJson(), 'id': 'p2', 'basePrice': 0}),
+        Product.fromJson({
+          ...product().toJson(),
+          'id': 'p3',
+          'categoryId': 'x',
+        }),
+      ],
+      ingredients: {
+        'i1': ok,
+        'i2': Ingredient.fromJson({
+          ...ok.toJson(),
+          'id': 'i2',
+          'assetId': 'zz',
+        }),
+      },
+      ingredientAssets: {'ing_i1'},
+    );
+    expect(findings.map((f) => '${f.kind}:${f.id}'), [
+      'product:p2',
+      'product:p3',
+      'ingredient:i2',
+    ]);
+  });
 }

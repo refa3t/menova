@@ -8,6 +8,8 @@ import '../features/auth/domain/admin_access.dart';
 import '../features/auth/presentation/auth_providers.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/assets/presentation/assets_screen.dart';
+import '../features/audit/presentation/audit_screen.dart';
+import '../features/catalog/presentation/catalog_check_screen.dart';
 import '../features/catalog/presentation/categories_screen.dart';
 import '../features/catalog/presentation/ingredient_edit_screen.dart';
 import '../features/catalog/presentation/ingredients_screen.dart';
@@ -43,6 +45,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/products',
         builder: (context, state) => const ProductsScreen(),
+      ),
+      GoRoute(path: '/audit', builder: (context, state) => const AuditScreen()),
+      GoRoute(
+        path: '/check',
+        builder: (context, state) => const CatalogCheckScreen(),
       ),
       GoRoute(
         path: '/categories',

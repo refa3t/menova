@@ -149,3 +149,47 @@ List<DefinitionIssue> validateAssetFile(AssetFile f, AssetSpec spec) {
   }
   return issues;
 }
+
+/// One catalog problem found by [checkCatalog].
+class CatalogFinding {
+  const CatalogFinding({
+    required this.kind,
+    required this.id,
+    required this.issues,
+  });
+
+  /// `product` or `ingredient`.
+  final String kind;
+  final String id;
+  final List<DefinitionIssue> issues;
+}
+
+/// The whole catalog against the definitions (P3-06): every product within
+/// its category's definition, and every ingredient with a known image. A
+/// product of a category with no valid definition is a finding too.
+List<CatalogFinding> checkCatalog({
+  required Map<String, CategoryDefinition> definitions,
+  required Iterable<Product> products,
+  required Map<String, Ingredient> ingredients,
+  required Set<String> ingredientAssets,
+}) {
+  final findings = <CatalogFinding>[];
+  for (final p in products) {
+    final def = definitions[p.categoryId];
+    final issues = def == null
+        ? [DefinitionIssue('categoryId', 'no definition "${p.categoryId}"')]
+        : validateProduct(p, def, ingredientIds: ingredients.keys.toSet());
+    if (issues.isNotEmpty) {
+      findings.add(CatalogFinding(kind: 'product', id: p.id, issues: issues));
+    }
+  }
+  for (final i in ingredients.values) {
+    final issues = validateIngredient(i, ingredientAssets: ingredientAssets);
+    if (issues.isNotEmpty) {
+      findings.add(
+        CatalogFinding(kind: 'ingredient', id: i.id, issues: issues),
+      );
+    }
+  }
+  return findings;
+}

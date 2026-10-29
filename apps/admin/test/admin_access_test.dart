@@ -20,6 +20,7 @@ void main() {
     }
     expect(canManage(AdminRole.menuManager, AdminArea.products), isTrue);
     expect(canManage(AdminRole.menuManager, AdminArea.assets), isTrue);
+    expect(canManage(AdminRole.menuManager, AdminArea.catalogCheck), isTrue);
     expect(canManage(AdminRole.menuManager, AdminArea.settings), isFalse);
     expect(canManage(AdminRole.menuManager, AdminArea.reports), isFalse);
     expect(canManage(AdminRole.menuManager, AdminArea.audit), isFalse);

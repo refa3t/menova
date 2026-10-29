@@ -28,6 +28,7 @@ abstract final class AppStrings {
     AdminArea.ingredients => 'المكونات وأسعار الإضافات',
     AdminArea.assets => 'الصور',
     AdminArea.categories => 'الأقسام: الظهور والترتيب',
+    AdminArea.catalogCheck => 'فحص المنيو',
     AdminArea.settings => 'إعدادات المطعم والتوصيل',
     AdminArea.reports => 'التقارير والمبيعات',
     AdminArea.audit => 'سجل التعديلات',
@@ -119,6 +120,38 @@ abstract final class AppStrings {
   static const deliveryNote =
       'الرسوم = كل كيلو بدأ × سعر الكيلو، ولا تقل عن الحد الأدنى. تُطبَّق على الطلبات الجديدة فوراً.';
   static const invalidNumber = 'رقم غير صحيح';
+
+  // Catalog check (P3-06).
+  static const catalogCheck = 'فحص المنيو';
+  static const catalogOk =
+      'المنيو سليم: كل المنتجات والمكونات مطابقة لتعريف أقسامها.';
+  static const catalogNote =
+      'يراجع كل منتج على تعريف قسمه، وكل مكوّن وصورته. المنتج المخالف لا يُضاف للسلة بشكل صحيح، فأوقفه حتى يُصلَّح.';
+  static const runCheck = 'افحص الآن';
+  static const disableBroken = 'أوقف المنتجات المخالفة';
+  static String findings(int n) => 'وُجدت $n مشكلة';
+  static const productLabel = 'منتج';
+  static const ingredientLabel = 'مكوّن';
+  static const disabledDone = 'تم إيقاف المنتجات المخالفة';
+
+  // Audit log (P3-07).
+  static const auditLog = 'سجل التعديلات';
+  static const auditEmpty = 'لا توجد تعديلات بعد';
+  static String action(String a) => switch (a) {
+    'saveProduct' => 'تعديل منتج',
+    'saveIngredient' => 'تعديل مكوّن',
+    'replaceAsset' => 'تغيير صورة',
+    'setCategoryVisibility' => 'ظهور/ترتيب قسم',
+    'saveStoreSettings' => 'إعدادات المطعم',
+    'validateCatalog' => 'إيقاف بعد فحص المنيو',
+    _ => a,
+  };
+  static String when(DateTime? at) {
+    if (at == null) return '';
+    final l = at.toLocal();
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${l.year}-${two(l.month)}-${two(l.day)} ${two(l.hour)}:${two(l.minute)}';
+  }
 
   /// Piasters as pounds for an input field (no currency sign).
   static String egp(int piasters) {
