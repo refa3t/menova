@@ -246,7 +246,7 @@ class Folded extends StatelessWidget {
     required this.product,
     this.back,
     this.without,
-    this.reveal = const [],
+    this.opening,
   });
 
   final List<FoldLine> lines;
@@ -254,10 +254,9 @@ class Folded extends StatelessWidget {
   final Widget product;
   final Widget? back;
 
-  /// The open end of a wrap (polygon, fractions of the box): once every line
-  /// is folded, the inside shows there over the folds, like the filling at
-  /// the top of a crepe cone.
-  final List<Offset> reveal;
+  /// The open end of a wrap: once every line is folded, the product's
+  /// contents show inside it, wrapped by the walls (a crepe cone).
+  final WrapOpening? opening;
 
   /// A line whose folding side is left out (the part folding right now).
   final FoldLine? without;
@@ -301,10 +300,12 @@ class Folded extends StatelessWidget {
         if (n < lines.length || without != null) return layers;
 
         // Fully folded: the wrap keeps the outline of what was not folded
-        // (folded parts tuck in, no corners stick out) and gets volume.
+        // (folded parts tuck in, no corners stick out) and gets volume. A
+        // wrap with an open end is all outside (the back) around it: its
+        // contents show only through the opening.
         final core = ClipPath(
           clipper: _PathClip((s) => _unfolded(s, done)),
-          child: layers,
+          child: opening != null && back != null ? back! : layers,
         );
         return Stack(
           fit: StackFit.expand,
@@ -340,7 +341,8 @@ class Folded extends StatelessWidget {
             ),
             // The folded edges: a lit crease with a soft shadow beside it.
             IgnorePointer(child: CustomPaint(painter: _CreasePainter(done))),
-            if (reveal.length >= 3) _Opening(product: product, reveal: reveal),
+            if (opening case final o?)
+              WrapOpeningView(product: product, opening: o),
           ],
         );
       },
@@ -348,43 +350,141 @@ class Folded extends StatelessWidget {
   }
 }
 
-/// The open end of a wrap: the inside shows a little proud of the folds
-/// (the filling pushes out) and darkens with depth.
-class _Opening extends StatelessWidget {
-  const _Opening({required this.product, required this.reveal});
+/// The open end of a wrap (step param `opening`, fractions of the box):
+/// `ellipse` `[cx, cy, rx, ry]` is the hole at the top, and `contents`
+/// `[x0, y0, x1, y1]` the part of the product that fills it (the filling).
+class WrapOpening {
+  const WrapOpening({required this.ellipse, required this.contents});
+
+  final Rect ellipse;
+  final Rect contents;
+
+  static WrapOpening? from(Object? raw) {
+    if (raw is! Map) return null;
+    final e = raw['ellipse'], c = raw['contents'];
+    if (e is! List || e.length != 4 || c is! List || c.length != 4) {
+      return null;
+    }
+    double n(Object? v) => (v as num).toDouble();
+    return WrapOpening(
+      ellipse: Rect.fromCenter(
+        center: Offset(n(e[0]), n(e[1])),
+        width: 2 * n(e[2]),
+        height: 2 * n(e[3]),
+      ),
+      contents: Rect.fromLTRB(n(c[0]), n(c[1]), n(c[2]), n(c[3])),
+    );
+  }
+}
+
+/// The opening of a wrap seen from above: the contents sit inside it, below
+/// the rim, darker towards the back wall; the front rim hides their lower
+/// part, so they read as inside the wrap rather than on top of it.
+class WrapOpeningView extends StatelessWidget {
+  const WrapOpeningView({
+    super.key,
+    required this.product,
+    required this.opening,
+  });
 
   final Widget product;
-  final List<Offset> reveal;
+  final WrapOpening opening;
 
   @override
   Widget build(BuildContext context) {
-    final ys = reveal.map((p) => p.dy);
-    final xs = reveal.map((p) => p.dx);
-    final top = ys.reduce(min), bottom = ys.reduce(max);
-    final cx = (xs.reduce(min) + xs.reduce(max)) / 2;
-    return ClipPath(
-      clipper: revealClip(reveal),
-      child: ShaderMask(
-        blendMode: BlendMode.srcATop,
-        // Deeper into the wrap is darker.
-        shaderCallback: (b) => LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: const [
-            Color(0x00000000),
-            Color(0x00000000),
-            Color(0x66000000),
+    return LayoutBuilder(
+      builder: (context, box) {
+        final size = box.biggest;
+        Rect px(Rect r) => Rect.fromLTRB(
+          r.left * size.width,
+          r.top * size.height,
+          r.right * size.width,
+          r.bottom * size.height,
+        );
+        final hole = px(opening.ellipse);
+        final contents = px(opening.contents);
+        // The contents fill the hole and continue below its front rim.
+        final target = Rect.fromLTWH(
+          hole.left - hole.width * 0.06,
+          hole.top + hole.height * 0.12,
+          hole.width * 1.12,
+          hole.height * 1.5,
+        );
+        final scale = target.width / contents.width;
+        final dx = target.center.dx - contents.center.dx * scale;
+        final dy = target.center.dy - contents.center.dy * scale;
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            ClipPath(
+              clipper: _PathClip((_) => Path()..addOval(hole)),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // The inner wall, in its own shade.
+                  const ColoredBox(color: Color(0xFFB98A4E)),
+                  Transform(
+                    transform: Matrix4.identity()
+                      ..translateByDouble(dx, dy, 0, 1)
+                      ..scaleByDouble(scale, scale, 1, 1),
+                    child: SizedBox.fromSize(size: size, child: product),
+                  ),
+                  // Depth: the back wall shades the contents near it.
+                  Positioned.fromRect(
+                    rect: hole,
+                    child: const DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Color(0xB0000000),
+                            Color(0x40000000),
+                            Color(0x00000000),
+                            Color(0x30000000),
+                          ],
+                          stops: [0, 0.35, 0.65, 1],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // The rim: the crepe's thickness around the hole.
+            IgnorePointer(child: CustomPaint(painter: _RimPainter(hole))),
           ],
-          stops: [0, top + (bottom - top) * 0.45, bottom],
-        ).createShader(b),
-        child: Transform.scale(
-          scale: 1.06,
-          alignment: Alignment(cx * 2 - 1, bottom * 2 - 1),
-          child: product,
-        ),
-      ),
+        );
+      },
     );
   }
+}
+
+class _RimPainter extends CustomPainter {
+  const _RimPainter(this.hole);
+
+  final Rect hole;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawOval(
+      hole.inflate(1.5),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5
+        ..color = const Color(0xFFEBCB93),
+    );
+    canvas.drawOval(
+      hole.inflate(4),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = const Color(0x66000000),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_RimPainter oldDelegate) => oldDelegate.hole != hole;
 }
 
 /// Lit creases along fold lines, drawn only inside the folded wrap.
@@ -422,22 +522,6 @@ class _CreasePainter extends CustomPainter {
   bool shouldRepaint(_CreasePainter oldDelegate) => oldDelegate.lines != lines;
 }
 
-/// Clips to a polygon given in fractions of the box.
-CustomClipper<Path> revealClip(List<Offset> points) => _PathClip(
-  (s) => Path()
-    ..addPolygon([
-      for (final p in points) Offset(p.dx * s.width, p.dy * s.height),
-    ], true),
-);
-
-/// A polygon from a step param `reveal`: `[[x, y], ...]` (fractions).
-List<Offset> revealFrom(Object? raw) => [
-  if (raw is List)
-    for (final p in raw)
-      if (p is List && p.length == 2)
-        Offset((p[0] as num).toDouble(), (p[1] as num).toDouble()),
-];
-
 /// The back image a step was given (role `back`), if any.
 Widget? backImage(AnimStepInput input) {
   final url = input.images['back']?.firstOrNull;
@@ -462,7 +546,7 @@ Widget shapedProduct(AnimStepInput input) {
     count: folds,
     product: baked,
     back: backImage(input),
-    reveal: revealFrom(input.params['reveal']),
+    opening: WrapOpening.from(input.params['opening']),
   );
 }
 

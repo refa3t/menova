@@ -26,7 +26,7 @@ class FoldStep implements AnimStep {
     final perspective = (p['perspective'] as num?)?.toDouble() ?? 0.0015;
     final rect = input.productRect;
     final back = backImage(input);
-    final reveal = revealFrom(p['reveal']);
+    final opening = WrapOpening.from(p['opening']);
     final baked = Cooked(amount: 1, child: input.product);
     if (lines.isEmpty) {
       return Stack(
@@ -80,13 +80,17 @@ class FoldStep implements AnimStep {
                       ),
                     ),
                   ),
-                  // After the last fold the open end shows the inside.
-                  if (stage == lines.length && reveal.length >= 3)
+                  // The last fold closes the wrap: it settles into its
+                  // finished look (outside all round, contents inside).
+                  if (stage == lines.length && opening != null)
                     Opacity(
                       opacity: interval(t, 0.8, 1),
-                      child: ClipPath(
-                        clipper: revealClip(reveal),
-                        child: baked,
+                      child: Folded(
+                        lines: lines,
+                        count: lines.length,
+                        product: baked,
+                        back: back,
+                        opening: opening,
                       ),
                     ),
                 ],

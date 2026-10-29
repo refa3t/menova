@@ -80,9 +80,12 @@ DRIZZLED = [('nutella', 48, 0.085), ('white_chocolate', 27, 0.12)]
 # part on its outer side (left, then right) over the filling. They meet
 # near the bottom and open towards the top, where the filling shows.
 CONE = [[0.36, 0.77, 0.16, 0.25], [0.84, 0.25, 0.64, 0.77]]
-# The open top of the cone, between the fold lines down to the middle of the
-# filling: the inside (and the filling) shows there over the folds.
-REVEAL = [[0.16, 0.25], [0.84, 0.25], [0.692, 0.64], [0.308, 0.64]]
+# The open top of the cone: an oval hole under the rim (ellipse cx, cy,
+# rx, ry) filled by the filling area of the half moon (contents x0, y0, x1,
+# y1); the outside of the cone is crepe all round, so the filling shows only
+# inside it, like a wrapped crepe.
+OPENING = {'ellipse': [0.5, 0.385, 0.255, 0.092],
+           'contents': [0.29, 0.5, 0.71, 0.66]}
 
 # Shown on the home page after the pizza.
 CATEGORY_ORDER = 1
@@ -154,23 +157,23 @@ def main() -> None:
                 'images': {'surface': 'griddle_surface',
                            'steam': 'oven_steam'}}},
             {'step': 'Fold', 'weight': 650, 'params': {
-                'durationMs': 650, 'stage': 1, 'lines': CONE, 'reveal': REVEAL,
+                'durationMs': 650, 'stage': 1, 'lines': CONE, 'opening': OPENING,
                 'images': {'surface': 'griddle_surface',
                            'back': 'crepe_back'}}},
             {'step': 'Fold', 'weight': 650, 'params': {
-                'durationMs': 650, 'stage': 2, 'lines': CONE, 'reveal': REVEAL,
+                'durationMs': 650, 'stage': 2, 'lines': CONE, 'opening': OPENING,
                 'images': {'surface': 'griddle_surface',
                            'back': 'crepe_back'}}},
             {'step': 'Swap', 'weight': 300, 'params': {
-                'durationMs': 300, 'folds': 2, 'lines': CONE, 'reveal': REVEAL,
+                'durationMs': 300, 'folds': 2, 'lines': CONE, 'opening': OPENING,
                 'images': {'back': 'crepe_back'}}},
             {'step': 'Shrink', 'weight': 350, 'params': {
-                'durationMs': 350, 'folds': 2, 'lines': CONE, 'reveal': REVEAL,
+                'durationMs': 350, 'folds': 2, 'lines': CONE, 'opening': OPENING,
                 'shrinkTo': 0.85,
                 'images': {'back': 'crepe_back',
                            'surface': 'griddle_surface'}}},
             {'step': 'FlyToCart', 'weight': 800, 'params': {
-                'durationMs': 800, 'folds': 2, 'lines': CONE, 'reveal': REVEAL,
+                'durationMs': 800, 'folds': 2, 'lines': CONE, 'opening': OPENING,
                 'shrinkTo': 0.2, 'arcControlPct': 20, 'rotateDeg': -12,
                 'images': {'back': 'crepe_back'}}},
         ],
