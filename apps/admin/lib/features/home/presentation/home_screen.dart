@@ -11,7 +11,10 @@ import '../../auth/presentation/auth_providers.dart';
 /// (P3-01). Each section opens once its task is built.
 class HomeScreen extends ConsumerWidget {
   /// Sections that are built, by route.
-  static const _routes = {AdminArea.products: '/products'};
+  static const _routes = {
+    AdminArea.products: '/products',
+    AdminArea.ingredients: '/ingredients',
+  };
 
   const HomeScreen({super.key});
 

@@ -68,3 +68,27 @@ List<DefinitionIssue> validateProduct(
   if (p.displayOrder < 0) issue('displayOrder', 'must be >= 0');
   return issues;
 }
+
+/// Validates an ingredient record the admin edits (P3-03). [ingredientAssets]
+/// are the asset ids of kind `ingredient`; null skips that check.
+List<DefinitionIssue> validateIngredient(
+  Ingredient i, {
+  Set<String>? ingredientAssets,
+}) {
+  final issues = <DefinitionIssue>[];
+  void issue(String path, String message) =>
+      issues.add(DefinitionIssue(path, message));
+  if (i.id.trim().isEmpty) issue('id', 'must not be empty');
+  if (i.name.trim().isEmpty) issue('name', 'must not be empty');
+  for (final e in i.names.entries) {
+    if (e.value.trim().isEmpty) issue('names.${e.key}', 'must not be empty');
+  }
+  if (i.extraPrice < 0) issue('extraPrice', 'must be >= 0');
+  for (final e in i.sizeMultipliers.entries) {
+    if (e.value <= 0) issue('sizeMultipliers.${e.key}', 'must be above zero');
+  }
+  if (ingredientAssets != null && !ingredientAssets.contains(i.assetId)) {
+    issue('assetId', 'unknown ingredient image "${i.assetId}"');
+  }
+  return issues;
+}

@@ -86,7 +86,26 @@ service cloud.firestore {
     }
     match /ingredients/{ingredientId} {
       allow read: if true;
-      allow write: if false;
+      // P3-03: admins edit existing ingredients (name, extra price,
+      // availability, image); new ones come with a category definition
+      // (developer), so no create or delete. Every write is audited.
+      allow update: if isAdmin()
+          && request.resource.data.keys().hasOnly(['id', 'name', 'names',
+               'assetId', 'extraPrice', 'isAvailable', 'sizeMultipliers',
+               'lastAuditId', 'temp'])
+          && request.resource.data.id == ingredientId
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() <= 60
+          && request.resource.data.names is map
+          && request.resource.data.assetId is string
+          && request.resource.data.extraPrice is int
+          && request.resource.data.extraPrice >= 0
+          && request.resource.data.isAvailable is bool
+          && request.resource.data.sizeMultipliers is map
+          && audited('ingredients/' + ingredientId,
+                     request.resource.data.lastAuditId);
+      allow create, delete: if false;
     }
     match /assets/{assetId} {
       allow read: if true;

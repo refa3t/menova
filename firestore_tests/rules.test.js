@@ -282,3 +282,29 @@ test('the audit log is append-only and only the owner reads it', async () => {
   await assertFails(staff('menu_manager', 'mgr1').collection('auditLog').get());
   await assertFails(staff('reception', 'rec1').collection('auditLog').get());
 });
+
+// P3-03: admins edit existing ingredients only, audited.
+async function saveIngredient(db, uid, id, data) {
+  const audit = db.collection('auditLog').doc();
+  const batch = db.batch();
+  batch.set(audit, {
+    action: 'saveIngredient', target: `ingredients/${id}`, by: uid,
+    at: serverTimestamp(), before: null, after: data,
+  });
+  batch.set(db.doc(`ingredients/${id}`), { ...data, lastAuditId: audit.id });
+  return batch.commit();
+}
+
+test('admins edit existing ingredients, audited; no create or delete', async () => {
+  const ing = {
+    id: 'i1', name: 'TEMP', names: { ar: 'TEMP' }, assetId: 'ing_i1',
+    extraPrice: 1500, isAvailable: false, sizeMultipliers: {},
+  };
+  const manager = staff('menu_manager', 'mgr1');
+  await assertSucceeds(saveIngredient(manager, 'mgr1', 'i1', ing));
+  await assertFails(saveIngredient(manager, 'mgr1', 'i1', { ...ing, extraPrice: -5 }));
+  await assertFails(saveIngredient(manager, 'mgr1', 'i9', { ...ing, id: 'i9' }));
+  await assertFails(manager.doc('ingredients/i1').set({ ...ing, lastAuditId: 'nope' }));
+  await assertFails(saveIngredient(staff('reception', 'rec1'), 'rec1', 'i1', ing));
+  await assertFails(manager.doc('ingredients/i1').delete());
+});

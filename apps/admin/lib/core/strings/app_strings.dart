@@ -66,6 +66,16 @@ abstract final class AppStrings {
   static const back = 'رجوع';
   static const open = 'فتح';
 
+  // Ingredients (P3-03).
+  static const ingredients = 'المكونات';
+  static const editIngredient = 'تعديل المكوّن';
+  static const extraPrice = 'سعر الإضافة (ج.م)';
+  static const extraPriceHint = 'نفس السعر في كل الأقسام التي تستخدمه';
+  static const image = 'الصورة';
+  static const usedIn = 'يُستخدم في';
+  static const ingredientsNote =
+      'إضافة مكوّن جديد لقسم تتم مع تعريف القسم (من المطور).';
+
   /// Piasters as pounds for an input field (no currency sign).
   static String egp(int piasters) {
     final p = piasters / 100;
@@ -98,6 +108,9 @@ abstract final class AppStrings {
       'groupId' => 'القسم الفرعي غير موجود',
       'categoryId' => 'القسم لا يطابق المنتج',
       'displayOrder' => 'ترتيب العرض غير صحيح',
+      'extraPrice' => 'سعر الإضافة لا يكون سالباً',
+      'assetId' => 'اختر صورة من صور المكونات',
+      'sizeMultipliers' => 'معامل الحجم غير صحيح',
       _ => path,
     };
   }

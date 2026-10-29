@@ -7,6 +7,8 @@ import '../core/strings/app_strings.dart';
 import '../features/auth/domain/admin_access.dart';
 import '../features/auth/presentation/auth_providers.dart';
 import '../features/auth/presentation/login_screen.dart';
+import '../features/catalog/presentation/ingredient_edit_screen.dart';
+import '../features/catalog/presentation/ingredients_screen.dart';
 import '../features/catalog/presentation/product_edit_screen.dart';
 import '../features/catalog/presentation/products_screen.dart';
 import '../features/home/presentation/home_screen.dart';
@@ -38,6 +40,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/products',
         builder: (context, state) => const ProductsScreen(),
+      ),
+      GoRoute(
+        path: '/ingredients',
+        builder: (context, state) => const IngredientsScreen(),
+      ),
+      GoRoute(
+        path: '/ingredients/:id',
+        builder: (context, state) =>
+            IngredientEditScreen(ingredientId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/products/new',

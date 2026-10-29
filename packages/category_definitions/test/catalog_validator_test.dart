@@ -94,4 +94,36 @@ void main() {
       ['defaults[0]', 'defaults[0]', 'defaults[0].qty'],
     );
   });
+
+  group('ingredients (P3-03)', () {
+    const ok = Ingredient(
+      id: 'i1',
+      name: 'TEMP',
+      assetId: 'ing_i1',
+      extraPrice: 1500,
+      isAvailable: true,
+    );
+    List<String> ing(Ingredient i) => validateIngredient(
+      i,
+      ingredientAssets: {'ing_i1'},
+    ).map((x) => x.path).toList();
+
+    test('a priced ingredient with a known image is valid', () {
+      expect(ing(ok), isEmpty);
+      expect(
+        ing(Ingredient.fromJson({...ok.toJson(), 'extraPrice': 0})),
+        isEmpty,
+      );
+    });
+
+    test('negative price, empty name, unknown image are refused', () {
+      expect(ing(Ingredient.fromJson({...ok.toJson(), 'extraPrice': -1})), [
+        'extraPrice',
+      ]);
+      expect(ing(Ingredient.fromJson({...ok.toJson(), 'name': ' '})), ['name']);
+      expect(ing(Ingredient.fromJson({...ok.toJson(), 'assetId': 'x'})), [
+        'assetId',
+      ]);
+    });
+  });
 }

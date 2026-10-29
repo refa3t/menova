@@ -32,3 +32,11 @@ final ingredientsProvider = StreamProvider<Map<String, Ingredient>>(
         (s) => {for (final d in s.docs) d.id: Ingredient.fromJson(d.data())},
       ),
 );
+
+/// Every asset record by id, live (images to pick from).
+final assetsProvider = StreamProvider<Map<String, Asset>>(
+  (ref) => FirebaseFirestore.instance
+      .collection('assets')
+      .snapshots()
+      .map((s) => {for (final d in s.docs) d.id: Asset.fromJson(d.data())}),
+);
