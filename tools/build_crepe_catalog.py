@@ -77,14 +77,15 @@ PRODUCTS = [
 DRIZZLED = [('nutella', 48, 0.085), ('white_chocolate', 27, 0.12)]
 
 # Fold lines of the cone, in fractions of the product box: each folds the
-# part on its outer side (left, then right) over the filling. They meet
-# near the bottom and open towards the top, where the filling shows.
-CONE = [[0.36, 0.77, 0.16, 0.25], [0.84, 0.25, 0.64, 0.77]]
+# part on its outer side (left, then right) over the filling. They meet in a
+# point at the straight edge (owner: an upside-down triangle) and open
+# towards the top, where the filling shows.
+CONE = [[0.50, 0.75, 0.13, 0.26], [0.87, 0.26, 0.50, 0.75]]
 # The open top of the cone: an oval hole under the rim (ellipse cx, cy,
 # rx, ry) filled by the filling area of the half moon (contents x0, y0, x1,
 # y1); the outside of the cone is crepe all round, so the filling shows only
 # inside it, like a wrapped crepe.
-OPENING = {'ellipse': [0.5, 0.385, 0.255, 0.092],
+OPENING = {'ellipse': [0.5, 0.37, 0.235, 0.085],
            'contents': [0.29, 0.5, 0.71, 0.66]}
 
 # Shown on the home page after the pizza.
