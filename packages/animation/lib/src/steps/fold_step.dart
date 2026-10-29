@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
@@ -39,8 +40,62 @@ class FoldStep implements AnimStep {
         ? 1.0
         : Curves.easeInOutCubic.transform(frame.t);
     final angle = pi * t;
+    final lift = sin(angle);
+    // How far the whole wrap has come (0 flat .. 1 every fold done): its
+    // volume (rounding, shadow) builds up fold by fold.
+    final progress = ((stage - 1) + t) / lines.length;
     // The moving part shows its front until edge-on, then the back.
     final face = angle > pi / 2 && back != null ? back : baked;
+
+    // Bend: lit along the crease, darker towards the free edge, so the
+    // moving part reads as curved, not as a flat card.
+    Alignment at(Offset f) => Alignment(f.dx * 2 - 1, f.dy * 2 - 1);
+    final mid = (line.a + line.b) / 2;
+    final dir = line.b - line.a;
+    final u = dir / dir.distance;
+    final towardFree = Offset(u.dy, -u.dx) * 0.45; // folding side
+    final bent = ShaderMask(
+      blendMode: BlendMode.srcATop,
+      shaderCallback: (b) => LinearGradient(
+        begin: at(mid),
+        end: at(mid + towardFree),
+        colors: [
+          const Color(0x40FFF6E6),
+          const Color(0x00000000),
+          Colors.black.withValues(alpha: 0.2 + 0.25 * lift),
+        ],
+        stops: const [0, 0.35, 1],
+      ).createShader(b),
+      child: face,
+    );
+
+    // Rounding across the wrap, growing with the folds.
+    Widget rounded(Widget child) => ShaderMask(
+      blendMode: BlendMode.srcATop,
+      shaderCallback: (b) => LinearGradient(
+        colors: [
+          Colors.black.withValues(alpha: 0.6 * progress),
+          Colors.black.withValues(alpha: 0.13 * progress),
+          Colors.white.withValues(alpha: 0.2 * progress),
+          Colors.black.withValues(alpha: 0.13 * progress),
+          Colors.black.withValues(alpha: 0.63 * progress),
+        ],
+        stops: const [0.2, 0.36, 0.5, 0.64, 0.8],
+      ).createShader(b),
+      child: child,
+    );
+
+    // A soft dark copy of [child], for shadows.
+    Widget shadowOf(Widget child, double opacity, double blur) => ImageFiltered(
+      imageFilter: ui.ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+      child: ColorFiltered(
+        colorFilter: ColorFilter.mode(
+          Colors.black.withValues(alpha: opacity),
+          BlendMode.srcIn,
+        ),
+        child: child,
+      ),
+    );
 
     return Stack(
       children: [
@@ -53,17 +108,37 @@ class FoldStep implements AnimStep {
           child: LayoutBuilder(
             builder: (context, box) {
               final size = box.biggest;
+              // Everything that is not moving in this fold.
+              final resting = Folded(
+                lines: lines,
+                count: done.length,
+                product: baked,
+                back: back,
+                without: line,
+              );
+              final movingShape = ClipPath(
+                clipper: _MovingClip(line, done),
+                child: face,
+              );
               return Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Everything that is not moving in this fold.
-                  Folded(
-                    lines: lines,
-                    count: done.length,
-                    product: baked,
-                    back: back,
-                    without: line,
+                  // The wrap lifts off the surface as it takes shape.
+                  Transform.translate(
+                    offset: Offset(0, size.height * 0.025 * progress),
+                    child: shadowOf(resting, 0.4 * progress, 6),
                   ),
+                  rounded(resting),
+                  // The lifted part casts a shadow on what is under it:
+                  // its outline seen straight down, offset and soft.
+                  if (lift > 0.02)
+                    Transform.translate(
+                      offset: Offset(size.width, size.height) * 0.02 * lift,
+                      child: Transform(
+                        transform: line.turn(size, angle, 0),
+                        child: shadowOf(movingShape, 0.35 * lift, 5),
+                      ),
+                    ),
                   // The part folding now, turning about the line.
                   Transform(
                     transform: line.turn(size, angle, perspective),
@@ -73,10 +148,10 @@ class FoldStep implements AnimStep {
                       // shades only the product's own pixels.
                       child: ColorFiltered(
                         colorFilter: ColorFilter.mode(
-                          Colors.black.withValues(alpha: 0.25 * sin(angle)),
+                          Colors.black.withValues(alpha: 0.2 * lift),
                           BlendMode.srcATop,
                         ),
-                        child: face,
+                        child: bent,
                       ),
                     ),
                   ),
