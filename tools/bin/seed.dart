@@ -8,8 +8,8 @@
 // Usage (from tools/):
 //   dart run bin/seed.dart pizza --products seed/pizza_trial.json
 //       [--allow-missing-final-images] [--dry-run] [--force]
-// Products and ingredients edited from the admin panel are kept unless
-// --force.
+// Products, ingredients and images edited from the admin panel are kept
+// unless --force.
 import 'dart:convert';
 import 'dart:io';
 
@@ -271,10 +271,10 @@ Future<void> main(List<String> args) async {
   if (dryRun) return;
 
   final token = await firebaseToken();
-  // Products and ingredients edited from the admin panel belong to the admin
+  // Products, ingredients and images edited from the admin panel belong to the admin
   // now (phase 3): the seed leaves them alone unless --force.
   if (!args.contains('--force')) {
-    for (final collection in ['products', 'ingredients']) {
+    for (final collection in ['products', 'ingredients', 'assets']) {
       final edited = await adminEditedIds(stagingProjectId, token, collection);
       final skipped = [
         for (final id in edited)

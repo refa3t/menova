@@ -109,7 +109,41 @@ service cloud.firestore {
     }
     match /assets/{assetId} {
       allow read: if true;
-      allow write: if false;
+      // P3-04: admins replace ingredient images and product photos (a new
+      // Cloudinary file and a higher version; the structure, layer order and
+      // categories never change) and add a product's first photo. Bases and
+      // animation images stay with the developer. Every write is audited.
+      allow create: if isAdmin()
+          && validAsset(request.resource.data, assetId)
+          && request.resource.data.kind == 'final'
+          && request.resource.data.version == 1
+          && audited('assets/' + assetId, request.resource.data.lastAuditId);
+      allow update: if isAdmin()
+          && validAsset(request.resource.data, assetId)
+          && resource.data.kind in ['ingredient', 'final']
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+               ['publicId', 'secureUrl', 'version', 'variants', 'name',
+                'lastAuditId', 'temp'])
+          && request.resource.data.version == resource.data.version + 1
+          && audited('assets/' + assetId, request.resource.data.lastAuditId);
+      allow delete: if false;
+
+      function validAsset(d, id) {
+        return d.keys().hasOnly(['id', 'kind', 'name', 'publicId',
+                 'secureUrl', 'version', 'variants', 'layerOrder',
+                 'placementRef', 'allowedCategoryIds', 'adminReplaceable',
+                 'lastAuditId', 'temp'])
+            && d.id == id
+            && d.kind is string
+            && d.name is string && d.name.size() <= 80
+            && d.publicId is string && d.publicId.size() > 0
+            && d.secureUrl is string
+            && d.secureUrl.matches('^https://res[.]cloudinary[.]com/etdgj6d8/.*')
+            && d.version is int && d.version >= 1
+            && d.variants is list && d.variants.size() <= 5
+            && d.layerOrder is int
+            && d.allowedCategoryIds is list;
+      }
     }
     // Store location and delivery rules (tools/seed now, admin later).
     match /settings/{settingId} {

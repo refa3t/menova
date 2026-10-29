@@ -304,6 +304,9 @@ def main() -> None:
                      'transparent': True},
             'ingredient': {'formats': ['png', 'webp'], 'maxBytes': 150 * 1024,
                            'transparent': True},
+            # Product photos the admin uploads for the menu (P3-04).
+            'final': {'formats': ['png', 'webp'], 'maxBytes': 500 * 1024,
+                      'transparent': True},
         },
     })
     # Sidecar: the definition schema stays strict, TEMP status lives here.

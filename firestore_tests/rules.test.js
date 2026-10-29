@@ -56,6 +56,8 @@ beforeEach(async () => {
     await db.doc('categoryContent/c1').set({ isVisible: true });
     await db.doc('ingredients/i1').set({ extraPrice: 10 });
     await db.doc('assets/a1').set({ secureUrl: 'x' });
+    await db.doc('assets/ing_i1').set(asset('ing_i1', 'ingredient', 1));
+    await db.doc('assets/base_x').set(asset('base_x', 'base', 1));
     await db.doc('settings/store').set({
       location: { lat: 30.4468569, lng: 31.1910437 },
       delivery: { perKm: 600, minFee: 2500, maxDistanceMeters: 15000 },
@@ -307,4 +309,44 @@ test('admins edit existing ingredients, audited; no create or delete', async () 
   await assertFails(manager.doc('ingredients/i1').set({ ...ing, lastAuditId: 'nope' }));
   await assertFails(saveIngredient(staff('reception', 'rec1'), 'rec1', 'i1', ing));
   await assertFails(manager.doc('ingredients/i1').delete());
+});
+
+// P3-04: admins replace ingredient images and product photos, audited.
+function asset(id, kind, version, overrides = {}) {
+  return {
+    id, kind, name: id, publicId: `menova/assets/${id}_${version}`,
+    secureUrl: `https://res.cloudinary.com/etdgj6d8/image/upload/v1/${id}_${version}.webp`,
+    version, variants: [], layerOrder: 20, allowedCategoryIds: ['cat'],
+    adminReplaceable: false, ...overrides,
+  };
+}
+
+async function saveAsset(db, uid, id, data) {
+  const audit = db.collection('auditLog').doc();
+  const batch = db.batch();
+  batch.set(audit, {
+    action: 'replaceAsset', target: `assets/${id}`, by: uid,
+    at: serverTimestamp(), before: null, after: data,
+  });
+  batch.set(db.doc(`assets/${id}`), { ...data, lastAuditId: audit.id });
+  return batch.commit();
+}
+
+test('admins replace ingredient images and add product photos', async () => {
+  const m = staff('menu_manager', 'mgr1');
+  await assertSucceeds(saveAsset(m, 'mgr1', 'ing_i1', asset('ing_i1', 'ingredient', 2)));
+  // Version must go up by one; layer order and categories never change.
+  await assertFails(saveAsset(m, 'mgr1', 'ing_i1', asset('ing_i1', 'ingredient', 2)));
+  await assertFails(saveAsset(m, 'mgr1', 'ing_i1', asset('ing_i1', 'ingredient', 3, { layerOrder: 99 })));
+  // Only our Cloudinary account.
+  await assertFails(saveAsset(m, 'mgr1', 'ing_i1', asset('ing_i1', 'ingredient', 3, {
+    secureUrl: 'https://evil.example/x.webp',
+  })));
+  // Bases are the developer's.
+  await assertFails(saveAsset(m, 'mgr1', 'base_x', asset('base_x', 'base', 2)));
+  // A product's first photo.
+  await assertSucceeds(saveAsset(m, 'mgr1', 'final_p1', asset('final_p1', 'final', 1)));
+  await assertFails(saveAsset(m, 'mgr1', 'new_ing', asset('new_ing', 'ingredient', 1)));
+  await assertFails(saveAsset(staff('reception', 'rec1'), 'rec1', 'final_p2', asset('final_p2', 'final', 1)));
+  await assertFails(m.doc('assets/ing_i1').delete());
 });

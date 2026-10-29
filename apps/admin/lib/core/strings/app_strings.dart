@@ -76,6 +76,30 @@ abstract final class AppStrings {
   static const ingredientsNote =
       'إضافة مكوّن جديد لقسم تتم مع تعريف القسم (من المطور).';
 
+  // Images (P3-04).
+  static const images = 'الصور';
+  static const productPhotos = 'صور المنتجات';
+  static const ingredientImages = 'صور المكونات';
+  static const noPhoto = 'بلا صورة: يظهر رسم المكونات في المنيو';
+  static const uploadPhoto = 'رفع صورة';
+  static const replace = 'استبدال';
+  static const replaceTitle = 'معاينة قبل الاعتماد';
+  static const confirmReplace = 'اعتمد الصورة';
+  static const cancel = 'إلغاء';
+  static const uploading = 'جارٍ الرفع...';
+  static const replaced = 'تم تحديث الصورة';
+  static const uploadFailed = 'تعذّر الرفع. لم يتغير شيء';
+  static const imagesNote =
+      'PNG أو WebP بخلفية شفافة. الصورة القديمة تبقى محفوظة للرجوع. صور القواعد والحركة من المطور.';
+  static const variantsNote =
+      'يمكن اختيار حتى 5 صور: الأولى أساسية والباقي تنويعات للقطع.';
+  static String fileIssue(String path, AssetSpec spec) => switch (path) {
+    'format' => 'الصيغة يجب أن تكون PNG أو WebP',
+    'bytes' => 'الحجم أكبر من ${spec.maxBytes ~/ 1024} كيلوبايت',
+    'transparent' => 'الخلفية يجب أن تكون شفافة',
+    _ => path,
+  };
+
   /// Piasters as pounds for an input field (no currency sign).
   static String egp(int piasters) {
     final p = piasters / 100;

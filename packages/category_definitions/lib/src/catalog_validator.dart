@@ -92,3 +92,60 @@ List<DefinitionIssue> validateIngredient(
   }
   return issues;
 }
+
+/// What the admin panel learned about a picked image before upload (P3-04).
+class AssetFile {
+  const AssetFile({
+    required this.format,
+    required this.bytes,
+    required this.hasTransparency,
+  });
+
+  /// `png`, `webp` or null when the content is neither (read from the file's
+  /// first bytes, not its name).
+  final String? format;
+  final int bytes;
+  final bool hasTransparency;
+
+  /// The format from a file's first bytes.
+  static String? sniff(List<int> head) {
+    bool at(int offset, List<int> sig) {
+      if (head.length < offset + sig.length) return false;
+      for (var i = 0; i < sig.length; i++) {
+        if (head[offset + i] != sig[i]) return false;
+      }
+      return true;
+    }
+
+    if (at(0, const [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])) {
+      return 'png';
+    }
+    // RIFF....WEBP
+    if (at(0, const [0x52, 0x49, 0x46, 0x46]) &&
+        at(8, const [0x57, 0x45, 0x42, 0x50])) {
+      return 'webp';
+    }
+    return null;
+  }
+}
+
+/// Checks a picked image against its kind's AssetSpec (format, size,
+/// transparency), so an image outside the spec is refused before upload and
+/// the current one stays.
+List<DefinitionIssue> validateAssetFile(AssetFile f, AssetSpec spec) {
+  final issues = <DefinitionIssue>[];
+  if (f.format == null || !spec.formats.contains(f.format)) {
+    issues.add(
+      DefinitionIssue('format', 'must be ${spec.formats.join(' or ')}'),
+    );
+  }
+  if (f.bytes > spec.maxBytes) {
+    issues.add(DefinitionIssue('bytes', 'must be <= ${spec.maxBytes} bytes'));
+  }
+  if (spec.transparent && !f.hasTransparency) {
+    issues.add(
+      const DefinitionIssue('transparent', 'needs a transparent background'),
+    );
+  }
+  return issues;
+}

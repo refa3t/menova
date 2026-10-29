@@ -126,4 +126,42 @@ void main() {
       ]);
     });
   });
+
+  group('asset files (P3-04)', () {
+    const spec = AssetSpec(
+      formats: ['png', 'webp'],
+      maxBytes: 150 * 1024,
+      transparent: true,
+    );
+    List<String> file(String? format, int bytes, bool alpha) =>
+        validateAssetFile(
+          AssetFile(format: format, bytes: bytes, hasTransparency: alpha),
+          spec,
+        ).map((i) => i.path).toList();
+
+    test('format is read from the content', () {
+      expect(
+        AssetFile.sniff([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]),
+        'png',
+      );
+      expect(
+        AssetFile.sniff([
+          0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50, //
+        ]),
+        'webp',
+      );
+      expect(AssetFile.sniff([0xFF, 0xD8, 0xFF, 0xE0]), isNull); // jpeg
+    });
+
+    test('a transparent png or webp within size passes', () {
+      expect(file('png', 100 * 1024, true), isEmpty);
+      expect(file('webp', 150 * 1024, true), isEmpty);
+    });
+
+    test('wrong format, too big or opaque is refused', () {
+      expect(file(null, 1000, true), ['format']);
+      expect(file('png', 151 * 1024, true), ['bytes']);
+      expect(file('png', 1000, false), ['transparent']);
+    });
+  });
 }

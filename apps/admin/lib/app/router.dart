@@ -7,6 +7,7 @@ import '../core/strings/app_strings.dart';
 import '../features/auth/domain/admin_access.dart';
 import '../features/auth/presentation/auth_providers.dart';
 import '../features/auth/presentation/login_screen.dart';
+import '../features/assets/presentation/assets_screen.dart';
 import '../features/catalog/presentation/ingredient_edit_screen.dart';
 import '../features/catalog/presentation/ingredients_screen.dart';
 import '../features/catalog/presentation/product_edit_screen.dart';
@@ -40,6 +41,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/products',
         builder: (context, state) => const ProductsScreen(),
+      ),
+      GoRoute(
+        path: '/assets',
+        builder: (context, state) => const AssetsScreen(),
       ),
       GoRoute(
         path: '/ingredients',

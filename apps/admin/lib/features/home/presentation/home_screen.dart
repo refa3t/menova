@@ -14,6 +14,7 @@ class HomeScreen extends ConsumerWidget {
   static const _routes = {
     AdminArea.products: '/products',
     AdminArea.ingredients: '/ingredients',
+    AdminArea.assets: '/assets',
   };
 
   const HomeScreen({super.key});

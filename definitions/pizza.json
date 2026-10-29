@@ -426,6 +426,14 @@
       ],
       "maxBytes": 153600,
       "transparent": true
+    },
+    "final": {
+      "formats": [
+        "png",
+        "webp"
+      ],
+      "maxBytes": 512000,
+      "transparent": true
     }
   }
 }
