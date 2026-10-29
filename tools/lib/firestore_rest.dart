@@ -83,3 +83,38 @@ Map<String, Object?> firestoreValue(Object? v) => switch (v) {
   },
   _ => throw ArgumentError('Unsupported value: $v'),
 };
+
+/// Ids of documents in [collection] edited from the admin panel (they carry
+/// `lastAuditId`): from then on the admin owns their content.
+Future<Set<String>> adminEditedIds(
+  String projectId,
+  String token,
+  String collection,
+) async {
+  final ids = <String>{};
+  String? page;
+  do {
+    final uri = Uri.parse(
+      'https://firestore.googleapis.com/v1/projects/$projectId/databases/'
+      '(default)/documents/$collection?pageSize=300'
+      '&mask.fieldPaths=lastAuditId${page == null ? '' : '&pageToken=$page'}',
+    );
+    final res = await http.get(
+      uri,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (res.statusCode != 200) {
+      stderr.writeln('Firestore error ${res.statusCode}: ${res.body}');
+      exit(1);
+    }
+    final body = jsonDecode(res.body) as Map<String, dynamic>;
+    for (final d in (body['documents'] as List?) ?? const []) {
+      final doc = d as Map<String, dynamic>;
+      if ((doc['fields'] as Map?)?.containsKey('lastAuditId') ?? false) {
+        ids.add((doc['name'] as String).split('/').last);
+      }
+    }
+    page = body['nextPageToken'] as String?;
+  } while (page != null);
+  return ids;
+}

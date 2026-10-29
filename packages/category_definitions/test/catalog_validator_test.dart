@@ -1,0 +1,97 @@
+import 'package:category_definitions/category_definitions.dart';
+import 'package:core/core.dart';
+import 'package:test/test.dart';
+
+// TEMP fixtures, not owner data.
+const def = CategoryDefinition(
+  id: 'cat',
+  definitionVersion: 1,
+  name: 'TEMP',
+  base: BaseSpec(shape: 'circle', rawAssetId: 'base'),
+  allowedIngredientIds: ['i1', 'i2'],
+  placement: PlacementSpec(strategy: 'scatter'),
+  constraints: CustomizationConstraints(maxQty: 2),
+  sizes: [SizeOption(id: 's', name: 'S')],
+  optionGroups: [
+    OptionGroup(
+      id: 'g',
+      name: 'G',
+      defaultChoiceId: 'a',
+      choices: [OptionChoice(id: 'a', name: 'A')],
+    ),
+  ],
+  animation: [],
+  assetSpecs: {},
+  productGroups: [ProductGroup(id: 'grp', name: 'Group')],
+);
+
+Product product({
+  String categoryId = 'cat',
+  int basePrice = 10000,
+  List<ProductIngredient> defaults = const [
+    ProductIngredient(ingredientId: 'i1', qty: 1, removable: true),
+  ],
+  Map<String, int> sizeDeltas = const {'s': 0},
+  Map<String, int> optionDeltas = const {'a': 0},
+  String? groupId = 'grp',
+}) => Product(
+  id: 'p',
+  categoryId: categoryId,
+  name: 'P',
+  description: '',
+  basePrice: basePrice,
+  imageAssetId: 'img',
+  defaults: defaults,
+  isAvailable: true,
+  sizeDeltas: sizeDeltas,
+  optionDeltas: optionDeltas,
+  groupId: groupId,
+);
+
+List<String> check(Product p) => validateProduct(
+  p,
+  def,
+  ingredientIds: {'i1', 'i2'},
+).map((i) => i.path).toList();
+
+void main() {
+  test('a product within its definition is valid', () {
+    expect(check(product()), isEmpty);
+  });
+
+  test('prices must be positive, deltas never negative', () {
+    expect(check(product(basePrice: 0)), ['basePrice']);
+    expect(check(product(sizeDeltas: {'s': -1})), ['sizeDeltas.s']);
+  });
+
+  test('only sizes, options and groups the definition offers', () {
+    expect(check(product(sizeDeltas: {'xl': 5})), ['sizeDeltas.xl']);
+    expect(check(product(optionDeltas: {'zz': 5})), ['optionDeltas.zz']);
+    expect(check(product(groupId: 'nope')), ['groupId']);
+    expect(check(product(categoryId: 'other')), ['categoryId']);
+  });
+
+  test('defaults: allowed, defined, once, at least one unit', () {
+    expect(
+      check(
+        product(
+          defaults: const [
+            ProductIngredient(ingredientId: 'i1', qty: 1, removable: true),
+            ProductIngredient(ingredientId: 'i1', qty: 1, removable: true),
+          ],
+        ),
+      ),
+      ['defaults[1]'],
+    );
+    expect(
+      check(
+        product(
+          defaults: const [
+            ProductIngredient(ingredientId: 'x', qty: 0, removable: true),
+          ],
+        ),
+      ),
+      ['defaults[0]', 'defaults[0]', 'defaults[0].qty'],
+    );
+  });
+}

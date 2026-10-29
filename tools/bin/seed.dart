@@ -7,7 +7,9 @@
 //
 // Usage (from tools/):
 //   dart run bin/seed.dart pizza --products seed/pizza_trial.json
-//       [--allow-missing-final-images] [--dry-run]
+//       [--allow-missing-final-images] [--dry-run] [--force]
+// Products and ingredients edited from the admin panel are kept unless
+// --force.
 import 'dart:convert';
 import 'dart:io';
 
@@ -268,7 +270,25 @@ Future<void> main(List<String> args) async {
   );
   if (dryRun) return;
 
-  await batchWrite(stagingProjectId, await firebaseToken(), docs);
+  final token = await firebaseToken();
+  // Products and ingredients edited from the admin panel belong to the admin
+  // now (phase 3): the seed leaves them alone unless --force.
+  if (!args.contains('--force')) {
+    for (final collection in ['products', 'ingredients']) {
+      final edited = await adminEditedIds(stagingProjectId, token, collection);
+      final skipped = [
+        for (final id in edited)
+          if (docs.remove('$collection/$id') != null) id,
+      ];
+      if (skipped.isNotEmpty) {
+        print(
+          'kept ${skipped.length} admin-edited $collection: '
+          '${skipped.join(', ')} (pass --force to overwrite)',
+        );
+      }
+    }
+  }
+  await batchWrite(stagingProjectId, token, docs);
 }
 
 Map<String, dynamic> _readJson(String path) =>

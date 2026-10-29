@@ -12,6 +12,42 @@ service cloud.firestore {
           && request.auth.token.role in ['reception', 'kitchen', 'owner'];
     }
 
+    // Admin panel roles (phase 3, custom claim `role`).
+    function isAdmin() {
+      return request.auth != null
+          && request.auth.token.role in ['owner', 'menu_manager'];
+    }
+
+    function isOwner() {
+      return request.auth != null && request.auth.token.role == 'owner';
+    }
+
+    // Every admin write carries the id of the audit entry written in the same
+    // batch, which must name this document and this user (P3-07): no change
+    // without its record.
+    function audited(path, auditId) {
+      return auditId is string
+          && existsAfter(/databases/$(database)/documents/auditLog/$(auditId))
+          && getAfter(/databases/$(database)/documents/auditLog/$(auditId)).data.target == path
+          && getAfter(/databases/$(database)/documents/auditLog/$(auditId)).data.by == request.auth.uid;
+    }
+
+    // Audit log (P3-07): written once by an admin, read by the owner, never
+    // changed or deleted.
+    match /auditLog/{entryId} {
+      allow create: if isAdmin()
+          && request.resource.data.keys().hasOnly(
+               ['action', 'target', 'by', 'byEmail', 'at', 'before', 'after'])
+          && request.resource.data.keys().hasAll(
+               ['action', 'target', 'by', 'at', 'after'])
+          && request.resource.data.action is string
+          && request.resource.data.target is string
+          && request.resource.data.by == request.auth.uid
+          && request.resource.data.at == request.time;
+      allow read: if isOwner();
+      allow update, delete: if false;
+    }
+
     // Public menu (CLAUDE.md 5.4).
     match /categoryContent/{categoryId} {
       allow read: if true;
@@ -19,7 +55,34 @@ service cloud.firestore {
     }
     match /products/{productId} {
       allow read: if true;
-      allow write: if false;
+      // P3-02: admins create and edit products within the definition (the
+      // panel checks it with the same validator); the category never
+      // changes, prices are whole piasters, and each write is audited.
+      allow create, update: if isAdmin()
+          && validProduct(request.resource.data, productId)
+          && (resource == null
+              || resource.data.categoryId == request.resource.data.categoryId)
+          && audited('products/' + productId, request.resource.data.lastAuditId);
+      allow delete: if false;
+
+      function validProduct(d, id) {
+        return d.keys().hasOnly(['id', 'categoryId', 'name', 'names',
+                 'description', 'basePrice', 'imageAssetId', 'defaults',
+                 'isAvailable', 'sizeDeltas', 'optionDeltas', 'displayOrder',
+                 'groupId', 'lastAuditId', 'temp'])
+            && d.id == id
+            && d.categoryId is string && d.categoryId.size() > 0
+            && d.name is string && d.name.size() > 0 && d.name.size() <= 80
+            && d.names is map
+            && d.description is string && d.description.size() <= 500
+            && d.basePrice is int && d.basePrice > 0
+            && d.imageAssetId is string
+            && d.defaults is list && d.defaults.size() <= 20
+            && d.isAvailable is bool
+            && d.sizeDeltas is map
+            && d.optionDeltas is map
+            && d.displayOrder is int && d.displayOrder >= 0;
+      }
     }
     match /ingredients/{ingredientId} {
       allow read: if true;

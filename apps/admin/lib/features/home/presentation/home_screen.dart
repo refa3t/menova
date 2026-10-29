@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/strings/app_strings.dart';
 import '../../auth/domain/admin_access.dart';
@@ -9,6 +10,9 @@ import '../../auth/presentation/auth_providers.dart';
 /// The admin home: who is signed in and the sections their role may manage
 /// (P3-01). Each section opens once its task is built.
 class HomeScreen extends ConsumerWidget {
+  /// Sections that are built, by route.
+  static const _routes = {AdminArea.products: '/products'};
+
   const HomeScreen({super.key});
 
   @override
@@ -51,8 +55,16 @@ class HomeScreen extends ConsumerWidget {
                     child: ListTile(
                       minTileHeight: 64,
                       title: Text(AppStrings.area(a)),
-                      subtitle: const Text(AppStrings.comingSoon),
-                      enabled: false,
+                      subtitle: _routes.containsKey(a)
+                          ? null
+                          : const Text(AppStrings.comingSoon),
+                      enabled: _routes.containsKey(a),
+                      trailing: _routes.containsKey(a)
+                          ? const Icon(Icons.chevron_left)
+                          : null,
+                      onTap: _routes.containsKey(a)
+                          ? () => context.push(_routes[a]!)
+                          : null,
                     ),
                   ),
                 ),

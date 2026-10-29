@@ -9,6 +9,7 @@ import 'package:core/core.dart';
 import 'src/generated/bundled_definitions.g.dart';
 import 'src/validator.dart';
 
+export 'src/catalog_validator.dart';
 export 'src/validator.dart';
 
 /// Parses and validates every bundled definition. A definition that fails

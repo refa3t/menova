@@ -2,6 +2,7 @@
 // D-INFRA-01 = B: guests create their own order once; staff change status
 // and payment under strict checks; nobody edits prices or menu data.
 import { after, before, beforeEach, test } from 'node:test';
+import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   assertFails,
@@ -227,4 +228,57 @@ test('payment status changes independently; prices stay locked', async () => {
 test('unknown collections are closed', async () => {
   await assertFails(anon().doc('secrets/x').get());
   await assertFails(guest().doc('secrets/x').set({ a: 1 }));
+});
+
+// P3-02 / P3-07: admins write products only with an audit entry in the
+// same batch; the audit log is append-only and owner-readable.
+function product(id, overrides = {}) {
+  return {
+    id, categoryId: 'cat', name: 'TEMP', names: { en: 'TEMP', ar: 'TEMP' },
+    description: '', basePrice: 13000, imageAssetId: 'img', defaults: [],
+    isAvailable: true, sizeDeltas: { s: 0 }, optionDeltas: {}, displayOrder: 0,
+    ...overrides,
+  };
+}
+
+async function saveProduct(db, uid, id, data, auditOverrides = {}) {
+  const audit = db.collection('auditLog').doc();
+  const batch = db.batch();
+  batch.set(audit, {
+    action: 'saveProduct', target: `products/${id}`, by: uid,
+    at: serverTimestamp(), before: null, after: data, ...auditOverrides,
+  });
+  batch.set(db.doc(`products/${id}`), { ...data, lastAuditId: audit.id });
+  return batch.commit();
+}
+
+test('admins save products only with an audit entry', async () => {
+  const owner = staff('owner', 'own1');
+  const manager = staff('menu_manager', 'mgr1');
+  await assertSucceeds(saveProduct(owner, 'own1', 'p9', product('p9')));
+  await assertSucceeds(saveProduct(manager, 'mgr1', 'p9', product('p9', { basePrice: 14000 })));
+  // No audit entry.
+  await assertFails(owner.doc('products/p9').set({ ...product('p9'), lastAuditId: 'nope' }));
+  // Audit names someone else or another document.
+  await assertFails(saveProduct(owner, 'own1', 'p9', product('p9'), { by: 'mgr1' }));
+  await assertFails(saveProduct(owner, 'own1', 'p9', product('p9'), { target: 'products/p8' }));
+  // Not an admin.
+  await assertFails(saveProduct(staff('reception', 'rec1'), 'rec1', 'p9', product('p9')));
+  // Bad data: no price, category change, unknown field.
+  await assertFails(saveProduct(owner, 'own1', 'p9', product('p9', { basePrice: 0 })));
+  await assertFails(saveProduct(owner, 'own1', 'p9', product('p9', { categoryId: 'other' })));
+  await assertFails(saveProduct(owner, 'own1', 'p9', product('p9', { extra: 1 })));
+  await assertFails(owner.doc('products/p9').delete());
+});
+
+test('the audit log is append-only and only the owner reads it', async () => {
+  const owner = staff('owner', 'own1');
+  await saveProduct(owner, 'own1', 'p9', product('p9'));
+  const entries = await owner.collection('auditLog').get();
+  assert.equal(entries.size, 1);
+  const ref = entries.docs[0].ref;
+  await assertFails(ref.update({ action: 'x' }));
+  await assertFails(ref.delete());
+  await assertFails(staff('menu_manager', 'mgr1').collection('auditLog').get());
+  await assertFails(staff('reception', 'rec1').collection('auditLog').get());
 });
