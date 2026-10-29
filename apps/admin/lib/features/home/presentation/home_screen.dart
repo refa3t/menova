@@ -15,6 +15,8 @@ class HomeScreen extends ConsumerWidget {
     AdminArea.products: '/products',
     AdminArea.ingredients: '/ingredients',
     AdminArea.assets: '/assets',
+    AdminArea.categories: '/categories',
+    AdminArea.settings: '/settings',
   };
 
   const HomeScreen({super.key});

@@ -8,10 +8,12 @@ import '../features/auth/domain/admin_access.dart';
 import '../features/auth/presentation/auth_providers.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/assets/presentation/assets_screen.dart';
+import '../features/catalog/presentation/categories_screen.dart';
 import '../features/catalog/presentation/ingredient_edit_screen.dart';
 import '../features/catalog/presentation/ingredients_screen.dart';
 import '../features/catalog/presentation/product_edit_screen.dart';
 import '../features/catalog/presentation/products_screen.dart';
+import '../features/catalog/presentation/settings_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 
 /// Only the owner and menu managers get in (P3-01); everyone else is sent to
@@ -41,6 +43,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/products',
         builder: (context, state) => const ProductsScreen(),
+      ),
+      GoRoute(
+        path: '/categories',
+        builder: (context, state) => const CategoriesScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
         path: '/assets',

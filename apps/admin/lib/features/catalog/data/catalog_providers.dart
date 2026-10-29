@@ -40,3 +40,23 @@ final assetsProvider = StreamProvider<Map<String, Asset>>(
       .snapshots()
       .map((s) => {for (final d in s.docs) d.id: Asset.fromJson(d.data())}),
 );
+
+/// Admin-owned category visibility and order, live.
+final categoryContentProvider = StreamProvider<List<CategoryContent>>(
+  (ref) => FirebaseFirestore.instance
+      .collection('categoryContent')
+      .snapshots()
+      .map(
+        (s) =>
+            [for (final d in s.docs) CategoryContent.fromJson(d.data())]
+              ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder)),
+      ),
+);
+
+/// The store location and delivery pricing, live.
+final storeSettingsProvider = StreamProvider<StoreSettings?>(
+  (ref) => FirebaseFirestore.instance
+      .doc('settings/store')
+      .snapshots()
+      .map((d) => d.data() == null ? null : StoreSettings.fromJson(d.data()!)),
+);

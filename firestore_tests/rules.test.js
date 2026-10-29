@@ -271,6 +271,8 @@ test('admins save products only with an audit entry', async () => {
   await assertFails(saveProduct(owner, 'own1', 'p9', product('p9', { categoryId: 'other' })));
   await assertFails(saveProduct(owner, 'own1', 'p9', product('p9', { extra: 1 })));
   await assertFails(owner.doc('products/p9').delete());
+  // Reusing an earlier audit entry (still stored) does not count.
+  await assertFails(owner.doc('products/p9').update({ basePrice: 1500 }));
 });
 
 test('the audit log is append-only and only the owner reads it', async () => {
@@ -349,4 +351,40 @@ test('admins replace ingredient images and add product photos', async () => {
   await assertFails(saveAsset(m, 'mgr1', 'new_ing', asset('new_ing', 'ingredient', 1)));
   await assertFails(saveAsset(staff('reception', 'rec1'), 'rec1', 'final_p2', asset('final_p2', 'final', 1)));
   await assertFails(m.doc('assets/ing_i1').delete());
+});
+
+// P3-05: categories (visibility/order) by admins, store settings by the owner.
+async function auditedSet(db, uid, path, data) {
+  const audit = db.collection('auditLog').doc();
+  const batch = db.batch();
+  batch.set(audit, {
+    action: 'save', target: path, by: uid, at: serverTimestamp(),
+    before: null, after: data,
+  });
+  batch.set(db.doc(path), { ...data, lastAuditId: audit.id });
+  return batch.commit();
+}
+
+test('admins show, hide and order defined categories only', async () => {
+  const m = staff('menu_manager', 'mgr1');
+  await assertSucceeds(auditedSet(m, 'mgr1', 'categoryContent/c1',
+    { isVisible: false, displayOrder: 2 }));
+  await assertFails(auditedSet(m, 'mgr1', 'categoryContent/c1',
+    { isVisible: true, displayOrder: 2, name: 'x' }));
+  await assertFails(auditedSet(m, 'mgr1', 'categoryContent/new',
+    { isVisible: true, displayOrder: 0 }));
+  await assertFails(m.doc('categoryContent/c1').update({ isVisible: true }));
+});
+
+test('only the owner changes the store settings', async () => {
+  const store = {
+    location: { lat: 30.46, lng: 31.18 },
+    delivery: { perKm: 700, minFee: 3000, maxDistanceMeters: 12000 },
+  };
+  await assertSucceeds(auditedSet(staff('owner', 'own1'), 'own1', 'settings/store', store));
+  await assertFails(auditedSet(staff('menu_manager', 'mgr1'), 'mgr1', 'settings/store', store));
+  await assertFails(auditedSet(staff('owner', 'own1'), 'own1', 'settings/store',
+    { ...store, delivery: { ...store.delivery, perKm: -1 } }));
+  await assertFails(auditedSet(staff('owner', 'own1'), 'own1', 'settings/store',
+    { ...store, location: { lat: 120, lng: 31 } }));
 });

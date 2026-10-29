@@ -4,6 +4,7 @@
 //
 // Usage (from tools/):
 //   dart run bin/seed_settings.dart [--file seed/store_settings.json] [--dry-run]
+//       [--force]
 import 'dart:convert';
 import 'dart:io';
 
@@ -23,7 +24,19 @@ Future<void> main(List<String> args) async {
     '${settings.location}, ${settings.delivery.toJson()}',
   );
   if (args.contains('--dry-run')) return;
-  await batchWrite(stagingProjectId, await firebaseToken(), {
+  final token = await firebaseToken();
+  // Once the owner edits the settings from the admin panel (P3-05), they
+  // own them: keep them unless --force.
+  if (!args.contains('--force') &&
+      (await adminEditedIds(
+        stagingProjectId,
+        token,
+        'settings',
+      )).contains('store')) {
+    print('kept admin-edited settings/store (pass --force to overwrite)');
+    return;
+  }
+  await batchWrite(stagingProjectId, token, {
     'settings/store': settings.toJson(),
   });
 }

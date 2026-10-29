@@ -274,7 +274,12 @@ Future<void> main(List<String> args) async {
   // Products, ingredients and images edited from the admin panel belong to the admin
   // now (phase 3): the seed leaves them alone unless --force.
   if (!args.contains('--force')) {
-    for (final collection in ['products', 'ingredients', 'assets']) {
+    for (final collection in [
+      'products',
+      'ingredients',
+      'assets',
+      'categoryContent',
+    ]) {
       final edited = await adminEditedIds(stagingProjectId, token, collection);
       final skipped = [
         for (final id in edited)

@@ -27,6 +27,9 @@ service cloud.firestore {
     // without its record.
     function audited(path, auditId) {
       return auditId is string
+          // A new entry, created by this very batch (an old one can't be
+          // reused to slip a change through).
+          && !exists(/databases/$(database)/documents/auditLog/$(auditId))
           && existsAfter(/databases/$(database)/documents/auditLog/$(auditId))
           && getAfter(/databases/$(database)/documents/auditLog/$(auditId)).data.target == path
           && getAfter(/databases/$(database)/documents/auditLog/$(auditId)).data.by == request.auth.uid;
@@ -51,7 +54,17 @@ service cloud.firestore {
     // Public menu (CLAUDE.md 5.4).
     match /categoryContent/{categoryId} {
       allow read: if true;
-      allow write: if false;
+      // P3-05: admins show/hide and order categories the developer defined
+      // (no new ones), audited.
+      allow update: if isAdmin()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+               ['isVisible', 'displayOrder', 'lastAuditId', 'temp'])
+          && request.resource.data.isVisible is bool
+          && request.resource.data.displayOrder is int
+          && request.resource.data.displayOrder >= 0
+          && audited('categoryContent/' + categoryId,
+                     request.resource.data.lastAuditId);
+      allow create, delete: if false;
     }
     match /products/{productId} {
       allow read: if true;
@@ -148,7 +161,28 @@ service cloud.firestore {
     // Store location and delivery rules (tools/seed now, admin later).
     match /settings/{settingId} {
       allow read: if true;
-      allow write: if false;
+      // P3-05: the owner sets the store location and delivery pricing
+      // (the order rules price delivery from this document), audited.
+      allow update: if isOwner()
+          && settingId == 'store'
+          && request.resource.data.keys().hasOnly(
+               ['location', 'delivery', 'lastAuditId', 'temp'])
+          && request.resource.data.location.lat is number
+          && request.resource.data.location.lat >= -90
+          && request.resource.data.location.lat <= 90
+          && request.resource.data.location.lng is number
+          && request.resource.data.location.lng >= -180
+          && request.resource.data.location.lng <= 180
+          && request.resource.data.delivery.keys().hasOnly(
+               ['perKm', 'minFee', 'maxDistanceMeters'])
+          && request.resource.data.delivery.perKm is int
+          && request.resource.data.delivery.perKm >= 0
+          && request.resource.data.delivery.minFee is int
+          && request.resource.data.delivery.minFee >= 0
+          && request.resource.data.delivery.maxDistanceMeters is int
+          && request.resource.data.delivery.maxDistanceMeters > 0
+          && audited('settings/' + settingId, request.resource.data.lastAuditId);
+      allow create, delete: if false;
     }
 
     match /orders/{orderId} {

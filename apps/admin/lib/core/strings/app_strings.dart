@@ -100,6 +100,26 @@ abstract final class AppStrings {
     _ => path,
   };
 
+  // Categories and store settings (P3-05).
+  static const categories = 'الأقسام';
+  static const visibleOnSite = 'ظاهر في الموقع';
+  static const hiddenOnSite = 'مخفي';
+  static const moveUp = 'لأعلى';
+  static const moveDown = 'لأسفل';
+  static const categoriesNote =
+      'إظهار القسم وترتيبه في الصفحة الرئيسية. إضافة قسم جديد تتم مع تعريفه (من المطور).';
+  static const settings = 'إعدادات المطعم والتوصيل';
+  static const storeLocation = 'موقع المطعم';
+  static const lat = 'خط العرض (lat)';
+  static const lng = 'خط الطول (lng)';
+  static const openMap = 'افتح الموقع على الخريطة';
+  static const perKm = 'سعر الكيلو (ج.م)';
+  static const minFee = 'أقل رسوم توصيل (ج.م)';
+  static const maxKm = 'أقصى مسافة توصيل (كم)';
+  static const deliveryNote =
+      'الرسوم = كل كيلو بدأ × سعر الكيلو، ولا تقل عن الحد الأدنى. تُطبَّق على الطلبات الجديدة فوراً.';
+  static const invalidNumber = 'رقم غير صحيح';
+
   /// Piasters as pounds for an input field (no currency sign).
   static String egp(int piasters) {
     final p = piasters / 100;
