@@ -1,5 +1,5 @@
 // Grants a staff role (custom claim `role`) to an existing Firebase Auth
-// user, as the logged-in Firebase CLI owner. Roles: reception, kitchen.
+// user, as the logged-in Firebase CLI owner. Roles: reception, kitchen (reception app), owner, menu_manager (admin).
 // Pass `none` to remove the role. The user must sign in again (or wait for
 // the token to refresh) for it to apply.
 //
@@ -10,12 +10,12 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 const projectId = 'menova-80602';
-const roles = {'reception', 'kitchen', 'none'};
+const roles = {'reception', 'kitchen', 'owner', 'menu_manager', 'none'};
 
 Future<void> main(List<String> args) async {
   if (args.length != 2 || !roles.contains(args[1])) {
     stderr.writeln(
-      'usage: dart run bin/set_staff_role.dart <email> <reception|kitchen|none>',
+      'usage: dart run bin/set_staff_role.dart <email> <reception|kitchen|owner|menu_manager|none>',
     );
     exit(64);
   }

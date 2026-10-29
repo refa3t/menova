@@ -1,10 +1,19 @@
 {
-  "projects": { "default": "menova-80602" },
+  "projects": {
+    "default": "menova-80602"
+  },
   "targets": {
     "menova-80602": {
       "hosting": {
-        "storefront": ["menova-80602"],
-        "reception": ["menova-reception"]
+        "storefront": [
+          "menova-80602"
+        ],
+        "reception": [
+          "menova-reception"
+        ],
+        "admin": [
+          "menova-admin"
+        ]
       }
     }
   }

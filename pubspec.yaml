@@ -5,6 +5,7 @@ environment:
 workspace:
   - apps/storefront
   - apps/reception
+  - apps/admin
   - packages/core
   - packages/product_builder
   - packages/pricing

@@ -160,6 +160,8 @@ test('guest reads only their own order; staff read all', async () => {
   await assertSucceeds(staff('reception').doc('orders/o1').get());
   await assertSucceeds(staff('kitchen').collection('orders').get());
   await assertFails(staff('admin').collection('orders').get());
+  await assertSucceeds(staff('owner').collection('orders').get());
+  await assertFails(staff('menu_manager').collection('orders').get());
 });
 
 test('a guest can probe a missing order id but not list orders', async () => {

@@ -9,7 +9,7 @@ service cloud.firestore {
 
     function isStaff() {
       return request.auth != null
-          && request.auth.token.role in ['reception', 'kitchen'];
+          && request.auth.token.role in ['reception', 'kitchen', 'owner'];
     }
 
     // Public menu (CLAUDE.md 5.4).
