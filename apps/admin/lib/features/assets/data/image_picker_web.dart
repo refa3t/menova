@@ -11,7 +11,7 @@ Future<List<PickedImage>> pickImages({bool multiple = false}) {
     ..type = 'file'
     ..accept = 'image/png,image/webp'
     ..multiple = multiple;
-  input.onchange = ((web.Event _) async {
+  Future<void> read() async {
     final files = input.files;
     final picked = <PickedImage>[];
     for (var i = 0; i < (files?.length ?? 0); i++) {
@@ -20,6 +20,12 @@ Future<List<PickedImage>> pickImages({bool multiple = false}) {
       picked.add(PickedImage(name: f.name, bytes: buffer.toDart.asUint8List()));
     }
     if (!done.isCompleted) done.complete(picked);
+  }
+
+  // JS callbacks must not return a Future: start the async read from a
+  // plain callback.
+  input.onchange = ((web.Event _) {
+    read();
   }).toJS;
   input.oncancel = ((web.Event _) {
     if (!done.isCompleted) done.complete(const []);
