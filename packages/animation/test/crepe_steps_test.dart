@@ -78,6 +78,52 @@ void main() {
     expect(lines.first.a, const Offset(0.42, 0.78));
   });
 
+  const wrap = {
+    'ellipse': [0.5, 0.37, 0.285, 0.095],
+    'contents': [0.29, 0.5, 0.71, 0.66],
+    'frame': [0.16, 0.25, 0.86, 0.77],
+    'sleeve': '#9C7650',
+  };
+
+  test('a wrap opening is read from step params, its paper optional', () {
+    final o = WrapOpening.from(wrap)!;
+    expect(o.ellipse.center.dy, closeTo(0.37, 1e-9));
+    expect(o.ellipse.width, closeTo(0.57, 1e-9));
+    expect(o.frame, const Rect.fromLTRB(0.16, 0.25, 0.86, 0.77));
+    expect(o.sleeve, const Color(0xFF9C7650));
+    // On the griddle it is not in its paper yet.
+    expect(o.unwrapped.sleeve, isNull);
+    expect(o.unwrapped.frame, o.frame);
+    expect(WrapOpening.from({...wrap, 'sleeve': 'brown'})!.sleeve, isNull);
+    expect(WrapOpening.from({'ellipse': [0.5]}), isNull);
+  });
+
+  testWidgets('a finished wrap draws in its paper as it grows', (
+    tester,
+  ) async {
+    for (final zoom in [0.0, 0.5, 1.0]) {
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Center(
+            child: SizedBox.square(
+              dimension: 300,
+              child: Folded(
+                lines: FoldLine.listFrom(cone),
+                count: 2,
+                product: const ColoredBox(color: Color(0xFFFFCC88)),
+                back: const ColoredBox(color: Color(0xFFC08040)),
+                opening: WrapOpening.from(wrap),
+                zoom: zoom,
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(tester.takeException(), isNull, reason: 'zoom $zoom');
+    }
+  });
+
   test('the crepe steps are registered', () {
     expect(
       animationStepKeys,

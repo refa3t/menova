@@ -39,7 +39,8 @@ class AnimStepInput {
   final Map<String, Object?> params;
 
   /// Image URLs resolved from asset data by the orchestrator, by role
-  /// (e.g. `hearth`, `fireBack` frames). Never hard-coded names.
+  /// (e.g. `hearth`, `fireBack` frames). Never hard-coded names. A running
+  /// step gets only the roles its own `images` param declares.
   final Map<String, List<String>> images;
 
   final bool reduceMotion;
@@ -247,6 +248,7 @@ class Folded extends StatelessWidget {
     this.back,
     this.without,
     this.opening,
+    this.zoom = 1,
   });
 
   final List<FoldLine> lines;
@@ -260,6 +262,10 @@ class Folded extends StatelessWidget {
 
   /// A line whose folding side is left out (the part folding right now).
   final FoldLine? without;
+
+  /// How far a finished wrap has grown into its `frame` (0 as folded, 1
+  /// filling the box).
+  final double zoom;
 
   @override
   Widget build(BuildContext context) {
@@ -298,14 +304,21 @@ class Folded extends StatelessWidget {
           ],
         );
         if (n < lines.length || without != null) return layers;
+        if (opening case final o? when back != null) {
+          return _WrapView(
+            lines: done,
+            opening: o,
+            product: product,
+            back: back!,
+            zoom: zoom,
+          );
+        }
 
         // Fully folded: the wrap keeps the outline of what was not folded
-        // (folded parts tuck in, no corners stick out) and gets volume. A
-        // wrap with an open end is all outside (the back) around it: its
-        // contents show only through the opening.
+        // (folded parts tuck in, no corners stick out) and gets volume.
         final core = ClipPath(
           clipper: _PathClip((s) => _unfolded(s, done)),
-          child: opening != null && back != null ? back! : layers,
+          child: layers,
         );
         return Stack(
           fit: StackFit.expand,
@@ -341,8 +354,6 @@ class Folded extends StatelessWidget {
             ),
             // The folded edges: a lit crease with a soft shadow beside it.
             IgnorePointer(child: CustomPaint(painter: _CreasePainter(done))),
-            if (opening case final o?)
-              WrapOpeningView(product: product, opening: o),
           ],
         );
       },
@@ -351,21 +362,36 @@ class Folded extends StatelessWidget {
 }
 
 /// The open end of a wrap (step param `opening`, fractions of the box):
-/// `ellipse` `[cx, cy, rx, ry]` is the hole at the top, and `contents`
-/// `[x0, y0, x1, y1]` the part of the product that fills it (the filling).
+/// `ellipse` `[cx, cy, rx, ry]` is the rim at the top, `contents`
+/// `[x0, y0, x1, y1]` the part of the product that fills it (the filling),
+/// the optional `frame` `[x0, y0, x1, y1]` the wrap's bounds, which it grows
+/// into to fill the box once finished, and the optional `sleeve`
+/// (`#RRGGBB`) the colour of a paper cone it is served in.
 class WrapOpening {
-  const WrapOpening({required this.ellipse, required this.contents});
+  const WrapOpening({
+    required this.ellipse,
+    required this.contents,
+    this.frame,
+    this.sleeve,
+  });
 
   final Rect ellipse;
   final Rect contents;
+  final Rect? frame;
+  final Color? sleeve;
+
+  /// The same wrap before it goes into its paper (still on the griddle).
+  WrapOpening get unwrapped =>
+      WrapOpening(ellipse: ellipse, contents: contents, frame: frame);
 
   static WrapOpening? from(Object? raw) {
     if (raw is! Map) return null;
-    final e = raw['ellipse'], c = raw['contents'];
+    final e = raw['ellipse'], c = raw['contents'], f = raw['frame'];
     if (e is! List || e.length != 4 || c is! List || c.length != 4) {
       return null;
     }
     double n(Object? v) => (v as num).toDouble();
+    final s = raw['sleeve'];
     return WrapOpening(
       ellipse: Rect.fromCenter(
         center: Offset(n(e[0]), n(e[1])),
@@ -373,22 +399,80 @@ class WrapOpening {
         height: 2 * n(e[3]),
       ),
       contents: Rect.fromLTRB(n(c[0]), n(c[1]), n(c[2]), n(c[3])),
+      frame: f is List && f.length == 4
+          ? Rect.fromLTRB(n(f[0]), n(f[1]), n(f[2]), n(f[3]))
+          : null,
+      sleeve: s is String && RegExp(r'^#[0-9a-fA-F]{6}$').hasMatch(s)
+          ? Color(0xFF000000 | int.parse(s.substring(1), radix: 16))
+          : null,
     );
   }
 }
 
-/// The opening of a wrap seen from above: the contents sit inside it, below
-/// the rim, darker towards the back wall; the front rim hides their lower
-/// part, so they read as inside the wrap rather than on top of it.
-class WrapOpeningView extends StatelessWidget {
-  const WrapOpeningView({
-    super.key,
-    required this.product,
+/// A finished wrap with an open end, drawn to look real (owner reference
+/// photo): the outside narrows from the rim to the point and is round (lit
+/// from the left, in shade on the right), the rim is the crepe's thin edge,
+/// and inside it the filling sits heaped below a strip of the inner wall.
+/// An optional paper cone shows beside it.
+class _WrapView extends StatelessWidget {
+  const _WrapView({
+    required this.lines,
     required this.opening,
+    required this.product,
+    required this.back,
+    required this.zoom,
   });
 
-  final Widget product;
+  final List<FoldLine> lines;
   final WrapOpening opening;
+  final Widget product;
+  final Widget back;
+  final double zoom;
+
+  /// The griddle side as the outside of a thin, lightly toasted crepe:
+  /// paler and less yellow, with its browned spots kept.
+  static const _toasted = ColorFilter.matrix([
+    0.797, 0.275, 0.028, 0, -20, //
+    0.082, 0.990, 0.028, 0, -20, //
+    0.082, 0.275, 0.743, 0, -20, //
+    0, 0, 0, 1, 0, //
+  ]);
+
+  /// Where the last two folds cross (the point of the cone); without two
+  /// lines, the bottom of the frame.
+  Offset _tip(Size size) {
+    Offset at(Offset f) => Offset(f.dx * size.width, f.dy * size.height);
+    if (lines.length >= 2) {
+      final l1 = lines[lines.length - 2], l2 = lines.last;
+      final p = at(l1.a), r = at(l1.b) - p;
+      final q = at(l2.a), d = at(l2.b) - q;
+      final den = r.dx * d.dy - r.dy * d.dx;
+      if (den.abs() > 1e-9) {
+        final t = ((q.dx - p.dx) * d.dy - (q.dy - p.dy) * d.dx) / den;
+        return p + r * t;
+      }
+    }
+    final f = opening.frame ?? opening.ellipse;
+    return at(Offset(f.center.dx, f.bottom));
+  }
+
+  /// The two points where lines from [tip] touch [oval] (its outline as
+  /// seen from the point).
+  static (Offset, Offset) _tangents(Rect oval, Offset tip) {
+    var left = oval.centerLeft, right = oval.centerRight;
+    var minA = double.infinity, maxA = -double.infinity;
+    for (var i = 0; i < 360; i++) {
+      final th = i * pi / 180;
+      final pt = Offset(
+        oval.center.dx + oval.width / 2 * cos(th),
+        oval.center.dy + oval.height / 2 * sin(th),
+      );
+      final a = atan2(pt.dx - tip.dx, tip.dy - pt.dy); // angle from vertical
+      if (a < minA) (minA, left) = (a, pt);
+      if (a > maxA) (maxA, right) = (a, pt);
+    }
+    return (left, right);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -401,90 +485,307 @@ class WrapOpeningView extends StatelessWidget {
           r.right * size.width,
           r.bottom * size.height,
         );
-        final hole = px(opening.ellipse);
+        Alignment at(Offset p) =>
+            Alignment(p.dx / size.width * 2 - 1, p.dy / size.height * 2 - 1);
+        // Clockwise angle of [p] around the point, in [0, 2pi).
+        double around(Offset p, Offset centre) {
+          final a = atan2(p.dy - centre.dy, p.dx - centre.dx);
+          return a < 0 ? a + 2 * pi : a;
+        }
+
+        final rim = px(opening.ellipse);
+        final lip = size.width * 0.008; // the crepe's own thickness
+        // Silhouette: the rim, and the walls running straight from the
+        // rim's sides (tangent) down to the point where the folds meet.
+        final tip = _tip(size);
+        final edge = rim.inflate(lip);
+        final (left, right) = _tangents(edge, tip);
+        Path cone(Size s) => Path.combine(
+          PathOperation.union,
+          Path()..addOval(edge),
+          Path()..addPolygon([tip, left, right], true),
+        );
+
+        // The paper cone: wider than the wrap and cut on a slant, so its
+        // corners stand out beside the rim and its edges along the walls.
+        final paper = opening.sleeve;
+        final sleeve = [
+          tip + Offset(0, lip * 2),
+          Offset(
+            edge.left - edge.width * 0.08,
+            edge.center.dy + edge.height * 0.12,
+          ),
+          Offset(
+            edge.right + edge.width * 0.11,
+            edge.center.dy - edge.height * 0.1,
+          ),
+        ];
+        Path outline(Size s) => paper == null
+            ? cone(s)
+            : Path.combine(
+                PathOperation.union,
+                cone(s),
+                Path()..addPolygon(sleeve, true),
+              );
+
+        // The outside, round: shaded by its angle around the point (so the
+        // shade follows the walls down to it), lit from the left.
+        final body = ClipPath(
+          clipper: _PathClip(cone),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              ColorFiltered(
+                colorFilter: _toasted,
+                child: Transform.scale(scale: 1.45, child: back),
+              ),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: SweepGradient(
+                    center: at(tip),
+                    startAngle: around(left, tip),
+                    endAngle: around(right, tip),
+                    colors: const [
+                      Color(0x59000000),
+                      Color(0x0A000000),
+                      Color(0x1FFFF3DC),
+                      Color(0x00000000),
+                      Color(0x47000000),
+                      Color(0x80000000),
+                    ],
+                    stops: const [0, 0.1, 0.3, 0.52, 0.85, 1],
+                  ),
+                ),
+              ),
+              // A little darker where it is folded tight, near the point.
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: const [
+                      Color(0x00000000),
+                      Color(0x00000000),
+                      Color(0x38000000),
+                    ],
+                    stops: [
+                      0,
+                      (rim.bottom / size.height).clamp(0.0, 1.0),
+                      (tip.dy / size.height).clamp(0.0, 1.0),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+
+        // Inside the rim: a strip of the inner wall at the back, and the
+        // filling heaped below it, filling the opening to the front edge.
+        final heap = Rect.fromLTRB(
+          rim.left,
+          rim.top + rim.height * 0.07,
+          rim.right,
+          rim.bottom + rim.height * 0.07,
+        );
+        Path heapShape(Size s) => Path.combine(
+          PathOperation.intersect,
+          Path()..addOval(rim),
+          Path()..addOval(heap),
+        );
         final contents = px(opening.contents);
-        // The contents fill the hole and continue below its front rim.
-        final target = Rect.fromLTWH(
-          hole.left - hole.width * 0.06,
-          hole.top + hole.height * 0.12,
-          hole.width * 1.12,
-          hole.height * 1.5,
+        final target = Rect.fromLTRB(
+          rim.left - rim.width * 0.03,
+          heap.top - rim.height * 0.08,
+          rim.right + rim.width * 0.03,
+          rim.bottom + rim.height * 0.25,
         );
         final scale = target.width / contents.width;
-        final dx = target.center.dx - contents.center.dx * scale;
-        final dy = target.center.dy - contents.center.dy * scale;
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            ClipPath(
-              clipper: _PathClip((_) => Path()..addOval(hole)),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // The inner wall, in its own shade.
-                  const ColoredBox(color: Color(0xFFB98A4E)),
-                  Transform(
-                    transform: Matrix4.identity()
-                      ..translateByDouble(dx, dy, 0, 1)
-                      ..scaleByDouble(scale, scale, 1, 1),
-                    child: SizedBox.fromSize(size: size, child: product),
+        final inside = ClipPath(
+          clipper: _PathClip((_) => Path()..addOval(rim)),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // The inner wall: the crepe's cooked side, lit at the rim and
+              // in shade where it goes down behind the filling.
+              Positioned.fromRect(
+                rect: rim,
+                child: const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0xFFDCC08E), Color(0xFFA27A4A)],
+                      stops: [0, 0.25],
+                    ),
                   ),
-                  // Depth: the back wall shades the contents near it.
-                  Positioned.fromRect(
-                    rect: hole,
-                    child: const DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Color(0xB0000000),
-                            Color(0x40000000),
-                            Color(0x00000000),
-                            Color(0x30000000),
-                          ],
-                          stops: [0, 0.35, 0.65, 1],
+                ),
+              ),
+              ClipPath(
+                clipper: _PathClip(heapShape),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Transform(
+                      transform: Matrix4.identity()
+                        ..translateByDouble(
+                          target.center.dx - contents.center.dx * scale,
+                          target.center.dy - contents.center.dy * scale,
+                          0,
+                          1,
+                        )
+                        ..scaleByDouble(scale, scale, 1, 1),
+                      child: SizedBox.fromSize(size: size, child: product),
+                    ),
+                    // Heaped: lit on top, falling away into shade at the
+                    // sides, under the back wall and towards the front edge.
+                    Positioned.fromRect(
+                      rect: heap,
+                      child: const DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Color(0x4D000000),
+                              Color(0x00000000),
+                              Color(0x14FFFFFF),
+                              Color(0x00000000),
+                              Color(0x5C000000),
+                            ],
+                            stops: [0, 0.16, 0.4, 0.76, 1],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                    Positioned.fromRect(
+                      rect: heap,
+                      child: const DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Color(0x73000000),
+                              Color(0x00000000),
+                              Color(0x00000000),
+                              Color(0x2E000000),
+                            ],
+                            stops: [0, 0.24, 0.8, 1],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+
+        final wrap = Stack(
+          fit: StackFit.expand,
+          children: [
+            // Soft contact shadow under the wrap.
+            Transform.translate(
+              offset: Offset(size.width * 0.015, size.height * 0.03),
+              child: ImageFiltered(
+                imageFilter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                child: ClipPath(
+                  clipper: _PathClip(outline),
+                  child: const ColoredBox(color: Color(0x66000000)),
+                ),
               ),
             ),
-            // The rim: the crepe's thickness around the hole.
-            IgnorePointer(child: CustomPaint(painter: _RimPainter(hole))),
+            if (paper != null) ...[
+              ClipPath(
+                clipper: _PathClip((_) => Path()..addPolygon(sleeve, true)),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Color.lerp(paper, const Color(0xFFFFFFFF), 0.12)!,
+                        paper,
+                        Color.lerp(paper, const Color(0xFF000000), 0.45)!,
+                      ],
+                      stops: const [0.15, 0.5, 0.85],
+                    ),
+                  ),
+                ),
+              ),
+              // The wrap's shade on the paper beside it.
+              ImageFiltered(
+                imageFilter: ui.ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+                child: ClipPath(
+                  clipper: _PathClip((s) => cone(s).shift(Offset(lip, lip))),
+                  child: const ColoredBox(color: Color(0x80000000)),
+                ),
+              ),
+            ],
+            body,
+            inside,
+            IgnorePointer(child: CustomPaint(painter: _RimPainter(rim, lip))),
           ],
+        );
+
+        final frame = opening.frame;
+        if (frame == null || zoom <= 0) return wrap;
+        // Grow into the frame: fit it to ~94% of the box, centred.
+        final f = px(frame);
+        final fit = min(size.width / f.width, size.height / f.height) * 0.94;
+        final k = 1 + (fit - 1) * zoom;
+        final centre = Offset.lerp(f.center, size.center(Offset.zero), zoom)!;
+        return Transform(
+          transform: Matrix4.identity()
+            ..translateByDouble(
+              centre.dx - f.center.dx * k,
+              centre.dy - f.center.dy * k,
+              0,
+              1,
+            )
+            ..scaleByDouble(k, k, 1, 1),
+          child: wrap,
         );
       },
     );
   }
 }
 
+/// The rim: the crepe's thin cut edge, a little lighter than the walls
+/// (their texture shows through), toasted darker on its outer side.
 class _RimPainter extends CustomPainter {
-  const _RimPainter(this.hole);
+  const _RimPainter(this.rim, this.lip);
 
-  final Rect hole;
+  final Rect rim;
+  final double lip;
 
   @override
   void paint(Canvas canvas, Size size) {
     canvas.drawOval(
-      hole.inflate(1.5),
+      rim.inflate(lip / 2),
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 5
-        ..color = const Color(0xFFEBCB93),
+        ..strokeWidth = lip
+        ..color = const Color(0x40FFF1D6),
     );
     canvas.drawOval(
-      hole.inflate(4),
+      rim.inflate(lip),
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5
-        ..color = const Color(0x66000000),
+        ..strokeWidth = 1
+        ..color = const Color(0x598A5A2B),
+    );
+    // Where the inner wall goes down.
+    canvas.drawOval(
+      rim,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.8
+        ..color = const Color(0x403A2410),
     );
   }
 
   @override
-  bool shouldRepaint(_RimPainter oldDelegate) => oldDelegate.hole != hole;
+  bool shouldRepaint(_RimPainter oldDelegate) =>
+      oldDelegate.rim != rim || oldDelegate.lip != lip;
 }
 
 /// Lit creases along fold lines, drawn only inside the folded wrap.

@@ -84,4 +84,59 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: SizedBox()));
     expect(events, [AnimEvent.started, AnimEvent.cancelled]);
   });
+
+  testWidgets('each step gets only the images it declares', (tester) async {
+    final first = <Set<String>>[], second = <Set<String>>[];
+    final plan = planSequence(
+      sequence: const StepSequence([
+        StepSpec(
+          step: 'A',
+          params: {
+            'images': {'surface': 'griddle_surface'},
+          },
+        ),
+        StepSpec(
+          step: 'B',
+          params: {
+            'images': {'back': 'crepe_back'},
+          },
+        ),
+      ]),
+      registry: {'A': _Recorder(first), 'B': _Recorder(second)},
+      total: const Duration(milliseconds: 1000),
+      reduceMotion: false,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: StepRunner(
+          steps: plan.steps,
+          total: plan.total,
+          input: const AnimStepInput(
+            product: SizedBox(),
+            productRect: Rect.zero,
+            images: {
+              'surface': ['surface.webp'],
+              'back': ['back.webp'],
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(first.last, {'surface'});
+    expect(second.last, {'back'}, reason: 'no surface under a later step');
+  });
+}
+
+/// Records which image roles a step was given.
+class _Recorder implements AnimStep {
+  _Recorder(this.seen);
+
+  final List<Set<String>> seen;
+
+  @override
+  Widget build(BuildContext context, AnimFrame frame, AnimStepInput input) {
+    seen.add(input.images.keys.toSet());
+    return const SizedBox.shrink();
+  }
 }

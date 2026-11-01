@@ -27,7 +27,8 @@ class FoldStep implements AnimStep {
     final perspective = (p['perspective'] as num?)?.toDouble() ?? 0.0015;
     final rect = input.productRect;
     final back = backImage(input);
-    final opening = WrapOpening.from(p['opening']);
+    // Folded on the griddle: it goes into its paper only when served.
+    final opening = WrapOpening.from(p['opening'])?.unwrapped;
     final baked = Cooked(amount: 1, child: input.product);
     if (lines.isEmpty) {
       return Stack(
@@ -159,13 +160,15 @@ class FoldStep implements AnimStep {
                   // finished look (outside all round, contents inside).
                   if (stage == lines.length && opening != null)
                     Opacity(
-                      opacity: interval(t, 0.8, 1),
+                      opacity: interval(t, 0.76, 0.86),
                       child: Folded(
                         lines: lines,
                         count: lines.length,
                         product: baked,
                         back: back,
                         opening: opening,
+                        // It grows into its frame as it settles.
+                        zoom: interval(t, 0.8, 1, Curves.easeOut),
                       ),
                     ),
                 ],

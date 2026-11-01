@@ -81,12 +81,17 @@ DRIZZLED = [('nutella', 48, 0.085), ('white_chocolate', 27, 0.12)]
 # point at the straight edge (owner: an upside-down triangle) and open
 # towards the top, where the filling shows.
 CONE = [[0.50, 0.75, 0.13, 0.26], [0.87, 0.26, 0.50, 0.75]]
-# The open top of the cone: an oval hole under the rim (ellipse cx, cy,
-# rx, ry) filled by the filling area of the half moon (contents x0, y0, x1,
-# y1); the outside of the cone is crepe all round, so the filling shows only
-# inside it, like a wrapped crepe.
-OPENING = {'ellipse': [0.5, 0.37, 0.235, 0.085],
-           'contents': [0.29, 0.5, 0.71, 0.66]}
+# The open top of the cone: the rim is its top edge (ellipse cx, cy, rx, ry,
+# as wide as the cone there), filled by the filling area of the half moon
+# (contents x0, y0, x1, y1); the outside is crepe all round, so the filling
+# shows only inside the rim, like a wrapped crepe.
+OPENING = {'ellipse': [0.5, 0.37, 0.285, 0.095],
+           'contents': [0.29, 0.5, 0.71, 0.66],
+           # The finished cone (with its paper) grows into this frame to
+           # fill the space.
+           'frame': [0.16, 0.25, 0.86, 0.77],
+           # Served in a kraft paper cone, like the owner's reference photo.
+           'sleeve': '#9C7650'}
 
 # Shown on the home page after the pizza.
 CATEGORY_ORDER = 1
@@ -168,11 +173,12 @@ def main() -> None:
             {'step': 'Swap', 'weight': 300, 'params': {
                 'durationMs': 300, 'folds': 2, 'lines': CONE, 'opening': OPENING,
                 'images': {'back': 'crepe_back'}}},
+            # Served (in its paper): the griddle and the dim Swap cleared
+            # stay away.
             {'step': 'Shrink', 'weight': 350, 'params': {
                 'durationMs': 350, 'folds': 2, 'lines': CONE, 'opening': OPENING,
-                'shrinkTo': 0.85,
-                'images': {'back': 'crepe_back',
-                           'surface': 'griddle_surface'}}},
+                'shrinkTo': 0.85, 'scrimMaxPct': 0,
+                'images': {'back': 'crepe_back'}}},
             {'step': 'FlyToCart', 'weight': 800, 'params': {
                 'durationMs': 800, 'folds': 2, 'lines': CONE, 'opening': OPENING,
                 'shrinkTo': 0.2, 'arcControlPct': 20, 'rotateDeg': -12,

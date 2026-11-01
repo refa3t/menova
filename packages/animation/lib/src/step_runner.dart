@@ -151,12 +151,19 @@ class _StepRunnerState extends State<StepRunner>
         start += len;
       }
     }
+    // A step sees only the image roles it declares (its `images` param), so
+    // a surface one step draws does not come back under a later step.
+    final declared = step.params['images'];
     final input = AnimStepInput(
       product: widget.input.product,
       productRect: widget.input.productRect,
       cartTarget: widget.input.cartTarget,
       params: step.params,
-      images: widget.input.images,
+      images: {
+        if (declared is Map)
+          for (final role in declared.keys)
+            '$role': ?widget.input.images['$role'],
+      },
       reduceMotion: widget.input.reduceMotion,
     );
     return GestureDetector(
