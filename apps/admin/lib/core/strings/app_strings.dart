@@ -28,6 +28,7 @@ abstract final class AppStrings {
     AdminArea.ingredients => 'المكونات وأسعار الإضافات',
     AdminArea.assets => 'الصور',
     AdminArea.categories => 'الأقسام: الظهور والترتيب',
+    AdminArea.offers => 'العروض والكوبونات',
     AdminArea.catalogCheck => 'فحص المنيو',
     AdminArea.settings => 'إعدادات المطعم والتوصيل',
     AdminArea.reports => 'التقارير والمبيعات',
@@ -144,8 +145,93 @@ abstract final class AppStrings {
     'setCategoryVisibility' => 'ظهور/ترتيب قسم',
     'saveStoreSettings' => 'إعدادات المطعم',
     'validateCatalog' => 'إيقاف بعد فحص المنيو',
+    'saveOffer' => 'تعديل عرض',
+    'saveCoupon' => 'تعديل كوبون',
     _ => a,
   };
+  // Offers and coupons (P3-09).
+  static const offers = 'العروض والكوبونات';
+  static const autoOffers = 'العروض التلقائية';
+  static const autoOffersNote =
+      'تُطبَّق وحدها على كل طلب يستوفي شروطها في فترتها.';
+  static const coupons = 'الكوبونات';
+  static const couponsNote =
+      'يكتب العميل الكود في صفحة الطلب. كل طلب يأخذ عرضاً واحداً: الأكبر خصماً.';
+  static const newOffer = 'عرض جديد';
+  static const newCoupon = 'كوبون جديد';
+  static const editOffer = 'تعديل العرض';
+  static const editCoupon = 'تعديل الكوبون';
+  static const noOffers = 'لا توجد عروض بعد';
+  static const noCoupons = 'لا توجد كوبونات بعد';
+  static const offerKind = 'نوع الخصم';
+  static String kind(OfferKind k) => switch (k) {
+    OfferKind.percent => 'نسبة مئوية',
+    OfferKind.amount => 'مبلغ ثابت',
+    OfferKind.freeDelivery => 'توصيل مجاني',
+  };
+  static const percentValue = 'النسبة (%)';
+  static const amountValue = 'المبلغ (ج.م)';
+  static const appliesTo = 'يُطبَّق على';
+  static const wholeOrder = 'كل الطلب';
+  static const minOrder = 'حد أدنى للطلب (ج.م، اختياري)';
+  static const maxDiscountField = 'حد أقصى للخصم (ج.م، اختياري)';
+  static const startDate = 'يبدأ';
+  static const endDate = 'آخر يوم';
+  static const noDate = 'بدون';
+  static const pick = 'اختر';
+  static const clear = 'مسح';
+  static const activeLabel = 'مفعّل';
+  static const couponCodeLabel = 'الكود (حروف إنجليزية وأرقام)';
+  static const maxUsesField = 'عدد مرات الاستخدام (اختياري)';
+  static const codeTaken = 'هذا الكود مستخدم لكوبون آخر';
+  static String usedTimes(int uses, int? max) =>
+      max == null ? 'استُخدم $uses مرة' : 'استُخدم $uses من $max';
+
+  /// Where an offer stands now.
+  static String offerState(Offer o, DateTime now) {
+    final ms = now.millisecondsSinceEpoch;
+    if (!o.isActive) return 'متوقف';
+    if (o.startsAtMs case final s? when ms < s) return 'لم يبدأ';
+    if (o.endsAtMs case final e? when ms >= e) return 'انتهى';
+    if (o.maxUses case final m? when o.uses >= m) return 'نفد';
+    return 'يعمل الآن';
+  }
+
+  /// One line on what an offer gives and when ([category]: its name).
+  static String offerSummary(Offer o, String? category) {
+    final scope = category == null ? wholeOrder : 'قسم $category';
+    final cap = o.maxDiscount == null
+        ? ''
+        : ' بحد أقصى ${price(o.maxDiscount!)}';
+    final parts = [
+      switch (o.kind) {
+        OfferKind.percent => '${o.value}% على $scope$cap',
+        OfferKind.amount => '${price(o.value)} خصم على $scope',
+        OfferKind.freeDelivery =>
+          category == null
+              ? 'توصيل مجاني$cap'
+              : 'توصيل مجاني لطلبات $category$cap',
+      },
+      if (o.minSubtotal > 0) 'لطلبات من ${price(o.minSubtotal)}',
+      if (o.startsAtMs case final s?)
+        'من ${date(DateTime.fromMillisecondsSinceEpoch(s))}',
+      if (o.endsAtMs case final e?)
+        'حتى ${date(DateTime.fromMillisecondsSinceEpoch(e - 1))}',
+    ];
+    return parts.join(' · ');
+  }
+
+  /// A whole number typed by the admin (Arabic or Latin digits); null if it
+  /// is not one.
+  static int? parseCount(String text) {
+    const arabic = '٠١٢٣٤٥٦٧٨٩';
+    final latin = text.trim().split('').map((c) {
+      final i = arabic.indexOf(c);
+      return i >= 0 ? '$i' : c;
+    }).join();
+    return RegExp(r'^\d{1,6}$').hasMatch(latin) ? int.parse(latin) : null;
+  }
+
   // Reports (P3-08).
   static const reports = 'التقارير والمبيعات';
   static String lastDaysLabel(int n) =>
@@ -160,6 +246,7 @@ abstract final class AppStrings {
   static const ordersLabel = 'الطلبات';
   static const salesLabel = 'المبيعات';
   static const deliveryFees = 'منها رسوم التوصيل';
+  static const discounts = 'خصومات العروض';
   static const averageOrder = 'متوسط الطلب';
   static const dailySales = 'المبيعات اليومية (ج.م)';
   static const weeklySales = 'المبيعات الأسبوعية';
@@ -266,6 +353,12 @@ abstract final class AppStrings {
       'extraPrice' => 'سعر الإضافة لا يكون سالباً',
       'assetId' => 'اختر صورة من صور المكونات',
       'sizeMultipliers' => 'معامل الحجم غير صحيح',
+      'value' => 'القيمة: النسبة من 1 إلى 100، والمبلغ 1 ج.م على الأقل',
+      'endsAtMs' => 'آخر يوم قبل يوم البداية',
+      'maxDiscount' => 'الحد الأقصى للخصم 1 ج.م على الأقل',
+      'maxUses' => 'عدد مرات الاستخدام 1 على الأقل',
+      'code' => 'الكود من 3 إلى 20 حرفاً إنجليزياً أو رقماً أو شرطة',
+      'minSubtotal' => 'الحد الأدنى للطلب لا يكون سالباً',
       _ => path,
     };
   }

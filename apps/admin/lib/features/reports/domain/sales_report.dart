@@ -14,22 +14,29 @@ bool countsAsSale(Order o) =>
     o.paymentStatus != PaymentStatus.refunded;
 
 /// Totals of sold orders from their frozen prices (SEC-03): the items'
-/// totals and the delivery fees.
+/// totals, the discounts offers took off (P3-09) and the delivery fees.
 class SalesTotals {
-  const SalesTotals({this.orders = 0, this.items = 0, this.delivery = 0});
+  const SalesTotals({
+    this.orders = 0,
+    this.items = 0,
+    this.discount = 0,
+    this.delivery = 0,
+  });
 
   final int orders;
   final Piasters items;
+  final Piasters discount;
   final Piasters delivery;
 
-  Piasters get sales => items + delivery;
+  Piasters get sales => items - discount + delivery;
 
   /// Sales per order; 0 without orders.
   Piasters get average => orders == 0 ? 0 : (sales / orders).round();
 
   SalesTotals plus(Order o) => SalesTotals(
     orders: orders + 1,
-    items: items + o.items.fold(0, (s, i) => s + i.price.total),
+    items: items + o.itemsTotal,
+    discount: discount + o.discount,
     delivery: delivery + o.deliveryFee,
   );
 }

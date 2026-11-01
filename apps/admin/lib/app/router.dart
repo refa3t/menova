@@ -17,6 +17,9 @@ import '../features/catalog/presentation/product_edit_screen.dart';
 import '../features/catalog/presentation/products_screen.dart';
 import '../features/catalog/presentation/settings_screen.dart';
 import '../features/home/presentation/home_screen.dart';
+import '../features/offers/data/offers_providers.dart';
+import '../features/offers/presentation/offer_edit_screen.dart';
+import '../features/offers/presentation/offers_screen.dart';
 import '../features/reports/presentation/reports_screen.dart';
 import 'area_routes.dart';
 
@@ -57,6 +60,32 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/reports',
         builder: (context, state) => const ReportsScreen(),
+      ),
+      GoRoute(
+        path: '/offers',
+        builder: (context, state) => const OffersScreen(),
+      ),
+      GoRoute(
+        path: '/offers/new',
+        builder: (context, state) => OfferEditScreen(
+          list: state.uri.queryParameters['coupon'] == '1'
+              ? OfferList.coupons
+              : OfferList.auto,
+        ),
+      ),
+      GoRoute(
+        path: '/offers/auto/:id',
+        builder: (context, state) => OfferEditScreen(
+          list: OfferList.auto,
+          id: state.pathParameters['id'],
+        ),
+      ),
+      GoRoute(
+        path: '/offers/coupon/:id',
+        builder: (context, state) => OfferEditScreen(
+          list: OfferList.coupons,
+          id: state.pathParameters['id'],
+        ),
       ),
       GoRoute(
         path: '/check',

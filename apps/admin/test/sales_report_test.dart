@@ -186,6 +186,33 @@ void main() {
     );
   });
 
+  test('sales take off what offers discounted (P3-09)', () {
+    final p = placed(DateTime(2026, 11, 1, 10), [
+      item('p_a', 'A', base: 20000),
+    ], deliveryFee: 3000);
+    final o = p.order;
+    final discounted = PlacedOrder(
+      Order.fromJson({
+        ...o.toJson(),
+        'discount': 2000,
+        'total': o.total - 2000,
+        'offer': const OrderOffer(
+          id: 'o1',
+          name: '10%',
+          kind: OfferKind.percent,
+          value: 10,
+        ).toJson(),
+      }),
+      p.at,
+    );
+    final r = SalesReport.build([discounted], from: period.from, to: period.to);
+    expect(r.totals.items, 20000);
+    expect(r.totals.discount, 2000);
+    expect(r.totals.delivery, 3000);
+    expect(r.totals.sales, 21000);
+    expect(r.days.last.totals.sales, 21000);
+  });
+
   test('extras count per unit of the item', () {
     final r = SalesReport.build(
       [

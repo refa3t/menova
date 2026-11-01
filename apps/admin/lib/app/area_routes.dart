@@ -6,6 +6,7 @@ const areaRoutes = {
   AdminArea.ingredients: '/ingredients',
   AdminArea.assets: '/assets',
   AdminArea.categories: '/categories',
+  AdminArea.offers: '/offers',
   AdminArea.catalogCheck: '/check',
   AdminArea.settings: '/settings',
   AdminArea.reports: '/reports',

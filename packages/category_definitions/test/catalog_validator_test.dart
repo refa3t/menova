@@ -200,4 +200,121 @@ void main() {
       'ingredient:i2',
     ]);
   });
+
+  test('offers and coupons stay within the rules (P3-09)', () {
+    List<String> paths(Offer o) => [
+      for (final i in validateOffer(o, categoryIds: {'cat'})) i.path,
+    ];
+    const ok = Offer(
+      id: 'o1',
+      name: 'TEMP offer',
+      kind: OfferKind.percent,
+      value: 10,
+    );
+    expect(paths(ok), isEmpty);
+    expect(
+      paths(
+        const Offer(
+          id: 'c',
+          name: 'TEMP',
+          kind: OfferKind.amount,
+          value: 2000,
+          categoryId: 'cat',
+          code: 'EID-26',
+          maxUses: 50,
+        ),
+      ),
+      isEmpty,
+    );
+    expect(
+      paths(
+        const Offer(id: 'o', name: 'x', kind: OfferKind.percent, value: 10),
+      ),
+      ['name'],
+    );
+    expect(
+      paths(
+        const Offer(id: 'o', name: 'TEMP', kind: OfferKind.percent, value: 0),
+      ),
+      ['value'],
+    );
+    expect(
+      paths(
+        const Offer(id: 'o', name: 'TEMP', kind: OfferKind.amount, value: 50),
+      ),
+      ['value'],
+    );
+    expect(
+      paths(
+        const Offer(
+          id: 'o',
+          name: 'TEMP',
+          kind: OfferKind.freeDelivery,
+          value: 5,
+        ),
+      ),
+      ['value'],
+    );
+    expect(
+      paths(
+        const Offer(
+          id: 'o',
+          name: 'TEMP',
+          kind: OfferKind.percent,
+          value: 5,
+          categoryId: 'other',
+        ),
+      ),
+      ['categoryId'],
+    );
+    expect(
+      paths(
+        const Offer(
+          id: 'o',
+          name: 'TEMP',
+          kind: OfferKind.percent,
+          value: 5,
+          startsAtMs: 10,
+          endsAtMs: 10,
+        ),
+      ),
+      ['endsAtMs'],
+    );
+    expect(
+      paths(
+        const Offer(
+          id: 'o',
+          name: 'TEMP',
+          kind: OfferKind.percent,
+          value: 5,
+          maxDiscount: 50,
+        ),
+      ),
+      ['maxDiscount'],
+    );
+    expect(
+      paths(
+        const Offer(
+          id: 'o',
+          name: 'TEMP',
+          kind: OfferKind.percent,
+          value: 5,
+          maxUses: 3,
+        ),
+      ),
+      ['maxUses'],
+    );
+    expect(
+      paths(
+        const Offer(
+          id: 'c',
+          name: 'TEMP',
+          kind: OfferKind.percent,
+          value: 5,
+          code: 'eid',
+        ),
+      ),
+      ['code'],
+    );
+  });
 }

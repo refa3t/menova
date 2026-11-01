@@ -93,6 +93,50 @@ List<DefinitionIssue> validateIngredient(
   return issues;
 }
 
+/// Validates an offer or coupon the admin edits (P3-09), as the Firestore
+/// rules do (`validOffer`): a category must be one of [categoryIds].
+List<DefinitionIssue> validateOffer(
+  Offer o, {
+  required Set<String> categoryIds,
+}) {
+  final issues = <DefinitionIssue>[];
+  void issue(String path, String message) =>
+      issues.add(DefinitionIssue(path, message));
+  final name = o.name.trim();
+  if (name.length < 2 || name.length > 60) issue('name', 'must be 2-60');
+  for (final e in o.names.entries) {
+    if (e.value.trim().isEmpty) issue('names.${e.key}', 'must not be empty');
+  }
+  switch (o.kind) {
+    case OfferKind.percent when o.value < 1 || o.value > 100:
+      issue('value', 'percent must be 1-100');
+    case OfferKind.amount when o.value < 100:
+      issue('value', 'amount must be at least 1 EGP');
+    case OfferKind.freeDelivery when o.value != 0:
+      issue('value', 'free delivery has no value');
+    default:
+  }
+  if (o.categoryId case final c? when !categoryIds.contains(c)) {
+    issue('categoryId', 'unknown category "$c"');
+  }
+  if (o.minSubtotal < 0) issue('minSubtotal', 'must be >= 0');
+  if (o.maxDiscount case final m? when m < 100) {
+    issue('maxDiscount', 'must be at least 1 EGP');
+  }
+  if (o.startsAtMs case final s?) {
+    if (o.endsAtMs case final e? when e <= s) {
+      issue('endsAtMs', 'must be after the start');
+    }
+  }
+  if (o.maxUses case final m? when m < 1) issue('maxUses', 'must be >= 1');
+  if (o.code case final code?) {
+    if (couponCode(code) != code) issue('code', 'must be 3-20 of A-Z 0-9 -');
+  } else if (o.maxUses != null) {
+    issue('maxUses', 'only a coupon counts uses');
+  }
+  return issues;
+}
+
 /// What the admin panel learned about a picked image before upload (P3-04).
 class AssetFile {
   const AssetFile({

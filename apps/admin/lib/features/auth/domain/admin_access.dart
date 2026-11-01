@@ -21,6 +21,7 @@ enum AdminArea {
   ingredients,
   assets,
   categories,
+  offers,
   catalogCheck,
   settings,
   reports,
@@ -36,6 +37,7 @@ bool canManage(AdminRole role, AdminArea area) => switch (role) {
     AdminArea.ingredients ||
     AdminArea.assets ||
     AdminArea.categories ||
+    AdminArea.offers ||
     AdminArea.catalogCheck => true,
     AdminArea.settings || AdminArea.reports || AdminArea.audit => false,
   },

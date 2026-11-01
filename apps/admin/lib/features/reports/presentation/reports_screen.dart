@@ -168,6 +168,11 @@ class _ReportBody extends StatelessWidget {
                   w,
                 ),
                 _StatTile(
+                  AppStrings.discounts,
+                  AppStrings.amount(t.discount),
+                  w,
+                ),
+                _StatTile(
                   AppStrings.averageOrder,
                   AppStrings.amount(t.average),
                   w,
