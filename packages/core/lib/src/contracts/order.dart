@@ -1,6 +1,7 @@
 import '../models/json.dart';
-import '../models/store_settings.dart';
 import '../models/money.dart';
+import '../models/offer.dart';
+import '../models/store_settings.dart';
 import 'price_breakdown.dart';
 import 'selection.dart';
 
@@ -232,6 +233,103 @@ class StatusChange {
   int get hashCode => Object.hash(field, value, by, at, reason);
 }
 
+/// The offer an order got, frozen at order time (SEC-03): enough to
+/// recompute its discount (reception, SEC-02) whatever the offer becomes.
+class OrderOffer {
+  const OrderOffer({
+    required this.id,
+    required this.name,
+    required this.kind,
+    required this.value,
+    this.categoryId,
+    this.minSubtotal = 0,
+    this.maxDiscount,
+    this.code,
+  });
+
+  factory OrderOffer.of(Offer o) => OrderOffer(
+    id: o.id,
+    name: o.name,
+    kind: o.kind,
+    value: o.value,
+    categoryId: o.categoryId,
+    minSubtotal: o.minSubtotal,
+    maxDiscount: o.maxDiscount,
+    code: o.code,
+  );
+
+  final String id;
+  final String name;
+  final OfferKind kind;
+  final int value;
+  final String? categoryId;
+  final Piasters minSubtotal;
+  final Piasters? maxDiscount;
+
+  /// Set when the offer was a coupon.
+  final String? code;
+
+  /// The offer as it was when ordered, to recompute the discount.
+  Offer get asOffer => Offer(
+    id: id,
+    name: name,
+    kind: kind,
+    value: value,
+    categoryId: categoryId,
+    minSubtotal: minSubtotal,
+    maxDiscount: maxDiscount,
+    code: code,
+  );
+
+  factory OrderOffer.fromJson(Json j) => OrderOffer(
+    id: req(j, 'id'),
+    name: req(j, 'name'),
+    kind: OfferKind.values.byName(req(j, 'kind')),
+    value: req(j, 'value'),
+    categoryId: opt(j, 'categoryId'),
+    minSubtotal: opt(j, 'minSubtotal') ?? 0,
+    maxDiscount: opt(j, 'maxDiscount'),
+    code: opt(j, 'code'),
+  );
+
+  /// Every field, nulls included: the Firestore rules compare them with
+  /// the offer.
+  Json toJson() => {
+    'id': id,
+    'name': name,
+    'kind': kind.name,
+    'value': value,
+    'categoryId': categoryId,
+    'minSubtotal': minSubtotal,
+    'maxDiscount': maxDiscount,
+    'code': code,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      other is OrderOffer &&
+      other.id == id &&
+      other.name == name &&
+      other.kind == kind &&
+      other.value == value &&
+      other.categoryId == categoryId &&
+      other.minSubtotal == minSubtotal &&
+      other.maxDiscount == maxDiscount &&
+      other.code == code;
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    name,
+    kind,
+    value,
+    categoryId,
+    minSubtotal,
+    maxDiscount,
+    code,
+  );
+}
+
 /// A confirmed order. Written by the server only (SEC-01).
 class Order {
   const Order({
@@ -251,6 +349,8 @@ class Order {
     required this.createdAt,
     this.notes = '',
     this.history = const [],
+    this.discount = 0,
+    this.offer,
   });
 
   final String id;
@@ -268,6 +368,15 @@ class Order {
 
   /// Snapshot computed by the server; never trusted from a client (SEC-02).
   final Piasters total;
+
+  /// Taken off by [offer], 0 without one: total = items − discount + fee.
+  final Piasters discount;
+
+  /// The one offer applied (P3-09), frozen; null for none.
+  final OrderOffer? offer;
+
+  /// The items' frozen totals, before any discount and delivery.
+  Piasters get itemsTotal => items.fold(0, (s, i) => s + i.price.total);
 
   /// Definition version per category id at order time.
   final Map<String, int> definitionVersions;
@@ -297,6 +406,8 @@ class Order {
     history: j['history'] == null
         ? const []
         : reqList(j, 'history', StatusChange.fromJson),
+    discount: opt(j, 'discount') ?? 0,
+    offer: j['offer'] == null ? null : OrderOffer.fromJson(req(j, 'offer')),
   );
 
   Json toJson() => {
@@ -316,6 +427,8 @@ class Order {
     'createdAt': createdAt,
     'notes': notes,
     'history': [for (final h in history) h.toJson()],
+    // Only with an offer: an order without one keeps its earlier shape.
+    if (offer != null) ...{'discount': discount, 'offer': offer!.toJson()},
   };
 
   @override
@@ -336,7 +449,9 @@ class Order {
       other.rulesVersion == rulesVersion &&
       other.createdAt == createdAt &&
       other.notes == notes &&
-      listEq(other.history, history);
+      listEq(other.history, history) &&
+      other.discount == discount &&
+      other.offer == offer;
 
   @override
   int get hashCode => Object.hash(
@@ -356,5 +471,7 @@ class Order {
     createdAt,
     notes,
     Object.hashAll(history),
+    discount,
+    offer,
   );
 }

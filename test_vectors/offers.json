@@ -1,0 +1,114 @@
+{
+  "_note": "Golden vectors for offers (P3-09): the discount one offer gives an order, from pricing offerDiscount. Amounts in piasters, times in epoch ms. Each case's offer is completed with id and name by the runner.",
+  "rules": { "roundingStep": 100 },
+  "cases": [
+    {
+      "name": "percent of the whole order, rounded once half up",
+      "offer": { "kind": "percent", "value": 10 },
+      "order": { "items": { "cat_a": 25500 }, "deliveryFee": 2500, "atMs": 1000 },
+      "expect": { "discount": 2600 }
+    },
+    {
+      "name": "percent below half a pound rounds down",
+      "offer": { "kind": "percent", "value": 10 },
+      "order": { "items": { "cat_a": 25400 }, "atMs": 1000 },
+      "expect": { "discount": 2500 }
+    },
+    {
+      "name": "percent stops at its cap",
+      "offer": { "kind": "percent", "value": 50, "maxDiscount": 5000 },
+      "order": { "items": { "cat_a": 30000 }, "atMs": 1000 },
+      "expect": { "discount": 5000 }
+    },
+    {
+      "name": "fixed amount",
+      "offer": { "kind": "amount", "value": 2000 },
+      "order": { "items": { "cat_a": 15000 }, "atMs": 1000 },
+      "expect": { "discount": 2000 }
+    },
+    {
+      "name": "an amount never takes the items below zero",
+      "offer": { "kind": "amount", "value": 20000 },
+      "order": { "items": { "cat_a": 15000 }, "deliveryFee": 3000, "atMs": 1000 },
+      "expect": { "discount": 15000 }
+    },
+    {
+      "name": "one category's items only",
+      "offer": { "kind": "percent", "value": 15, "categoryId": "cat_b" },
+      "order": { "items": { "cat_a": 20000, "cat_b": 10000 }, "atMs": 1000 },
+      "expect": { "discount": 1500 }
+    },
+    {
+      "name": "a category offer without that category's items",
+      "offer": { "kind": "amount", "value": 2000, "categoryId": "cat_b" },
+      "order": { "items": { "cat_a": 20000 }, "atMs": 1000 },
+      "expect": { "miss": "noEligibleItems" }
+    },
+    {
+      "name": "minimum order not reached",
+      "offer": { "kind": "percent", "value": 10, "minSubtotal": 20000 },
+      "order": { "items": { "cat_a": 19900 }, "atMs": 1000 },
+      "expect": { "miss": "belowMinimum" }
+    },
+    {
+      "name": "minimum order reached exactly, across categories",
+      "offer": { "kind": "percent", "value": 10, "minSubtotal": 20000, "categoryId": "cat_b" },
+      "order": { "items": { "cat_a": 15000, "cat_b": 5000 }, "atMs": 1000 },
+      "expect": { "discount": 500 }
+    },
+    {
+      "name": "free delivery takes the fee",
+      "offer": { "kind": "freeDelivery" },
+      "order": { "items": { "cat_a": 15000 }, "deliveryFee": 3600, "atMs": 1000 },
+      "expect": { "discount": 3600 }
+    },
+    {
+      "name": "free delivery on pickup gives nothing",
+      "offer": { "kind": "freeDelivery" },
+      "order": { "items": { "cat_a": 15000 }, "deliveryFee": 0, "atMs": 1000 },
+      "expect": { "miss": "nothingToTake" }
+    },
+    {
+      "name": "free delivery for one category's orders",
+      "offer": { "kind": "freeDelivery", "categoryId": "cat_b" },
+      "order": { "items": { "cat_a": 15000 }, "deliveryFee": 3600, "atMs": 1000 },
+      "expect": { "miss": "noEligibleItems" }
+    },
+    {
+      "name": "not started yet",
+      "offer": { "kind": "percent", "value": 10, "startsAtMs": 2000 },
+      "order": { "items": { "cat_a": 15000 }, "atMs": 1000 },
+      "expect": { "miss": "notStarted" }
+    },
+    {
+      "name": "the end is exclusive",
+      "offer": { "kind": "percent", "value": 10, "startsAtMs": 0, "endsAtMs": 1000 },
+      "order": { "items": { "cat_a": 15000 }, "atMs": 1000 },
+      "expect": { "miss": "ended" }
+    },
+    {
+      "name": "inside its dates",
+      "offer": { "kind": "percent", "value": 10, "startsAtMs": 1000, "endsAtMs": 1001 },
+      "order": { "items": { "cat_a": 15000 }, "atMs": 1000 },
+      "expect": { "discount": 1500 }
+    },
+    {
+      "name": "stopped by the admin",
+      "offer": { "kind": "amount", "value": 1000, "isActive": false },
+      "order": { "items": { "cat_a": 15000 }, "atMs": 1000 },
+      "expect": { "miss": "inactive" }
+    },
+    {
+      "name": "a coupon used up",
+      "offer": { "kind": "amount", "value": 1000, "code": "WELCOME", "maxUses": 3, "uses": 3 },
+      "order": { "items": { "cat_a": 15000 }, "atMs": 1000 },
+      "expect": { "miss": "usedUp" }
+    },
+    {
+      "name": "a coupon with uses left",
+      "offer": { "kind": "amount", "value": 1000, "code": "WELCOME", "maxUses": 3, "uses": 2 },
+      "order": { "items": { "cat_a": 15000 }, "atMs": 1000 },
+      "expect": { "discount": 1000 }
+    }
+  ]
+}

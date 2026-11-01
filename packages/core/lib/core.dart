@@ -10,4 +10,5 @@ export 'src/models/catalog.dart';
 export 'src/models/category_definition.dart';
 export 'src/models/json.dart' show Json;
 export 'src/models/money.dart';
+export 'src/models/offer.dart';
 export 'src/models/store_settings.dart';
