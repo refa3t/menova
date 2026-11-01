@@ -185,6 +185,88 @@ service cloud.firestore {
       allow create, delete: if false;
     }
 
+    // Offers and coupons (P3-09): the same shape (core Offer), every key
+    // written, nulls included. Admins manage them, audited.
+    function validOffer(d, id) {
+      return d.keys().hasOnly(['id', 'name', 'names', 'kind', 'value',
+                               'categoryId', 'minSubtotal', 'maxDiscount',
+                               'startsAtMs', 'endsAtMs', 'isActive', 'code',
+                               'maxUses', 'uses', 'lastOrderId', 'lastAuditId'])
+          && d.keys().hasAll(['id', 'name', 'names', 'kind', 'value',
+                              'categoryId', 'minSubtotal', 'maxDiscount',
+                              'startsAtMs', 'endsAtMs', 'isActive', 'code',
+                              'maxUses', 'uses'])
+          && d.id == id
+          && d.name is string && d.name.size() >= 2 && d.name.size() <= 60
+          && d.names is map
+          && d.kind in ['percent', 'amount', 'freeDelivery']
+          && d.value is int
+          && (d.kind != 'percent' || (d.value >= 1 && d.value <= 100))
+          && (d.kind != 'amount' || d.value >= 100)
+          && (d.kind != 'freeDelivery' || d.value == 0)
+          // A category the developer defined.
+          && (d.categoryId == null
+              || exists(/databases/$(database)/documents/categoryContent/$(d.categoryId)))
+          && d.minSubtotal is int && d.minSubtotal >= 0
+          && (d.maxDiscount == null
+              || (d.maxDiscount is int && d.maxDiscount >= 100))
+          && (d.startsAtMs == null || d.startsAtMs is int)
+          && (d.endsAtMs == null || d.endsAtMs is int)
+          && (d.startsAtMs == null || d.endsAtMs == null
+              || d.startsAtMs < d.endsAtMs)
+          && d.isActive is bool
+          && (d.maxUses == null || (d.maxUses is int && d.maxUses >= 1))
+          && d.uses is int && d.uses >= 0;
+    }
+
+    // Automatic offers: public, for every order in their dates.
+    match /offers/{offerId} {
+      allow read: if true;
+      allow create, update: if isAdmin()
+          && validOffer(request.resource.data, offerId)
+          && request.resource.data.code == null
+          && request.resource.data.maxUses == null
+          && request.resource.data.uses == 0
+          && audited('offers/' + offerId, request.resource.data.lastAuditId);
+      allow delete: if false;
+    }
+
+    // Coupons, keyed by their code: a guest fetches one only by typing it;
+    // only the admin panel lists them. The admin never changes the count;
+    // each order with the coupon counts one use, in the same write.
+    match /coupons/{code} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create: if isAdmin()
+          && validOffer(request.resource.data, code)
+          && request.resource.data.code == code
+          && code.matches('^[A-Z0-9-]{3,20}$')
+          && request.resource.data.uses == 0
+          && audited('coupons/' + code, request.resource.data.lastAuditId);
+      allow update: if (isAdmin()
+              && validOffer(request.resource.data, code)
+              && request.resource.data.code == code
+              && request.resource.data.uses == resource.data.uses
+              && audited('coupons/' + code, request.resource.data.lastAuditId))
+          || couponUse(code);
+      allow delete: if false;
+    }
+
+    // One use, counted by the order created in the same write.
+    function couponUse(code) {
+      let d = request.resource.data;
+      let order = /databases/$(database)/documents/orders/$(d.lastOrderId);
+      return request.auth != null
+          && d.diff(resource.data).affectedKeys().hasOnly(['uses', 'lastOrderId'])
+          && d.uses == resource.data.uses + 1
+          && (resource.data.maxUses == null
+              || resource.data.uses < resource.data.maxUses)
+          && d.lastOrderId is string
+          && !exists(order)
+          && existsAfter(order)
+          && getAfter(order).data.offer.id == code;
+    }
+
     match /orders/{orderId} {
       function orderKeys() {
         return ['id', 'requestId', 'payloadHash', 'customerUid', 'customer',
@@ -224,10 +306,59 @@ service cloud.firestore {
             && fee == (km * s.perKm < s.minFee ? s.minFee : km * s.perKm);
       }
 
+      // P3-09: an order with an offer carries the discount and the offer's
+      // frozen snapshot, which must match the live offer; the discount stays
+      // within the offer's bounds (pricing offerDiscount; the reception
+      // recomputes it exactly, SEC-02). Total = items - discount + fee.
+      function offerOk(d) {
+        return !d.keys().hasAny(['discount', 'offer'])
+            || (d.keys().hasAll(['discount', 'offer']) && validOrderOffer(d));
+      }
+
+      function validOrderOffer(d) {
+        let o = d.offer;
+        let src = get(o.code == null
+            ? /databases/$(database)/documents/offers/$(o.id)
+            : /databases/$(database)/documents/coupons/$(o.id)).data;
+        let items = d.total + d.discount - d.deliveryFee;
+        let now = request.time.toMillis();
+        return o.keys().hasOnly(['id', 'name', 'kind', 'value', 'categoryId',
+                                 'minSubtotal', 'maxDiscount', 'code'])
+            && o.keys().hasAll(['id', 'name', 'kind', 'value', 'categoryId',
+                                'minSubtotal', 'maxDiscount', 'code'])
+            && d.discount is int && d.discount > 0
+            && src.isActive == true
+            && (src.startsAtMs == null || now >= src.startsAtMs)
+            && (src.endsAtMs == null || now < src.endsAtMs)
+            && o.kind == src.kind && o.value == src.value
+            && o.categoryId == src.categoryId
+            && o.minSubtotal == src.minSubtotal
+            && o.maxDiscount == src.maxDiscount
+            && o.code == src.code
+            && items >= src.minSubtotal
+            && (src.maxDiscount == null || d.discount <= src.maxDiscount)
+            && (src.kind != 'amount' || d.discount <= src.value)
+            // Rounded once to the pricing step (1 EGP): at most half over.
+            && (src.kind != 'percent'
+                || d.discount * 100 <= items * src.value + 5000)
+            && (src.kind == 'freeDelivery'
+                ? d.discount == d.deliveryFee
+                : d.discount <= items)
+            && (o.code == null || couponCounted(o.id));
+      }
+
+      // The coupon counts this order in the same write.
+      function couponCounted(code) {
+        let path = /databases/$(database)/documents/coupons/$(code);
+        return getAfter(path).data.uses == get(path).data.uses + 1
+            && getAfter(path).data.lastOrderId == orderId;
+      }
+
       // A guest creates their own order once, in its initial state.
       function validNewOrder(d) {
-        return d.keys().hasOnly(orderKeys())
+        return d.keys().hasOnly(orderKeys().concat(['discount', 'offer']))
             && d.keys().hasAll(orderKeys())
+            && offerOk(d)
             && d.id == orderId
             && d.requestId == orderId
             && d.customerUid == request.auth.uid

@@ -402,3 +402,141 @@ test('only the owner changes the store settings', async () => {
   await assertFails(auditedSet(staff('owner', 'own1'), 'own1', 'settings/store',
     { ...store, location: { lat: 120, lng: 31 } }));
 });
+
+// P3-09: offers and coupons (core Offer, every key written).
+function offer(id, overrides = {}) {
+  return {
+    id, name: 'TEMP offer', names: {}, kind: 'percent', value: 10,
+    categoryId: null, minSubtotal: 0, maxDiscount: null,
+    startsAtMs: null, endsAtMs: null, isActive: true,
+    code: null, maxUses: null, uses: 0,
+    ...overrides,
+  };
+}
+
+function coupon(code, overrides = {}) {
+  return offer(code, { code, maxUses: 2, ...overrides });
+}
+
+// The frozen snapshot an order keeps (core OrderOffer).
+function snapshot(o) {
+  return {
+    id: o.id, name: o.name, kind: o.kind, value: o.value,
+    categoryId: o.categoryId, minSubtotal: o.minSubtotal,
+    maxDiscount: o.maxDiscount, code: o.code,
+  };
+}
+
+// 115 EGP of items with [o] taking [discount] off.
+function withOffer(o, discount, overrides = {}) {
+  return { offer: snapshot(o), discount, total: 11500 - discount, ...overrides };
+}
+
+async function seed(path, data) {
+  await env.withSecurityRulesDisabled((ctx) => ctx.firestore().doc(path).set(data));
+}
+
+test('admins manage offers and coupons, audited (P3-09)', async () => {
+  const m = staff('menu_manager', 'mgr1');
+  await assertSucceeds(auditedSet(m, 'mgr1', 'offers/o9', offer('o9')));
+  await assertSucceeds(auditedSet(m, 'mgr1', 'offers/o9',
+    offer('o9', { kind: 'amount', value: 2000, categoryId: 'c1' })));
+  await assertSucceeds(auditedSet(staff('owner', 'own1'), 'own1',
+    'coupons/EID-26', coupon('EID-26')));
+  await assertFails(auditedSet(staff('reception', 'rec1'), 'rec1',
+    'offers/o8', offer('o8')));
+  await assertFails(auditedSet(m, 'mgr1', 'offers/o8', offer('o8', { value: 150 })));
+  await assertFails(auditedSet(m, 'mgr1', 'offers/o8',
+    offer('o8', { kind: 'amount', value: 50 })), 'at least 1 EGP');
+  await assertFails(auditedSet(m, 'mgr1', 'offers/o8',
+    offer('o8', { categoryId: 'nope' })), 'a defined category');
+  await assertFails(auditedSet(m, 'mgr1', 'offers/o8',
+    offer('o8', { startsAtMs: 5, endsAtMs: 5 })), 'ends after it starts');
+  await assertFails(auditedSet(m, 'mgr1', 'offers/o8',
+    offer('o8', { code: 'ABC' })), 'a coupon is not an automatic offer');
+  await assertFails(auditedSet(m, 'mgr1', 'coupons/eid', coupon('eid')),
+    'codes are upper case');
+  await assertFails(auditedSet(m, 'mgr1', 'coupons/ABC', coupon('ABD')),
+    'the id is the code');
+  await assertFails(auditedSet(m, 'mgr1', 'coupons/ABC',
+    coupon('ABC', { uses: 3 })), 'a new coupon starts unused');
+  await assertFails(m.doc('offers/o9').update({ value: 20 }), 'not audited');
+  await assertFails(m.doc('offers/o9').delete());
+});
+
+test('offers are public; a coupon is read only by its exact code', async () => {
+  await seed('offers/o1', offer('o1'));
+  await seed('coupons/SAVE10', coupon('SAVE10'));
+  await assertSucceeds(anon().collection('offers').where('isActive', '==', true).get());
+  await assertSucceeds(anon().doc('coupons/SAVE10').get());
+  await assertFails(anon().collection('coupons').get());
+  await assertFails(guest('g1').collection('coupons').get());
+  await assertSucceeds(staff('menu_manager', 'mgr1').collection('coupons').get());
+});
+
+test('an order gets a live offer, within its bounds', async () => {
+  const g = guest('g5');
+  await seed('offers/o1', offer('o1'));
+  // 10% of 115 EGP is 11.5, rounded once to 12.
+  await assertSucceeds(g.doc('orders/f1').set(newOrder('f1', 'g5', withOffer(offer('o1'), 1200))));
+  await assertFails(g.doc('orders/f2').set(newOrder('f2', 'g5', withOffer(offer('o1'), 1300))),
+    'more than the percent');
+  await assertFails(g.doc('orders/f2').set(newOrder('f2', 'g5',
+    withOffer(offer('o1', { value: 20 }), 2300))), 'the snapshot matches the live offer');
+  await assertFails(g.doc('orders/f2').set(newOrder('f2', 'g5', { offer: snapshot(offer('o1')) })),
+    'discount and offer go together');
+  await assertFails(g.doc('orders/f2').set(newOrder('f2', 'g5', withOffer(offer('missing'), 1200))),
+    'an offer that does not exist');
+
+  await seed('offers/o2', offer('o2', { isActive: false }));
+  await assertFails(g.doc('orders/f3').set(newOrder('f3', 'g5', withOffer(offer('o2'), 1200))),
+    'stopped');
+  await seed('offers/o3', offer('o3', { endsAtMs: Date.now() - 60000 }));
+  await assertFails(g.doc('orders/f3').set(newOrder('f3', 'g5', withOffer(offer('o3'), 1200))),
+    'ended');
+  const minimum = offer('o4', { kind: 'amount', value: 2000, minSubtotal: 20000 });
+  await seed('offers/o4', minimum);
+  await assertFails(g.doc('orders/f3').set(newOrder('f3', 'g5', withOffer(minimum, 2000))),
+    'below the minimum order');
+  const amount = offer('o6', { kind: 'amount', value: 2000 });
+  await seed('offers/o6', amount);
+  await assertFails(g.doc('orders/f3').set(newOrder('f3', 'g5', withOffer(amount, 2500))),
+    'more than the amount');
+
+  // Free delivery takes exactly the fee: items stay at 115 EGP.
+  const free = offer('o5', { kind: 'freeDelivery', value: 0 });
+  await seed('offers/o5', free);
+  await assertSucceeds(g.doc('orders/f5').set(newOrder('f5', 'g5',
+    { ...delivery(4300, 3000), offer: snapshot(free), discount: 3000, total: 11500 })));
+  await assertFails(g.doc('orders/f6').set(newOrder('f6', 'g5',
+    { ...delivery(4300, 3000), offer: snapshot(free), discount: 2000, total: 12500 })));
+});
+
+test('a coupon counts each order once, up to its limit', async () => {
+  const g = guest('g6');
+  const c = coupon('SAVE10', { kind: 'amount', value: 1000, maxUses: 1 });
+  await seed('coupons/SAVE10', c);
+  const order = (id) => newOrder(id, 'g6', withOffer(c, 1000));
+  await assertFails(g.doc('orders/c1').set(order('c1')), 'the use must be counted');
+  await assertFails(g.doc('coupons/SAVE10').update({ uses: 1, lastOrderId: 'c9' }),
+    'no use without its order');
+  const first = g.batch();
+  first.set(g.doc('orders/c1'), order('c1'));
+  first.update(g.doc('coupons/SAVE10'), { uses: 1, lastOrderId: 'c1' });
+  await assertSucceeds(first.commit());
+  const second = g.batch();
+  second.set(g.doc('orders/c2'), order('c2'));
+  second.update(g.doc('coupons/SAVE10'), { uses: 2, lastOrderId: 'c2' });
+  await assertFails(second.commit(), 'used up');
+
+  // The admin edits the coupon but never its count.
+  const m = staff('menu_manager', 'mgr1');
+  await assertSucceeds(auditedSet(m, 'mgr1', 'coupons/SAVE10', { ...c, maxUses: 5, uses: 1 }));
+  await assertFails(auditedSet(m, 'mgr1', 'coupons/SAVE10', { ...c, maxUses: 5, uses: 0 }));
+
+  // With uses left, one order still counts only one use.
+  const twice = g.batch();
+  twice.set(g.doc('orders/c3'), order('c3'));
+  twice.update(g.doc('coupons/SAVE10'), { uses: 3, lastOrderId: 'c3' });
+  await assertFails(twice.commit(), 'one use per order');
+});
