@@ -8,6 +8,7 @@ import '../../../core/strings/app_strings.dart';
 
 import '../../cart/domain/cart.dart';
 import '../../menu/domain/menu.dart';
+import '../../offers/domain/cart_offer.dart';
 
 /// A price difference found when re-pricing the cart against fresh data
 /// right before sending (scenario 4, CLAUDE.md 5.2).
@@ -146,7 +147,8 @@ abstract final class OrderBuilder {
   }
 
   /// Builds the order document. [deliveryFee] comes from pricing
-  /// `deliveryFee` (0 for pickup) and is checked by the order rules.
+  /// `deliveryFee` (0 for pickup) and is checked by the order rules; the
+  /// one [offer] (P3-09) takes its discount off, frozen with the order.
   static Order build({
     required String requestId,
     required String customerUid,
@@ -155,8 +157,10 @@ abstract final class OrderBuilder {
     required String notes,
     required DateTime now,
     int deliveryFee = 0,
+    AppliedOffer? offer,
   }) {
     final subtotal = items.fold<int>(0, (s, i) => s + i.price.total);
+    final discount = offer?.discount ?? 0;
     return Order(
       id: requestId,
       requestId: requestId,
@@ -168,7 +172,9 @@ abstract final class OrderBuilder {
       paymentStatus: PaymentStatus.unpaid,
       paymentMethod: PaymentMethod.cash,
       deliveryFee: deliveryFee,
-      total: subtotal + deliveryFee,
+      total: subtotal - discount + deliveryFee,
+      discount: discount,
+      offer: offer == null ? null : OrderOffer.of(offer.offer),
       definitionVersions: {
         for (final i in items)
           i.selection.categoryId: i.selection.definitionVersion,

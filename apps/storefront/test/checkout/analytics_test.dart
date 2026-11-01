@@ -30,6 +30,7 @@ void main() {
         sharedPreferencesProvider.overrideWithValue(prefs),
         menuProvider.overrideWith((ref) async => menuWith()),
         freshMenuProvider.overrideWithValue(() async => menuWith()),
+        freshOffersProvider.overrideWithValue(() async => const []),
         guestUidProvider.overrideWithValue(() async => 'guest-1'),
         orderGatewayProvider.overrideWithValue(gateway),
         analyticsProvider.overrideWithValue(analytics),

@@ -4,6 +4,7 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pricing/pricing.dart';
 
 import '../../../core/analytics/analytics.dart';
 import '../../../core/strings/app_strings.dart';
@@ -12,6 +13,8 @@ import '../../cart/presentation/cart_providers.dart';
 import '../../delivery/domain/delivery_quote.dart';
 import '../../delivery/presentation/delivery_controller.dart';
 import '../../menu/presentation/menu_providers.dart';
+import '../../offers/domain/cart_offer.dart';
+import '../../offers/presentation/offers_providers.dart';
 import '../domain/guest_form.dart';
 import '../domain/order_builder.dart';
 import 'checkout_controller.dart';
@@ -33,6 +36,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   final _address = TextEditingController();
   final _notes = TextEditingController();
   Fulfillment _fulfillment = Fulfillment.pickup;
+
+  /// The offer and discount on screen, checked again when confirming.
+  AppliedOffer? _shownOffer;
 
   @override
   void initState() {
@@ -108,6 +114,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           customer: _customer(quote),
           notes: _notes.text.trim(),
           shownDeliveryFee: quote?.fee ?? 0,
+          shownOffer: _shownOffer,
         );
   }
 
@@ -177,8 +184,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   bool _isDelivery(PriceDiff d) =>
       d.lineId == CheckoutController.deliveryLineId;
 
-  String _diffName(PriceDiff d) =>
-      _isDelivery(d) ? AppStrings.deliveryFee : d.productName;
+  String _diffName(PriceDiff d) => switch (d.lineId) {
+    CheckoutController.deliveryLineId => AppStrings.deliveryFee,
+    CheckoutController.discountLineId => AppStrings.discount,
+    _ => d.productName,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -200,6 +210,20 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             final v = CartLineView.resolve(l, menu);
             return s + (v.price?.total ?? 0);
           });
+    // P3-09: one offer per order, the largest discount (automatic or the
+    // guest's coupon), following the cart and the delivery fee.
+    final coupon = couponOf(ref.watch(couponProvider));
+    final basis = menu == null
+        ? null
+        : cartBasis(cart, menu, deliveryFee: fee ?? 0, now: DateTime.now());
+    final applied = basis == null
+        ? null
+        : bestOffer([
+            ...?ref.watch(activeOffersProvider).value,
+            ?coupon,
+          ], basis);
+    _shownOffer = applied;
+    final discount = applied?.discount ?? 0;
     String? message(String? key) => switch (key) {
       'name' => AppStrings.errorName,
       'phone' => AppStrings.errorPhone,
@@ -274,13 +298,26 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               decoration: InputDecoration(labelText: AppStrings.orderNotes),
             ),
             const SizedBox(height: 8),
+            _CouponField(basis: basis, applied: applied),
+            const SizedBox(height: 8),
             if (subtotal != null) ...[
-              _TotalRow(AppStrings.subtotal, subtotal),
+              _TotalRow(AppStrings.itemsTotal, subtotal),
+              if (applied != null)
+                _TotalRow(
+                  AppStrings.discountOf(
+                    AppStrings.localized(
+                      applied.offer.name,
+                      applied.offer.names,
+                    ),
+                  ),
+                  discount,
+                  minus: true,
+                ),
               if (_fulfillment == Fulfillment.delivery)
                 _TotalRow(AppStrings.deliveryFee, fee),
               _TotalRow(
                 AppStrings.orderTotal,
-                fee == null ? null : subtotal + fee,
+                fee == null ? null : subtotal - discount + fee,
                 strong: true,
               ),
             ],
@@ -329,11 +366,19 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 }
 
 class _TotalRow extends StatelessWidget {
-  const _TotalRow(this.label, this.amount, {this.strong = false});
+  const _TotalRow(
+    this.label,
+    this.amount, {
+    this.strong = false,
+    this.minus = false,
+  });
 
   final String label;
   final int? amount;
   final bool strong;
+
+  /// Taken off the total (a discount).
+  final bool minus;
 
   @override
   Widget build(BuildContext context) {
@@ -344,11 +389,103 @@ class _TotalRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          Text(label, style: style),
-          const Spacer(),
-          Text(amount == null ? '—' : AppStrings.price(amount!), style: style),
+          Flexible(child: Text(label, style: style)),
+          const SizedBox(width: 8),
+          Text(
+            amount == null
+                ? '—'
+                : '${minus ? '− ' : ''}${AppStrings.price(amount!)}',
+            style: style,
+          ),
         ],
       ),
+    );
+  }
+}
+
+/// The guest's coupon (P3-09): a code to apply, then what it gives this
+/// cart or why it gives nothing.
+class _CouponField extends ConsumerStatefulWidget {
+  const _CouponField({required this.basis, required this.applied});
+
+  final OfferBasis? basis;
+  final AppliedOffer? applied;
+
+  @override
+  ConsumerState<_CouponField> createState() => _CouponFieldState();
+}
+
+class _CouponFieldState extends ConsumerState<_CouponField> {
+  final _code = TextEditingController();
+
+  @override
+  void dispose() {
+    _code.dispose();
+    super.dispose();
+  }
+
+  void _apply() => ref.read(couponProvider.notifier).apply(_code.text);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final state = ref.watch(couponProvider);
+    final coupon = couponOf(state);
+    final basis = widget.basis;
+    if (coupon != null) {
+      final miss = basis == null ? null : offerDiscount(coupon, basis).miss;
+      final note = miss != null
+          ? AppStrings.offerMiss(miss, coupon)
+          : widget.applied?.offer.id == coupon.id
+          ? AppStrings.couponApplied(coupon.code!)
+          : AppStrings.betterOfferApplied;
+      return Row(
+        children: [
+          Icon(
+            Icons.local_offer_outlined,
+            color: miss == null ? theme.colorScheme.primary : null,
+          ),
+          const SizedBox(width: 8),
+          Expanded(child: Text(note)),
+          TextButton(
+            onPressed: () {
+              _code.clear();
+              ref.read(couponProvider.notifier).clear();
+            },
+            child: Text(AppStrings.removeCoupon),
+          ),
+        ],
+      );
+    }
+    final checking = state is CouponChecking;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _code,
+            textDirection: TextDirection.ltr,
+            textCapitalization: TextCapitalization.characters,
+            onSubmitted: (_) => _apply(),
+            decoration: InputDecoration(
+              labelText: AppStrings.couponLabel,
+              errorText: switch (state) {
+                CouponNotFound() => AppStrings.couponNotFound,
+                CouponFailed() => AppStrings.couponOffline,
+                _ => null,
+              },
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: FilledButton.tonal(
+            onPressed: checking ? null : _apply,
+            child: Text(AppStrings.applyCoupon),
+          ),
+        ),
+      ],
     );
   }
 }

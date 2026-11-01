@@ -101,6 +101,16 @@ class KitchenTicket extends StatelessWidget {
             if (c.address != null) Text(c.address!),
             if (c.distanceMeters != null)
               Text(AppStrings.distance(c.distanceMeters!)),
+            if (order.offer case final o?)
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(AppStrings.discountOf(o.code ?? o.name)),
+                  ),
+                  const SizedBox(width: 8),
+                  Text('− ${AppStrings.price(order.discount)}'),
+                ],
+              ),
             if (order.deliveryFee > 0)
               Row(
                 children: [

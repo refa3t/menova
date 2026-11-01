@@ -141,9 +141,16 @@ class OrderCard extends StatelessWidget {
               ),
             ],
             const Divider(height: 24),
-            if (order.deliveryFee > 0) ...[
-              _Amount(AppStrings.subtotal, order.total - order.deliveryFee),
-              _Amount(AppStrings.deliveryFee, order.deliveryFee),
+            if (order.deliveryFee > 0 || order.offer != null) ...[
+              _Amount(AppStrings.subtotal, order.itemsTotal),
+              if (order.offer case final o?)
+                _Amount(
+                  AppStrings.discountOf(o.code ?? o.name),
+                  order.discount,
+                  minus: true,
+                ),
+              if (order.deliveryFee > 0)
+                _Amount(AppStrings.deliveryFee, order.deliveryFee),
             ],
             Row(
               children: [
@@ -242,15 +249,22 @@ class _Chip extends StatelessWidget {
 }
 
 class _Amount extends StatelessWidget {
-  const _Amount(this.label, this.amount);
+  const _Amount(this.label, this.amount, {this.minus = false});
 
   final String label;
   final int amount;
 
+  /// Taken off the total (a discount).
+  final bool minus;
+
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: [Text(label), const Spacer(), Text(AppStrings.price(amount))],
+      children: [
+        Flexible(child: Text(label)),
+        const SizedBox(width: 8),
+        Text('${minus ? '− ' : ''}${AppStrings.price(amount)}'),
+      ],
     );
   }
 }

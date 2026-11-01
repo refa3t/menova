@@ -64,6 +64,7 @@ abstract final class AppStrings {
 
   static const subtotal = 'المنتجات';
   static const deliveryFee = 'رسوم التوصيل';
+  static String discountOf(String offer) => 'الخصم ($offer)';
   static const openMap = 'الموقع على الخريطة';
   static String distance(int meters) =>
       '${(meters / 1000).toStringAsFixed(1)} كم بالطريق';

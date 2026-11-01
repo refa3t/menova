@@ -64,6 +64,31 @@ void main() {
     expect(v.computedTotal, 13500);
   });
 
+  test('an offer discount is recomputed from its frozen snapshot (P3-09)', () {
+    Order discounted(int discount) {
+      final o = order('o', OrderStatus.newOrder);
+      return Order.fromJson({
+        ...o.toJson(),
+        'discount': discount,
+        'total': o.total - discount,
+        'offer': const OrderOffer(
+          id: 'o1',
+          name: 'TEMP',
+          kind: OfferKind.percent,
+          value: 10,
+        ).toJson(),
+      });
+    }
+
+    // 10% of 115 EGP of items, rounded once to 12.
+    final ok = verifyOrder(discounted(1200), data());
+    expect(ok.matches, isTrue);
+    expect(ok.computedTotal, discounted(1200).total);
+    final tampered = verifyOrder(discounted(5000), data());
+    expect(tampered.matches, isFalse);
+    expect(tampered.issues.single, contains('discount 5000'));
+  });
+
   test('transitions follow the lifecycle; delivery adds out-for-delivery', () {
     expect(nextStatuses(order('o', OrderStatus.newOrder)), [
       OrderStatus.accepted,

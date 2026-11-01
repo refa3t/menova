@@ -8,6 +8,7 @@ import 'package:storefront/features/checkout/data/order_submitter.dart';
 import 'package:storefront/features/checkout/presentation/checkout_controller.dart';
 import 'package:storefront/features/menu/domain/menu.dart';
 import 'package:storefront/features/menu/presentation/menu_providers.dart';
+import 'package:storefront/features/offers/domain/cart_offer.dart';
 
 import '../cart/cart_test.dart' show def, product, sel;
 
@@ -22,12 +23,19 @@ class FakeGateway implements OrderGateway {
   /// Next submit: fail before reaching the server (scenario 3).
   bool failNextBeforeServer = false;
 
+  /// Next submit: the order's coupon ran out in the meantime (P3-09).
+  bool couponGoneNext = false;
+
   @override
   Future<SubmitResult> submit(Order order) async {
     submits++;
     if (failNextBeforeServer) {
       failNextBeforeServer = false;
       return const NotConfirmed();
+    }
+    if (couponGoneNext && order.offer?.code != null) {
+      couponGoneNext = false;
+      return const OfferUnavailable();
     }
     final decision = decideExisting(
       existingHash: orders[order.requestId]?.payloadHash,
@@ -95,11 +103,15 @@ class Harness {
   final gateway = FakeGateway();
   Menu shown = menuWith();
   Menu fresh = menuWith();
+
+  /// Live offers and the guest's coupon on the server (P3-09).
+  List<Offer> offers = const [];
   late final ProviderContainer c = ProviderContainer(
     overrides: [
       sharedPreferencesProvider.overrideWithValue(prefs),
       menuProvider.overrideWith((ref) async => shown),
       freshMenuProvider.overrideWithValue(() async => fresh),
+      freshOffersProvider.overrideWithValue(() async => offers),
       guestUidProvider.overrideWithValue(() async => 'guest-1'),
       orderGatewayProvider.overrideWithValue(gateway),
     ],
@@ -114,7 +126,8 @@ class Harness {
     c.read(cartProvider.notifier).add(sel({'cheese': 2, 'olive': 1}));
   }
 
-  Future<void> confirm() => checkout.confirm(customer: guest, notes: '');
+  Future<void> confirm({AppliedOffer? shownOffer}) =>
+      checkout.confirm(customer: guest, notes: '', shownOffer: shownOffer);
 }
 
 void main() {
@@ -246,5 +259,59 @@ void main() {
     await h.confirm();
     expect(h.state, isA<CheckoutPriceChanged>());
     expect(h.gateway.submits, 0);
+  });
+
+  group('offers (P3-09)', () {
+    const tenPercent = Offer(
+      id: 'o1',
+      name: 'TEMP 10%',
+      kind: OfferKind.percent,
+      value: 10,
+    );
+    const coupon = Offer(
+      id: 'SAVE20',
+      name: 'TEMP coupon',
+      kind: OfferKind.amount,
+      value: 2000,
+      code: 'SAVE20',
+      maxUses: 5,
+    );
+
+    test('the offer shown is frozen with the order', () async {
+      h.offers = [tenPercent];
+      // 10% of 115 EGP is 11.5, rounded once to 12.
+      await h.confirm(shownOffer: (offer: tenPercent, discount: 1200));
+      expect(h.state, isA<CheckoutDone>());
+      final order = h.gateway.orders.values.single;
+      expect(order.discount, 1200);
+      expect(order.total, 11500 - 1200);
+      expect(order.offer, OrderOffer.of(tenPercent));
+    });
+
+    test('an offer that ended is shown before anything is sent', () async {
+      h.offers = const [];
+      await h.confirm(shownOffer: (offer: tenPercent, discount: 1200));
+      final state = h.state as CheckoutPriceChanged;
+      final diff = state.diffs.single;
+      expect(diff.lineId, CheckoutController.discountLineId);
+      expect((diff.shown, diff.current), (1200, 0));
+      expect(h.gateway.submits, 0);
+    });
+
+    test('a bigger coupon wins over the automatic offer', () async {
+      h.offers = [tenPercent, coupon];
+      await h.confirm(shownOffer: (offer: coupon, discount: 2000));
+      expect(h.state, isA<CheckoutDone>());
+      expect(h.gateway.orders.values.single.offer?.code, 'SAVE20');
+    });
+
+    test('a coupon that ran out while sending writes nothing', () async {
+      h.offers = [coupon];
+      h.gateway.couponGoneNext = true;
+      await h.confirm(shownOffer: (offer: coupon, discount: 2000));
+      final state = h.state as CheckoutPriceChanged;
+      expect((state.diffs.single.shown, state.diffs.single.current), (2000, 0));
+      expect(h.gateway.orders, isEmpty);
+    });
   });
 }

@@ -13,6 +13,8 @@ import '../../cart/presentation/cart_providers.dart';
 import '../../delivery/presentation/delivery_controller.dart';
 import '../../menu/domain/menu.dart';
 import '../../menu/presentation/menu_providers.dart';
+import '../../offers/domain/cart_offer.dart';
+import '../../offers/presentation/offers_providers.dart';
 import '../data/order_submitter.dart';
 import '../domain/order_builder.dart';
 
@@ -72,6 +74,19 @@ final freshMenuProvider = Provider<Future<Menu> Function()>(
       () => ref.read(menuRepositoryProvider).load(fromServer: true),
 );
 
+/// The live automatic offers and the guest's coupon straight from the
+/// server (never the cache), to check the discount again (P3-09).
+final freshOffersProvider = Provider<Future<List<Offer>> Function()>(
+  (ref) => () async {
+    final repo = ref.read(offersRepositoryProvider);
+    final code = couponOf(ref.read(couponProvider))?.code;
+    return [
+      ...await repo.activeFromServer(),
+      if (code != null) ?await repo.coupon(code, fromServer: true),
+    ];
+  },
+);
+
 final checkoutProvider =
     NotifierProvider.autoDispose<CheckoutController, CheckoutState>(
       CheckoutController.new,
@@ -87,12 +102,17 @@ class CheckoutController extends Notifier<CheckoutState> {
   /// Line id of the delivery fee in a [PriceDiff].
   static const deliveryLineId = 'delivery';
 
-  /// [shownDeliveryFee] is the fee the guest saw; it is re-priced from
-  /// fresh store settings before sending, like the items.
+  /// Line id of the offer's discount in a [PriceDiff] (P3-09).
+  static const discountLineId = 'discount';
+
+  /// [shownDeliveryFee] is the fee the guest saw and [shownOffer] the
+  /// discount; both are checked against fresh data before sending, like
+  /// the items.
   Future<void> confirm({
     required GuestCustomer customer,
     required String notes,
     int shownDeliveryFee = 0,
+    AppliedOffer? shownOffer,
   }) async {
     if (state is CheckoutSending) return; // One send at a time (scenario 6).
     final checking = state is CheckoutPending;
@@ -118,10 +138,12 @@ class CheckoutController extends Notifier<CheckoutState> {
     final shown = ref.read(menuProvider).value;
     final Menu fresh;
     final String uid;
+    final List<Offer> offers;
     StoreSettings? settings;
     try {
       uid = await ref.read(guestUidProvider)();
       fresh = await ref.read(freshMenuProvider)();
+      offers = await ref.read(freshOffersProvider)();
       if (customer.fulfillment == Fulfillment.delivery) {
         settings = await ref.read(storeSettingsLoaderProvider)();
       }
@@ -167,6 +189,26 @@ class CheckoutController extends Notifier<CheckoutState> {
       state = CheckoutPriceChanged(OrderBuilder.diff(cart, fresh, fresh));
       return;
     }
+
+    // P3-09: the one offer and its discount, checked again like a price.
+    final now = DateTime.now();
+    final offer = bestOffer(
+      offers,
+      OfferBasis.of(items, deliveryFee: fee, atMs: now.millisecondsSinceEpoch),
+    );
+    if (offer?.offer.id != shownOffer?.offer.id ||
+        offer?.discount != shownOffer?.discount) {
+      _syncCoupon(offers);
+      state = CheckoutPriceChanged([
+        PriceDiff(
+          lineId: discountLineId,
+          productName: discountLineId,
+          shown: shownOffer?.discount ?? 0,
+          current: offer?.discount ?? 0,
+        ),
+      ]);
+      return;
+    }
     final hash = OrderBuilder.payloadHash(
       items: items,
       customer: customer,
@@ -179,8 +221,9 @@ class CheckoutController extends Notifier<CheckoutState> {
       items: items,
       customer: customer,
       notes: notes,
-      now: DateTime.now(),
+      now: now,
       deliveryFee: fee,
+      offer: offer,
     );
 
     final result = await ref.read(orderGatewayProvider).submit(order);
@@ -192,7 +235,40 @@ class CheckoutController extends Notifier<CheckoutState> {
       case Conflict():
         _clearRequest(); // The next attempt gets a fresh id.
         state = const CheckoutConflict();
+      case OfferUnavailable():
+        // The coupon ran out meanwhile: nothing was written; show the
+        // discount going and let the guest confirm without it.
+        final coupon = couponOf(ref.read(couponProvider));
+        if (coupon != null) {
+          // Used up, or removed when it had no limit.
+          final max = coupon.maxUses;
+          ref
+              .read(couponProvider.notifier)
+              .refreshed(
+                max == null
+                    ? null
+                    : Offer.fromJson({...coupon.toJson(), 'uses': max}),
+              );
+        }
+        state = CheckoutPriceChanged([
+          PriceDiff(
+            lineId: discountLineId,
+            productName: discountLineId,
+            shown: offer?.discount ?? 0,
+            current: 0,
+          ),
+        ]);
     }
+  }
+
+  /// The guest's coupon as the server has it now (changed, used up or
+  /// gone), so the screen shows why it no longer applies.
+  void _syncCoupon(List<Offer> fresh) {
+    final code = couponOf(ref.read(couponProvider))?.code;
+    if (code == null) return;
+    ref
+        .read(couponProvider.notifier)
+        .refreshed(fresh.where((o) => o.code == code).firstOrNull);
   }
 
   /// The customer accepted the corrected prices: refresh the shown menu so
@@ -217,10 +293,15 @@ class CheckoutController extends Notifier<CheckoutState> {
         'value': AppEvents.pounds(order.total),
         'shipping': AppEvents.pounds(order.deliveryFee),
         'fulfillment': order.customer.fulfillment.name,
+        if (order.offer case final o?) ...{
+          'coupon': o.code ?? o.name,
+          'discount': AppEvents.pounds(order.discount),
+        },
       },
     });
     _clearRequest();
     ref.read(cartProvider.notifier).clear();
+    ref.read(couponProvider.notifier).clear();
     state = CheckoutDone(orderId);
   }
 

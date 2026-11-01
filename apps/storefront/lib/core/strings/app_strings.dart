@@ -1,4 +1,5 @@
 import 'package:core/core.dart';
+import 'package:pricing/pricing.dart' show OfferMiss;
 
 /// The storefront's display language. English is the default; Arabic is
 /// available from the language toggle (owner decision, amends UX-01).
@@ -180,6 +181,45 @@ abstract final class AppStrings {
   );
   static String get noLongerAvailable =>
       _t('no longer available', 'لم يعد متاحاً');
+
+  // Offers and coupons (P3-09).
+  static String get itemsTotal => _t('Items', 'الأصناف');
+  static String get discount => _t('Discount', 'الخصم');
+  static String discountOf(String offer) =>
+      _t('Discount ($offer)', 'الخصم ($offer)');
+  static String get couponLabel => _t('Coupon code', 'كود الخصم');
+  static String get applyCoupon => _t('Apply', 'تطبيق');
+  static String get removeCoupon => _t('Remove', 'إزالة');
+  static String get couponNotFound =>
+      _t('This code is not valid', 'الكود غير صحيح');
+  static String get couponOffline => _t(
+    'Could not check the code. Try again.',
+    'تعذّر التحقق من الكود. حاول مرة أخرى.',
+  );
+  static String couponApplied(String code) =>
+      _t('Code $code applied', 'تم تطبيق الكود $code');
+  static String get betterOfferApplied =>
+      _t('A bigger offer is already applied', 'عرض أكبر مطبَّق بالفعل');
+
+  /// Why an offer gives this cart nothing.
+  static String offerMiss(OfferMiss miss, Offer o) => switch (miss) {
+    OfferMiss.inactive => _t('This code is stopped', 'الكود متوقف'),
+    OfferMiss.notStarted => _t(
+      'This code has not started yet',
+      'الكود لم يبدأ بعد',
+    ),
+    OfferMiss.ended => _t('This code has ended', 'انتهت مدة الكود'),
+    OfferMiss.usedUp => _t('This code has been used up', 'نفد الكود'),
+    OfferMiss.belowMinimum => _t(
+      'For orders from ${price(o.minSubtotal)}',
+      'للطلبات من ${price(o.minSubtotal)}',
+    ),
+    OfferMiss.noEligibleItems => _t(
+      'Not for the items in your cart',
+      'لا ينطبق على أصناف سلتك',
+    ),
+    OfferMiss.nothingToTake => _t('For delivery orders', 'لطلبات التوصيل'),
+  };
   static String get acceptNewPrices =>
       _t('Accept the new prices', 'موافق على الأسعار الجديدة');
   static String get backToCart => _t('Back to cart', 'العودة للسلة');

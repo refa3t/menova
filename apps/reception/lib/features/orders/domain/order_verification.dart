@@ -63,12 +63,28 @@ OrderVerification verifyOrder(Order order, PricingData data) {
       priced = false;
     }
   }
-  final snapshotSum = order.items.fold<int>(0, (a, i) => a + i.price.total);
-  if (snapshotSum + order.deliveryFee != order.total) {
-    issues.add('total ${order.total} ≠ items $snapshotSum + delivery');
+  final snapshotSum = order.itemsTotal;
+  // P3-09: the discount again, from the offer frozen with the order.
+  var discount = 0;
+  if (order.offer case final offer?) {
+    final r = offerDiscount(
+      offer.asOffer,
+      OfferBasis.of(order.items, deliveryFee: order.deliveryFee, atMs: 0),
+    );
+    discount = r.discount;
+    if (r.discount != order.discount) {
+      issues.add('discount ${order.discount} ≠ ${r.discount}');
+    }
+  } else if (order.discount != 0) {
+    issues.add('discount ${order.discount} without an offer');
+  }
+  if (snapshotSum - order.discount + order.deliveryFee != order.total) {
+    issues.add(
+      'total ${order.total} ≠ items $snapshotSum - discount + delivery',
+    );
   }
   return OrderVerification(
-    computedTotal: priced ? total + order.deliveryFee : null,
+    computedTotal: priced ? total - discount + order.deliveryFee : null,
     issues: issues,
   );
 }
