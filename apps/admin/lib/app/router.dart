@@ -17,9 +17,11 @@ import '../features/catalog/presentation/product_edit_screen.dart';
 import '../features/catalog/presentation/products_screen.dart';
 import '../features/catalog/presentation/settings_screen.dart';
 import '../features/home/presentation/home_screen.dart';
+import '../features/reports/presentation/reports_screen.dart';
+import 'area_routes.dart';
 
 /// Only the owner and menu managers get in (P3-01); everyone else is sent to
-/// sign in or told they have no access.
+/// sign in or told they have no access. Each role only opens its sections.
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier(0);
   ref.listen(adminAccessProvider, (_, _) => refresh.value++);
@@ -36,8 +38,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       return switch (access) {
         SignedOut() => at == '/login' ? null : '/login',
         Denied() => at == '/denied' ? null : '/denied',
-        Granted() =>
-          at == '/splash' || at == '/login' || at == '/denied' ? '/' : null,
+        Granted(:final role) =>
+          at == '/splash' ||
+                  at == '/login' ||
+                  at == '/denied' ||
+                  !mayOpen(role, at)
+              ? '/'
+              : null,
       };
     },
     routes: [
@@ -47,6 +54,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ProductsScreen(),
       ),
       GoRoute(path: '/audit', builder: (context, state) => const AuditScreen()),
+      GoRoute(
+        path: '/reports',
+        builder: (context, state) => const ReportsScreen(),
+      ),
       GoRoute(
         path: '/check',
         builder: (context, state) => const CatalogCheckScreen(),

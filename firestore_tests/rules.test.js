@@ -167,6 +167,20 @@ test('guest reads only their own order; staff read all', async () => {
   await assertFails(staff('menu_manager').collection('orders').get());
 });
 
+test('the owner reads a period of orders by server time (P3-08)', async () => {
+  const from = Timestamp.fromMillis(Date.now() - 7 * 864e5);
+  const to = Timestamp.fromMillis(Date.now() + 864e5);
+  const period = (db) =>
+    db.collection('orders')
+      .where('serverCreatedAt', '>=', from)
+      .where('serverCreatedAt', '<', to)
+      .get();
+  const snap = await assertSucceeds(period(staff('owner')));
+  assert.equal(snap.size, 1);
+  await assertFails(period(staff('menu_manager', 'mgr1')));
+  await assertFails(period(guest('guest1')));
+});
+
 test('a guest can probe a missing order id but not list orders', async () => {
   await assertSucceeds(guest('g9').doc('orders/missing').get());
   await assertFails(anon().doc('orders/missing').get());

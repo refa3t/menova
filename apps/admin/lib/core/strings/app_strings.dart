@@ -146,6 +146,84 @@ abstract final class AppStrings {
     'validateCatalog' => 'إيقاف بعد فحص المنيو',
     _ => a,
   };
+  // Reports (P3-08).
+  static const reports = 'التقارير والمبيعات';
+  static String lastDaysLabel(int n) =>
+      n <= 10 ? 'آخر $n أيام' : 'آخر $n يوماً';
+  static const refresh = 'تحديث';
+  static const reportsNote =
+      'تُحسب كل الطلبات عدا الملغاة والمستردة، بأسعارها المجمّدة وقت الطلب.';
+  static String period(DateTime from, DateTime last) =>
+      'من ${day(from)} حتى ${day(last)}';
+  static String excluded(int n) => 'مستبعد: $n (ملغى أو مسترد)';
+  static String unreadable(int n) => 'تعذّرت قراءة $n طلب';
+  static const ordersLabel = 'الطلبات';
+  static const salesLabel = 'المبيعات';
+  static const deliveryFees = 'منها رسوم التوصيل';
+  static const averageOrder = 'متوسط الطلب';
+  static const dailySales = 'المبيعات اليومية (ج.م)';
+  static const weeklySales = 'المبيعات الأسبوعية';
+  static const weekNote = 'الأسبوع من السبت إلى الجمعة';
+  static const bestSellers = 'الأكثر مبيعاً';
+  static const bestSellersNote = 'المنتجات بعدد القطع المباعة';
+  static const topAddOns = 'الإضافات الأكثر طلباً';
+  static const addOnsNote =
+      'المكونات الإضافية فوق الافتراضي والخيارات المدفوعة مثل الحواف';
+  static const noSales = 'لا توجد مبيعات في هذه الفترة';
+  static const showTable = 'عرض كجدول';
+  static const showChart = 'عرض كرسم';
+  static const dayCol = 'اليوم';
+  static const weekCol = 'الأسبوع';
+  static const salesCol = 'المبيعات (ج.م)';
+  static const averageCol = 'متوسط الطلب (ج.م)';
+  static String dayTip(DateTime d, int orders, int piasters) =>
+      '${day(d)}\n${amount(piasters)} · $ordersLabel: $orders';
+
+  static const _weekdays = [
+    'الاثنين',
+    'الثلاثاء',
+    'الأربعاء',
+    'الخميس',
+    'الجمعة',
+    'السبت',
+    'الأحد',
+  ];
+  static const _months = [
+    'يناير',
+    'فبراير',
+    'مارس',
+    'أبريل',
+    'مايو',
+    'يونيو',
+    'يوليو',
+    'أغسطس',
+    'سبتمبر',
+    'أكتوبر',
+    'نوفمبر',
+    'ديسمبر',
+  ];
+  static String weekday(DateTime d) => _weekdays[d.weekday - 1];
+  static String date(DateTime d) => '${d.day} ${_months[d.month - 1]}';
+  static String day(DateTime d) => '${weekday(d)} ${date(d)}';
+  static String week(DateTime start) =>
+      '${date(start)} - ${date(DateTime(start.year, start.month, start.day + 6))}';
+
+  /// A whole number with thousands separators (1,250).
+  static String grouped(int n) => n.toString().replaceAllMapped(
+    RegExp(r'\B(?=(\d{3})+(?!\d))'),
+    (_) => ',',
+  );
+
+  /// Piasters as pounds with thousands separators (1,250 or 117.69).
+  static String pounds(int piasters) {
+    final rest = piasters.abs() % 100;
+    final whole = '${piasters < 0 ? '-' : ''}${grouped(piasters.abs() ~/ 100)}';
+    return rest == 0 ? whole : '$whole.${rest.toString().padLeft(2, '0')}';
+  }
+
+  /// [pounds] with the currency, for reports.
+  static String amount(int piasters) => '${pounds(piasters)} ج.م';
+
   static String when(DateTime? at) {
     if (at == null) return '';
     final l = at.toLocal();

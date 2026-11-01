@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/area_routes.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../auth/domain/admin_access.dart';
 import '../../auth/presentation/auth_providers.dart';
@@ -10,16 +11,7 @@ import '../../auth/presentation/auth_providers.dart';
 /// The admin home: who is signed in and the sections their role may manage
 /// (P3-01). Each section opens once its task is built.
 class HomeScreen extends ConsumerWidget {
-  /// Sections that are built, by route.
-  static const _routes = {
-    AdminArea.products: '/products',
-    AdminArea.ingredients: '/ingredients',
-    AdminArea.assets: '/assets',
-    AdminArea.categories: '/categories',
-    AdminArea.catalogCheck: '/check',
-    AdminArea.settings: '/settings',
-    AdminArea.audit: '/audit',
-  };
+  static const _routes = areaRoutes;
 
   const HomeScreen({super.key});
 
