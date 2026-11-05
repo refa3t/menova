@@ -540,3 +540,50 @@ test('a coupon counts each order once, up to its limit', async () => {
   twice.update(g.doc('coupons/SAVE10'), { uses: 3, lastOrderId: 'c3' });
   await assertFails(twice.commit(), 'one use per order');
 });
+
+// P3-09: drafts, saved and published by admins only.
+function draft(target, uid, overrides = {}) {
+  return {
+    target, kind: target.startsWith('products/') ? 'product' : 'ingredient',
+    isNew: false, changes: { basePrice: 14000 }, base: { basePrice: 13000 },
+    by: uid, at: serverTimestamp(),
+    ...overrides,
+  };
+}
+
+test('admins keep drafts; customers and staff never see them (P3-09)', async () => {
+  const m = staff('menu_manager', 'mgr1');
+  await assertSucceeds(m.doc('drafts/products__p1').set(draft('products/p1', 'mgr1')));
+  await assertSucceeds(staff('owner', 'own1').doc('drafts/products__p1')
+    .set(draft('products/p1', 'own1', { changes: { basePrice: 15000 } })));
+  await assertSucceeds(m.doc('drafts/ingredients__i1').set(draft('ingredients/i1', 'mgr1')));
+  await assertSucceeds(m.collection('drafts').get());
+  await assertFails(guest('g1').collection('drafts').get());
+  await assertFails(staff('reception', 'rec1').doc('drafts/products__p1').get());
+  await assertFails(staff('reception', 'rec1').doc('drafts/products__p2')
+    .set(draft('products/p2', 'rec1')));
+  await assertFails(m.doc('drafts/x').set(draft('products/p1', 'mgr1')), 'one draft per record');
+  await assertFails(m.doc('drafts/offers__o1').set(draft('offers/o1', 'mgr1')),
+    'products and ingredients only');
+  await assertFails(m.doc('drafts/products__p3').set(draft('products/p3', 'mgr1',
+    { kind: 'ingredient' })), 'the kind follows the target');
+  await assertFails(m.doc('drafts/products__p3').set(draft('products/p3', 'own1')),
+    'saved under its own name');
+  await assertSucceeds(m.doc('drafts/products__p1').delete());
+});
+
+test('publishing a draft is an audited save that drops the draft', async () => {
+  const m = staff('menu_manager', 'mgr1');
+  await m.doc('drafts/products__p9').set(draft('products/p9', 'mgr1', { isNew: true }));
+  const audit = m.collection('auditLog').doc();
+  const batch = m.batch();
+  batch.set(audit, {
+    action: 'saveProduct', target: 'products/p9', by: 'mgr1',
+    at: serverTimestamp(), before: null, after: product('p9'),
+  });
+  batch.set(m.doc('products/p9'), { ...product('p9'), lastAuditId: audit.id });
+  batch.delete(m.doc('drafts/products__p9'));
+  await assertSucceeds(batch.commit());
+  const left = await m.collection('drafts').get();
+  assert.equal(left.size, 0);
+});

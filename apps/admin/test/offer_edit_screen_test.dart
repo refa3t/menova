@@ -22,6 +22,7 @@ class RecordingWriter implements AuditedWriter {
     required String path,
     required Json after,
     Json? before,
+    String? alsoDelete,
   }) async => writes.add((action, path, after));
 }
 

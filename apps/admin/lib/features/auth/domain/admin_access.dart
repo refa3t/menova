@@ -19,6 +19,7 @@ enum AdminRole {
 enum AdminArea {
   products,
   ingredients,
+  drafts,
   assets,
   categories,
   offers,
@@ -35,6 +36,7 @@ bool canManage(AdminRole role, AdminArea area) => switch (role) {
   AdminRole.menuManager => switch (area) {
     AdminArea.products ||
     AdminArea.ingredients ||
+    AdminArea.drafts ||
     AdminArea.assets ||
     AdminArea.categories ||
     AdminArea.offers ||

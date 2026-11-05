@@ -4,6 +4,7 @@ import '../features/auth/domain/admin_access.dart';
 const areaRoutes = {
   AdminArea.products: '/products',
   AdminArea.ingredients: '/ingredients',
+  AdminArea.drafts: '/drafts',
   AdminArea.assets: '/assets',
   AdminArea.categories: '/categories',
   AdminArea.offers: '/offers',

@@ -16,6 +16,7 @@ import '../features/catalog/presentation/ingredients_screen.dart';
 import '../features/catalog/presentation/product_edit_screen.dart';
 import '../features/catalog/presentation/products_screen.dart';
 import '../features/catalog/presentation/settings_screen.dart';
+import '../features/drafts/presentation/drafts_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/offers/data/offers_providers.dart';
 import '../features/offers/presentation/offer_edit_screen.dart';
@@ -60,6 +61,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/reports',
         builder: (context, state) => const ReportsScreen(),
+      ),
+      GoRoute(
+        path: '/drafts',
+        builder: (context, state) => const DraftsScreen(),
       ),
       GoRoute(
         path: '/offers',

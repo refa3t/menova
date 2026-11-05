@@ -12,12 +12,14 @@ class AuditedWriter {
 
   final FirebaseFirestore _db;
 
+  /// [alsoDelete] goes in the same batch (the draft a publish applies).
   Future<void> write({
     required Granted who,
     required String action,
     required String path,
     required Json after,
     Json? before,
+    String? alsoDelete,
   }) {
     final audit = _db.collection('auditLog').doc();
     final batch = _db.batch()
@@ -31,6 +33,7 @@ class AuditedWriter {
         'after': after,
       })
       ..set(_db.doc(path), {...after, 'lastAuditId': audit.id});
+    if (alsoDelete != null) batch.delete(_db.doc(alsoDelete));
     return batch.commit();
   }
 }

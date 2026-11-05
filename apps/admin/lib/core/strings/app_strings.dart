@@ -26,6 +26,7 @@ abstract final class AppStrings {
   static String area(AdminArea a) => switch (a) {
     AdminArea.products => 'المنتجات والأسعار',
     AdminArea.ingredients => 'المكونات وأسعار الإضافات',
+    AdminArea.drafts => 'المسودات والنشر',
     AdminArea.assets => 'الصور',
     AdminArea.categories => 'الأقسام: الظهور والترتيب',
     AdminArea.offers => 'العروض والكوبونات',
@@ -149,6 +150,56 @@ abstract final class AppStrings {
     'saveCoupon' => 'تعديل كوبون',
     _ => a,
   };
+  // Drafts and publishing (P3-09).
+  static const drafts = 'المسودات والنشر';
+  static const saveDraft = 'حفظ كمسودة';
+  static const draftSaved = 'تم حفظ المسودة. انشرها من «المسودات والنشر»';
+  static const pendingDraft = 'مسودة غير منشورة: العملاء يرون النسخة الحالية';
+  static const discardDraft = 'تجاهل المسودة';
+  static const draftsNote =
+      'التعديلات المحفوظة كمسودة لا تظهر للعملاء حتى تُنشر. التوفر السريع من القوائم والصور يتغيران فوراً.';
+  static const noDrafts = 'لا توجد مسودات بانتظار النشر';
+  static String publishAll(int n) => 'نشر الكل ($n)';
+  static const publish = 'نشر';
+  static const publishing = 'جارٍ النشر...';
+  static String published(int n) => 'تم نشر $n';
+  static String notPublished(String names) => 'لم يُنشر (راجع التعديل): $names';
+  static const newRecord = 'جديد';
+  static String changedSince(String fields) =>
+      'تغيّر منذ حفظ المسودة: $fields. النشر يستبدله.';
+  static String draftKind(String kind) => kind == 'product' ? 'منتج' : 'مكوّن';
+
+  /// Arabic name of a product or ingredient field.
+  static String field(String key) => switch (key) {
+    'name' => 'الاسم',
+    'names' => 'الأسماء',
+    'description' => 'الوصف',
+    'basePrice' => 'السعر الأساسي',
+    'sizeDeltas' => 'فروق الأحجام',
+    'optionDeltas' => 'أسعار الخيارات',
+    'defaults' => 'المكونات الافتراضية',
+    'isAvailable' => 'التوفر',
+    'displayOrder' => 'ترتيب العرض',
+    'groupId' => 'القسم الفرعي',
+    'extraPrice' => 'سعر الإضافة',
+    'assetId' || 'imageAssetId' => 'الصورة',
+    _ => key,
+  };
+
+  /// A field's value as people read it (prices in pounds).
+  static String fieldValue(String key, Object? v) => switch ((key, v)) {
+    (_, null) => '—',
+    ('basePrice' || 'extraPrice', final int p) => price(p),
+    ('sizeDeltas' || 'optionDeltas', final Map m) => [
+      for (final e in m.entries)
+        '${e.key}: ${e.value is int ? price(e.value as int) : e.value}',
+    ].join('، '),
+    ('names', final Map m) => m.values.join(' / '),
+    ('defaults', final List l) => '${l.length}',
+    ('isAvailable', final bool b) => b ? available : unavailable,
+    _ => '$v',
+  };
+
   // Offers and coupons (P3-09).
   static const offers = 'العروض والكوبونات';
   static const autoOffers = 'العروض التلقائية';

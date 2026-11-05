@@ -7,14 +7,18 @@ import 'package:go_router/go_router.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../auth/domain/admin_access.dart';
 import '../../auth/presentation/auth_providers.dart';
-import '../data/audited_writer.dart';
+import '../../drafts/data/drafts_providers.dart';
+import '../../drafts/domain/draft.dart';
+import '../../drafts/presentation/draft_note.dart';
 import '../data/catalog_providers.dart';
 import '../domain/product_ids.dart';
 
 /// Edits (or creates) one product within its category's definition (P3-02):
 /// names, description, prices, sizes and options the definition offers,
 /// group, availability, display order and default ingredients. Checked
-/// with the same validator as the catalog before an audited save.
+/// with the same validator as the catalog, then saved as a draft that an
+/// admin publishes (P3-09); a pending draft opens here on top of the live
+/// product.
 class ProductEditScreen extends ConsumerStatefulWidget {
   const ProductEditScreen({super.key, this.productId, this.categoryId});
 
@@ -40,7 +44,13 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
   String? _categoryId;
   String? _groupId;
   bool _available = true;
+
+  /// The product being edited: the live one with its draft, if any.
   Product? _original;
+
+  /// The product customers see now (null for a new one).
+  Product? _live;
+  Draft? _draft;
   bool _loaded = false;
   bool _saving = false;
   List<String> _issues = const [];
@@ -61,9 +71,25 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
     super.dispose();
   }
 
-  void _load(List<Product> products, Map<String, CategoryDefinition> defs) {
+  void _load(
+    List<Product> products,
+    Map<String, CategoryDefinition> defs,
+    List<Draft> drafts,
+  ) {
     if (_loaded) return;
-    final p = products.where((p) => p.id == widget.productId).firstOrNull;
+    final id = widget.productId;
+    _live = products.where((p) => p.id == id).firstOrNull;
+    _draft = id == null
+        ? null
+        : drafts.where((d) => d.target == 'products/$id').firstOrNull;
+    Product? p = _live;
+    if (_draft case final d?) {
+      try {
+        p = Product.fromJson(d.applyTo(_live?.toJson()));
+      } on Object {
+        // A draft that no longer reads: edit the live product.
+      }
+    }
     _original = p;
     _categoryId = p?.categoryId ?? widget.categoryId ?? defs.keys.firstOrNull;
     final def = defs[_categoryId];
@@ -97,6 +123,7 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
     CategoryDefinition def,
     List<Product> products,
     Map<String, Ingredient> ingredients,
+    List<Draft> drafts,
   ) {
     final money = <String>[];
     int moneyOf(TextEditingController c, String label) {
@@ -122,7 +149,11 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
         newProductId(
           categoryId: def.id,
           name: nameEn.isNotEmpty ? nameEn : nameAr,
-          taken: {for (final p in products) p.id},
+          taken: {
+            for (final p in products) p.id,
+            for (final d in drafts)
+              if (d.kind == DraftKind.product) d.recordId,
+          },
         );
     final product = Product(
       id: id,
@@ -156,26 +187,27 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
     CategoryDefinition def,
     List<Product> products,
     Map<String, Ingredient> ingredients,
+    List<Draft> drafts,
   ) async {
     final who = ref.read(adminAccessProvider).value;
     if (who is! Granted || _saving) return;
-    final product = _build(def, products, ingredients);
+    final product = _build(def, products, ingredients, drafts);
     if (product == null) return;
     setState(() => _saving = true);
     try {
       await ref
-          .read(auditedWriterProvider)
-          .write(
+          .read(draftWriterProvider)
+          .save(
             who: who,
-            action: 'saveProduct',
-            path: 'products/${product.id}',
-            before: _original?.toJson(),
-            after: product.toJson(),
+            kind: DraftKind.product,
+            target: 'products/${product.id}',
+            live: _live?.toJson(),
+            edited: product.toJson(),
           );
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text(AppStrings.saved)));
+      ).showSnackBar(const SnackBar(content: Text(AppStrings.draftSaved)));
       context.pop();
     } on Object {
       if (mounted) {
@@ -193,10 +225,11 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
     final defs = ref.watch(definitionsProvider);
     final products = ref.watch(productsProvider).value;
     final ingredients = ref.watch(ingredientsProvider).value;
-    if (products == null || ingredients == null) {
+    final drafts = ref.watch(draftsProvider).value;
+    if (products == null || ingredients == null || drafts == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    _load(products, defs);
+    _load(products, defs, drafts);
     final def = defs[_categoryId];
     if (def == null) {
       return const Scaffold(body: Center(child: Text(AppStrings.loadError)));
@@ -230,6 +263,16 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              if (_draft case final d?) ...[
+                DraftNote(
+                  draft: d,
+                  onDiscard: () async {
+                    await ref.read(draftWriterProvider).discard(d);
+                    if (context.mounted) context.pop();
+                  },
+                ),
+                gap,
+              ],
               if (_original == null)
                 DropdownButtonFormField<String>(
                   initialValue: def.id,
@@ -251,7 +294,7 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
                     _sizeDeltas.clear();
                     _optionDeltas.clear();
                     _loaded = false;
-                    _load(products, defs);
+                    _load(products, defs, drafts);
                   }),
                 )
               else
@@ -457,11 +500,13 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: FilledButton(
-            onPressed: _saving ? null : () => _save(def, products, ingredients),
+            onPressed: _saving
+                ? null
+                : () => _save(def, products, ingredients, drafts),
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(48),
             ),
-            child: Text(_saving ? AppStrings.saving : AppStrings.save),
+            child: Text(_saving ? AppStrings.saving : AppStrings.saveDraft),
           ),
         ),
       ),

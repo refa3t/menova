@@ -185,6 +185,30 @@ service cloud.firestore {
       allow create, delete: if false;
     }
 
+    // Drafts (P3-09): a pending change to one product or ingredient, saved
+    // by an admin and published later through the audited writes above.
+    // One draft per record (its id is the target with '__' for '/'), never
+    // read by customers.
+    match /drafts/{draftId} {
+      allow read: if isAdmin();
+      allow create, update: if isAdmin()
+          && request.resource.data.keys().hasOnly(['target', 'kind', 'isNew',
+               'changes', 'base', 'by', 'byEmail', 'at'])
+          && request.resource.data.keys().hasAll(['target', 'kind', 'isNew',
+               'changes', 'by', 'at'])
+          && request.resource.data.target is string
+          && request.resource.data.target.matches('^(products|ingredients)/[A-Za-z0-9_-]+$')
+          && draftId == request.resource.data.target.replace('/', '__')
+          && request.resource.data.kind
+               == (request.resource.data.target.matches('^products/.*')
+                   ? 'product' : 'ingredient')
+          && request.resource.data.isNew is bool
+          && request.resource.data.changes is map
+          && request.resource.data.by == request.auth.uid
+          && request.resource.data.at == request.time;
+      allow delete: if isAdmin();
+    }
+
     // Offers and coupons (P3-09): the same shape (core Offer), every key
     // written, nulls included. Admins manage them, audited.
     function validOffer(d, id) {

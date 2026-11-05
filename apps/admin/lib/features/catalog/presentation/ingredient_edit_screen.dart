@@ -7,12 +7,15 @@ import 'package:go_router/go_router.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../auth/domain/admin_access.dart';
 import '../../auth/presentation/auth_providers.dart';
-import '../data/audited_writer.dart';
+import '../../drafts/data/drafts_providers.dart';
+import '../../drafts/domain/draft.dart';
+import '../../drafts/presentation/draft_note.dart';
 import '../data/catalog_providers.dart';
 
 /// Edits one ingredient (P3-03): names, extra price (one price wherever it
 /// is used), availability and its image, picked from the ingredient images.
-/// Checked by `validateIngredient`, then an audited save.
+/// Checked by `validateIngredient`, then saved as a draft that an admin
+/// publishes (P3-09).
 class IngredientEditScreen extends ConsumerStatefulWidget {
   const IngredientEditScreen({super.key, required this.ingredientId});
 
@@ -27,7 +30,13 @@ class _IngredientEditScreenState extends ConsumerState<IngredientEditScreen> {
   final _nameAr = TextEditingController();
   final _nameEn = TextEditingController();
   final _price = TextEditingController();
+
+  /// The ingredient being edited: the live one with its draft, if any.
   Ingredient? _original;
+
+  /// The ingredient customers see now.
+  Ingredient? _live;
+  Draft? _draft;
   String? _assetId;
   bool _available = true;
   bool _saving = false;
@@ -41,8 +50,18 @@ class _IngredientEditScreenState extends ConsumerState<IngredientEditScreen> {
     super.dispose();
   }
 
-  void _load(Ingredient i) {
+  void _load(Ingredient live, Draft? draft) {
     if (_original != null) return;
+    _live = live;
+    _draft = draft;
+    var i = live;
+    if (draft != null) {
+      try {
+        i = Ingredient.fromJson(draft.applyTo(live.toJson()));
+      } on Object {
+        // A draft that no longer reads: edit the live ingredient.
+      }
+    }
     _original = i;
     _nameAr.text = i.names['ar'] ?? i.name;
     _nameEn.text = i.names['en'] ?? '';
@@ -79,18 +98,18 @@ class _IngredientEditScreenState extends ConsumerState<IngredientEditScreen> {
     setState(() => _saving = true);
     try {
       await ref
-          .read(auditedWriterProvider)
-          .write(
+          .read(draftWriterProvider)
+          .save(
             who: who,
-            action: 'saveIngredient',
-            path: 'ingredients/${original.id}',
-            before: original.toJson(),
-            after: after.toJson(),
+            kind: DraftKind.ingredient,
+            target: 'ingredients/${original.id}',
+            live: _live?.toJson(),
+            edited: after.toJson(),
           );
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text(AppStrings.saved)));
+      ).showSnackBar(const SnackBar(content: Text(AppStrings.draftSaved)));
       context.pop();
     } on Object {
       if (mounted) {
@@ -109,10 +128,16 @@ class _IngredientEditScreenState extends ConsumerState<IngredientEditScreen> {
         .watch(ingredientsProvider)
         .value?[widget.ingredientId];
     final assets = ref.watch(assetsProvider).value;
-    if (ingredient == null || assets == null) {
+    final drafts = ref.watch(draftsProvider).value;
+    if (ingredient == null || assets == null || drafts == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    _load(ingredient);
+    _load(
+      ingredient,
+      drafts
+          .where((d) => d.target == 'ingredients/${widget.ingredientId}')
+          .firstOrNull,
+    );
     final pickable = {
       for (final e in assets.entries)
         if (e.value.kind == 'ingredient') e.key: e.value,
@@ -126,6 +151,16 @@ class _IngredientEditScreenState extends ConsumerState<IngredientEditScreen> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              if (_draft case final d?) ...[
+                DraftNote(
+                  draft: d,
+                  onDiscard: () async {
+                    await ref.read(draftWriterProvider).discard(d);
+                    if (context.mounted) context.pop();
+                  },
+                ),
+                gap,
+              ],
               TextField(
                 controller: _nameAr,
                 decoration: const InputDecoration(labelText: AppStrings.nameAr),
@@ -223,7 +258,7 @@ class _IngredientEditScreenState extends ConsumerState<IngredientEditScreen> {
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(48),
             ),
-            child: Text(_saving ? AppStrings.saving : AppStrings.save),
+            child: Text(_saving ? AppStrings.saving : AppStrings.saveDraft),
           ),
         ),
       ),
