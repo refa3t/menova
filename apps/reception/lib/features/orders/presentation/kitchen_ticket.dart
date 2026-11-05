@@ -104,7 +104,7 @@ class KitchenTicket extends StatelessWidget {
             if (order.offer case final o?)
               Row(
                 children: [
-                  Flexible(
+                  Expanded(
                     child: Text(AppStrings.discountOf(o.code ?? o.name)),
                   ),
                   const SizedBox(width: 8),

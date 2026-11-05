@@ -261,7 +261,7 @@ class _Amount extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Flexible(child: Text(label)),
+        Expanded(child: Text(label)),
         const SizedBox(width: 8),
         Text('${minus ? '− ' : ''}${AppStrings.price(amount)}'),
       ],

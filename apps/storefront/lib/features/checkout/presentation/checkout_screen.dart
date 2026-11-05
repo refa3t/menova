@@ -389,7 +389,7 @@ class _TotalRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          Flexible(child: Text(label, style: style)),
+          Expanded(child: Text(label, style: style)),
           const SizedBox(width: 8),
           Text(
             amount == null
