@@ -156,6 +156,7 @@ class _StepRunnerState extends State<StepRunner>
     final declared = step.params['images'];
     final input = AnimStepInput(
       product: widget.input.product,
+      contents: widget.input.contents,
       productRect: widget.input.productRect,
       cartTarget: widget.input.cartTarget,
       params: step.params,

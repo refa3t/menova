@@ -24,10 +24,15 @@ class AnimStepInput {
     this.params = const {},
     this.images = const {},
     this.reduceMotion = false,
+    this.contents,
   });
 
   /// The customer's product as drawn when "add" was pressed (snapshot).
   final Widget product;
+
+  /// The same snapshot's pieces alone (no base), same box, when the
+  /// orchestrator could capture them: a wrap heaps its filling from them.
+  final Widget? contents;
 
   /// Where the product sits on screen, in the overlay's coordinates.
   final Rect productRect;
@@ -249,12 +254,17 @@ class Folded extends StatelessWidget {
     this.without,
     this.opening,
     this.zoom = 1,
+    this.contents,
   });
 
   final List<FoldLine> lines;
   final int count;
   final Widget product;
   final Widget? back;
+
+  /// The product's pieces alone, same box: a finished wrap heaps them in
+  /// its opening (see [AnimStepInput.contents]).
+  final Widget? contents;
 
   /// The open end of a wrap: once every line is folded, the product's
   /// contents show inside it, wrapped by the walls (a crepe cone).
@@ -311,6 +321,7 @@ class Folded extends StatelessWidget {
             product: product,
             back: back!,
             zoom: zoom,
+            contents: contents,
           );
         }
 
@@ -421,6 +432,7 @@ class _WrapView extends StatelessWidget {
     required this.product,
     required this.back,
     required this.zoom,
+    this.contents,
   });
 
   final List<FoldLine> lines;
@@ -428,6 +440,7 @@ class _WrapView extends StatelessWidget {
   final Widget product;
   final Widget back;
   final double zoom;
+  final Widget? contents;
 
   /// The griddle side as the outside of a thin, lightly toasted crepe:
   /// paler and less yellow, with its browned spots kept.
@@ -581,33 +594,59 @@ class _WrapView extends StatelessWidget {
         );
 
         // Inside the rim: a strip of the inner wall at the back, and the
-        // filling heaped below it, filling the opening to the front edge.
+        // filling below it, filling the opening to the front edge. When the
+        // product's pieces come apart from it, they are heaped into a dome
+        // that rises above the back of the rim, a second layer behind and
+        // each piece shading what lies under it (owner: a full, 3D filling).
+        final pieces = contents;
         final heap = Rect.fromLTRB(
           rim.left,
           rim.top + rim.height * 0.07,
           rim.right,
           rim.bottom + rim.height * 0.07,
         );
-        Path heapShape(Size s) => Path.combine(
-          PathOperation.intersect,
-          Path()..addOval(rim),
-          Path()..addOval(heap),
-        );
-        final contents = px(opening.contents);
+        final region = px(opening.contents);
         final target = Rect.fromLTRB(
           rim.left - rim.width * 0.03,
           heap.top - rim.height * 0.08,
           rim.right + rim.width * 0.03,
           rim.bottom + rim.height * 0.25,
         );
-        final scale = target.width / contents.width;
-        final inside = ClipPath(
+        final scale = target.width / region.width;
+        // With the pieces apart, the filling is seen at the rim's tilt:
+        // flattened in depth like the opening itself, centred a little
+        // above the rim's middle, so only the pieces' ragged top edge rises
+        // above the rim (a low heap, owner reference).
+        final squash = pieces == null ? 1.0 : 0.55;
+        final middle = pieces == null
+            ? target.center
+            : rim.center - Offset(0, rim.height * 0.1);
+        // [child] (a widget of the product's box) with the filling region
+        // fitted into the opening; [grow], [lift] and [flip] vary a layer.
+        Widget fitted(
+          Widget child, {
+          double grow = 1,
+          double lift = 0,
+          bool flip = false,
+        }) {
+          final k = scale * grow;
+          final c = middle - Offset(0, lift);
+          return Transform(
+            transform: Matrix4.identity()
+              ..translateByDouble(c.dx, c.dy, 0, 1)
+              ..scaleByDouble(flip ? -k : k, k * squash, 1, 1)
+              ..translateByDouble(-region.center.dx, -region.center.dy, 0, 1),
+            child: SizedBox.fromSize(size: size, child: child),
+          );
+        }
+
+        // The inner wall: the crepe's cooked side, lit at the rim and in
+        // shade where it goes down behind the filling.
+        final wall = ClipPath(
           clipper: _PathClip((_) => Path()..addOval(rim)),
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // The inner wall: the crepe's cooked side, lit at the rim and
-              // in shade where it goes down behind the filling.
               Positioned.fromRect(
                 rect: rim,
                 child: const DecoratedBox(
@@ -621,64 +660,150 @@ class _WrapView extends StatelessWidget {
                   ),
                 ),
               ),
-              ClipPath(
-                clipper: _PathClip(heapShape),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Transform(
-                      transform: Matrix4.identity()
-                        ..translateByDouble(
-                          target.center.dx - contents.center.dx * scale,
-                          target.center.dy - contents.center.dy * scale,
-                          0,
-                          1,
-                        )
-                        ..scaleByDouble(scale, scale, 1, 1),
-                      child: SizedBox.fromSize(size: size, child: product),
-                    ),
-                    // Heaped: lit on top, falling away into shade at the
-                    // sides, under the back wall and towards the front edge.
-                    Positioned.fromRect(
-                      rect: heap,
-                      child: const DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Color(0x4D000000),
-                              Color(0x00000000),
-                              Color(0x14FFFFFF),
-                              Color(0x00000000),
-                              Color(0x5C000000),
-                            ],
-                            stops: [0, 0.16, 0.4, 0.76, 1],
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned.fromRect(
-                      rect: heap,
-                      child: const DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Color(0x73000000),
-                              Color(0x00000000),
-                              Color(0x00000000),
-                              Color(0x2E000000),
-                            ],
-                            stops: [0, 0.24, 0.8, 1],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
+        );
+
+        final heapBounds = Rect.fromLTRB(
+          rim.left,
+          rim.top - rim.height * 0.4,
+          rim.right,
+          rim.bottom,
+        );
+        Path lensShape(Size s) => Path.combine(
+          PathOperation.intersect,
+          Path()..addOval(rim),
+          Path()..addOval(heap),
+        );
+        // Room for the pile above the rim: wide enough that the pieces'
+        // own outlines, not this shape, make the top of the heap.
+        Path pileShape(Size s) => Path.combine(
+          PathOperation.union,
+          lensShape(s),
+          // Above the rim's middle only (below it the walls hide the
+          // pile); the pieces' own top edge ends it.
+          Path.combine(
+            PathOperation.intersect,
+            // A mound: narrower towards the top, so its sides curve in.
+            Path()..addOval(
+              Rect.fromCenter(
+                center: rim.center + Offset(0, rim.height * 0.2),
+                width: rim.width * 0.98,
+                height: rim.height * 2.2,
+              ),
+            ),
+            Path()..addRect(
+              Rect.fromLTRB(-s.width, -s.height, 2 * s.width, rim.center.dy),
+            ),
+          ),
+        );
+        final filling = Stack(
+          fit: StackFit.expand,
+          children: [
+            // The bed of the filling, level with the opening.
+            ClipPath(
+              clipper: _PathClip(lensShape),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  fitted(product),
+                  // Lit on top, falling away into shade at the sides, under
+                  // the back wall and towards the front edge.
+                  Positioned.fromRect(
+                    rect: heap,
+                    child: const DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(0x4D000000),
+                            Color(0x00000000),
+                            Color(0x14FFFFFF),
+                            Color(0x00000000),
+                            Color(0x5C000000),
+                          ],
+                          stops: [0, 0.16, 0.4, 0.76, 1],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned.fromRect(
+                    rect: heap,
+                    child: const DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Color(0x73000000),
+                            Color(0x00000000),
+                            Color(0x00000000),
+                            Color(0x2E000000),
+                          ],
+                          stops: [0, 0.24, 0.8, 1],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (pieces != null)
+              // The pile: a second, mirrored layer behind and higher in its
+              // shade, each front piece's soft shadow, the front layer, and
+              // light falling on the pieces themselves (a mound).
+              ClipPath(
+                clipper: _PathClip(pileShape),
+                child: ShaderMask(
+                  blendMode: BlendMode.srcATop,
+                  shaderCallback: (_) => const RadialGradient(
+                    center: Alignment(0, -0.3),
+                    radius: 0.78,
+                    colors: [
+                      Color(0x29FFFFFF),
+                      Color(0x00FFFFFF),
+                      Color(0x00000000),
+                      Color(0x61000000),
+                    ],
+                    stops: [0, 0.4, 0.68, 1],
+                    transform: _StretchToBounds(),
+                  ).createShader(heapBounds),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      ColorFiltered(
+                        colorFilter: const ColorFilter.mode(
+                          Color(0x47000000),
+                          BlendMode.srcATop,
+                        ),
+                        child: fitted(
+                          pieces,
+                          grow: 0.92,
+                          lift: rim.height * 0.14,
+                          flip: true,
+                        ),
+                      ),
+                      Transform.translate(
+                        offset: Offset(lip * 0.6, lip * 1.3),
+                        child: ImageFiltered(
+                          imageFilter: ui.ImageFilter.blur(
+                            sigmaX: 2,
+                            sigmaY: 2,
+                          ),
+                          child: ColorFiltered(
+                            colorFilter: const ColorFilter.mode(
+                              Color(0x8C000000),
+                              BlendMode.srcIn,
+                            ),
+                            child: fitted(pieces),
+                          ),
+                        ),
+                      ),
+                      fitted(pieces),
+                    ],
+                  ),
+                ),
+              ),
+          ],
         );
 
         final wrap = Stack(
@@ -721,8 +846,20 @@ class _WrapView extends StatelessWidget {
               ),
             ],
             body,
-            inside,
-            IgnorePointer(child: CustomPaint(painter: _RimPainter(rim, lip))),
+            wall,
+            // The far half of the rim goes behind the heap, the near half
+            // over it.
+            IgnorePointer(
+              child: CustomPaint(
+                painter: _RimPainter(rim, lip, half: _RimHalf.back),
+              ),
+            ),
+            filling,
+            IgnorePointer(
+              child: CustomPaint(
+                painter: _RimPainter(rim, lip, half: _RimHalf.front),
+              ),
+            ),
           ],
         );
 
@@ -750,23 +887,31 @@ class _WrapView extends StatelessWidget {
 }
 
 /// The rim: the crepe's thin cut edge, a little lighter than the walls
-/// (their texture shows through), toasted darker on its outer side.
+/// (their texture shows through), toasted darker on its outer side. [half]
+/// draws only the far or the near half, so a heaped filling can sit
+/// between them.
 class _RimPainter extends CustomPainter {
-  const _RimPainter(this.rim, this.lip);
+  const _RimPainter(this.rim, this.lip, {this.half});
 
   final Rect rim;
   final double lip;
+  final _RimHalf? half;
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawOval(
+    void ring(Rect r, Paint p) => switch (half) {
+      null => canvas.drawOval(r, p),
+      _RimHalf.back => canvas.drawArc(r, pi, pi, false, p),
+      _RimHalf.front => canvas.drawArc(r, 0, pi, false, p),
+    };
+    ring(
       rim.inflate(lip / 2),
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = lip
         ..color = const Color(0x40FFF1D6),
     );
-    canvas.drawOval(
+    ring(
       rim.inflate(lip),
       Paint()
         ..style = PaintingStyle.stroke
@@ -774,7 +919,7 @@ class _RimPainter extends CustomPainter {
         ..color = const Color(0x598A5A2B),
     );
     // Where the inner wall goes down.
-    canvas.drawOval(
+    ring(
       rim,
       Paint()
         ..style = PaintingStyle.stroke
@@ -785,7 +930,26 @@ class _RimPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_RimPainter oldDelegate) =>
-      oldDelegate.rim != rim || oldDelegate.lip != lip;
+      oldDelegate.rim != rim ||
+      oldDelegate.lip != lip ||
+      oldDelegate.half != half;
+}
+
+enum _RimHalf { back, front }
+
+/// Stretches a radial gradient across its bounds, so its circle becomes
+/// the ellipse the bounds hold (a wide mound, not a round spot).
+class _StretchToBounds extends GradientTransform {
+  const _StretchToBounds();
+
+  @override
+  Matrix4 transform(Rect bounds, {TextDirection? textDirection}) {
+    final c = bounds.center;
+    return Matrix4.identity()
+      ..translateByDouble(c.dx, c.dy, 0, 1)
+      ..scaleByDouble(bounds.width / bounds.height, 1, 1, 1)
+      ..translateByDouble(-c.dx, -c.dy, 0, 1);
+  }
 }
 
 /// Lit creases along fold lines, drawn only inside the folded wrap.
@@ -848,8 +1012,15 @@ Widget shapedProduct(AnimStepInput input) {
     product: baked,
     back: backImage(input),
     opening: WrapOpening.from(input.params['opening']),
+    contents: bakedContents(input),
   );
 }
+
+/// The product's pieces alone, baked like the product, when given.
+Widget? bakedContents(AnimStepInput input) => switch (input.contents) {
+  final c? => Cooked(amount: 1, child: c),
+  null => null,
+};
 
 /// The cooking surface (role `surface`) under the product, slightly larger.
 Widget? surfaceUnder(AnimStepInput input, {double opacity = 1}) {

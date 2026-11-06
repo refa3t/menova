@@ -44,7 +44,13 @@ class BuilderCanvas extends StatefulWidget {
     this.placementParams = const {},
     this.scale = 1,
     this.density = 1,
+    this.piecesKey,
   });
+
+  /// Key of the pieces' own repaint boundary (the base not included), so
+  /// the orchestrator can capture them alone: a wrap shows its filling
+  /// heaped from them. Same box as the canvas, before [scale].
+  final GlobalKey? piecesKey;
 
   final String baseImageUrl;
   final List<CanvasLayer> layers;
@@ -99,26 +105,7 @@ class _BuilderCanvasState extends State<BuilderCanvas> {
             builder: (context, box) {
               final side = box.maxWidth;
               final half = side / 2;
-              final children = <Widget>[
-                Positioned.fill(
-                  child: RepaintBoundary(
-                    child: Image.network(
-                      widget.baseImageUrl,
-                      fit: BoxFit.contain,
-                      // Keep the previous base on screen while a new one
-                      // (another option's base) loads.
-                      gaplessPlayback: true,
-                      // Until the base arrives, toppings sit on a plain
-                      // disc instead of floating over the page.
-                      frameBuilder: (_, child, frame, sync) =>
-                          frame == null && !sync ? _plainDisc : child,
-                      // A missing base never breaks the screen; toppings
-                      // still show on a plain disc.
-                      errorBuilder: (_, _, _) => _plainDisc,
-                    ),
-                  ),
-                ),
-              ];
+              final children = <Widget>[];
               for (final layer in layers) {
                 final enter =
                     enterProfiles[layer.enterProfile] ??
@@ -183,7 +170,36 @@ class _BuilderCanvasState extends State<BuilderCanvas> {
                   }
                 }
               }
-              return Stack(clipBehavior: Clip.none, children: children);
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned.fill(
+                    child: RepaintBoundary(
+                      child: Image.network(
+                        widget.baseImageUrl,
+                        fit: BoxFit.contain,
+                        // Keep the previous base on screen while a new one
+                        // (another option's base) loads.
+                        gaplessPlayback: true,
+                        // Until the base arrives, toppings sit on a plain
+                        // disc instead of floating over the page.
+                        frameBuilder: (_, child, frame, sync) =>
+                            frame == null && !sync ? _plainDisc : child,
+                        // A missing base never breaks the screen; toppings
+                        // still show on a plain disc.
+                        errorBuilder: (_, _, _) => _plainDisc,
+                      ),
+                    ),
+                  ),
+                  // The pieces on a layer of their own (see piecesKey).
+                  Positioned.fill(
+                    child: RepaintBoundary(
+                      key: widget.piecesKey,
+                      child: Stack(clipBehavior: Clip.none, children: children),
+                    ),
+                  ),
+                ],
+              );
             },
           ),
         ),

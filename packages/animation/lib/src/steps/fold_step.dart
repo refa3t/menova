@@ -169,6 +169,7 @@ class FoldStep implements AnimStep {
                         opening: opening,
                         // It grows into its frame as it settles.
                         zoom: interval(t, 0.8, 1, Curves.easeOut),
+                        contents: bakedContents(input),
                       ),
                     ),
                 ],

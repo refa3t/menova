@@ -95,12 +95,75 @@ void main() {
     expect(o.unwrapped.sleeve, isNull);
     expect(o.unwrapped.frame, o.frame);
     expect(WrapOpening.from({...wrap, 'sleeve': 'brown'})!.sleeve, isNull);
-    expect(WrapOpening.from({'ellipse': [0.5]}), isNull);
+    expect(
+      WrapOpening.from({
+        'ellipse': [0.5],
+      }),
+      isNull,
+    );
   });
 
-  testWidgets('a finished wrap draws in its paper as it grows', (
+  testWidgets('a finished wrap heaps the pieces given apart (3D filling)', (
     tester,
   ) async {
+    const pieces = Center(
+      child: SizedBox.square(
+        dimension: 40,
+        child: ColoredBox(color: Color(0xFF884422)),
+      ),
+    );
+    for (final zoom in [0.0, 1.0]) {
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Center(
+            child: SizedBox.square(
+              dimension: 300,
+              child: Folded(
+                lines: FoldLine.listFrom(cone),
+                count: 2,
+                product: const ColoredBox(color: Color(0xFFFFCC88)),
+                back: const ColoredBox(color: Color(0xFFC08040)),
+                opening: WrapOpening.from(wrap),
+                zoom: zoom,
+                contents: pieces,
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(tester.takeException(), isNull, reason: 'zoom $zoom');
+      // A back layer, the shadows and the front layer.
+      expect(find.byWidget(pieces), findsNWidgets(3));
+    }
+    // Steps pass the pieces on.
+    final step = animSteps['Swap']!;
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: Builder(
+          builder: (context) => step.build(
+            context,
+            const AnimFrame(t: 1, elapsed: Duration.zero),
+            AnimStepInput(
+              product: const ColoredBox(color: Color(0xFFFFCC88)),
+              contents: pieces,
+              productRect: rect,
+              params: {'folds': 2, 'lines': cone, 'opening': wrap},
+              // The finished wrap needs the outside (role `back`).
+              images: const {
+                'back': ['back.webp'],
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+    expect(find.byWidget(pieces), findsNWidgets(3));
+  });
+
+  testWidgets('a finished wrap draws in its paper as it grows', (tester) async {
     for (final zoom in [0.0, 0.5, 1.0]) {
       await tester.pumpWidget(
         Directionality(

@@ -41,11 +41,14 @@ class BuilderScreen extends ConsumerStatefulWidget {
 
 class _BuilderScreenState extends ConsumerState<BuilderScreen> {
   final _canvasKey = GlobalKey();
+  final _piecesKey = GlobalKey();
   final _cartKey = GlobalKey();
   OverlayEntry? _animation;
 
-  /// Raster of the canvas shown by the running animation.
+  /// Raster of the canvas shown by the running animation, and of its
+  /// pieces alone (a wrap heaps its filling from them).
   ui.Image? _snapshot;
+  ui.Image? _pieces;
   AddStatus _status = AddStatus.idle;
 
   BuilderKey get _key => (productId: widget.productId, lineId: widget.lineId);
@@ -69,6 +72,7 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
     // Leaving mid-animation cancels it; the cart item is already committed.
     _animation?.remove();
     _snapshot?.dispose();
+    _pieces?.dispose();
     _animation = null;
     super.dispose();
   }
@@ -133,6 +137,10 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
     final raster = _rasterize(canvasBox);
     _snapshot?.dispose();
     _snapshot = raster;
+    final piecesBox = _piecesKey.currentContext?.findRenderObject();
+    final pieces = piecesBox is RenderBox ? _rasterize(piecesBox) : null;
+    _pieces?.dispose();
+    _pieces = pieces;
     final Widget snapshot = raster != null
         ? RawImage(image: raster, fit: BoxFit.contain)
         : ProductPreview(
@@ -166,6 +174,13 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
           cartTarget: cartBox == null ? null : rectOf(cartBox).center,
           images: images,
           reduceMotion: MediaQuery.of(context).disableAnimations,
+          // Captured inside the canvas's size scale: scaled the same way.
+          contents: pieces == null
+              ? null
+              : Transform.scale(
+                  scale: state.sizeScale,
+                  child: RawImage(image: pieces, fit: BoxFit.contain),
+                ),
         ),
         onEvent: (e) {
           if (e == AnimEvent.completed) {
@@ -173,6 +188,8 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
             _animation = null;
             _snapshot?.dispose();
             _snapshot = null;
+            _pieces?.dispose();
+            _pieces = null;
             _finish();
           }
         },
@@ -225,6 +242,7 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
             menu: menu,
             builderKey: _key,
             canvasKey: _canvasKey,
+            piecesKey: _piecesKey,
             productHidden: _status == AddStatus.busy,
           );
         },
@@ -238,6 +256,7 @@ class _BuilderBody extends ConsumerStatefulWidget {
     required this.menu,
     required this.builderKey,
     required this.canvasKey,
+    required this.piecesKey,
     this.productHidden = false,
   });
 
@@ -248,8 +267,10 @@ class _BuilderBody extends ConsumerStatefulWidget {
   /// the oven, on the griddle, flying to the cart); its place stays.
   final bool productHidden;
 
-  /// Marks the canvas so the orchestrator can start the animation from it.
+  /// Marks the canvas so the orchestrator can start the animation from it,
+  /// and its pieces' own layer.
   final GlobalKey canvasKey;
+  final GlobalKey piecesKey;
 
   @override
   ConsumerState<_BuilderBody> createState() => _BuilderBodyState();
@@ -355,6 +376,7 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
             maintainState: true,
             child: BuilderCanvas(
               key: widget.canvasKey,
+              piecesKey: widget.piecesKey,
               baseImageUrl: base.secureUrl,
               strategy: strategy,
               strategyByIngredient: strategiesByIngredient(def.placement),

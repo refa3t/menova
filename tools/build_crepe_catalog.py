@@ -87,9 +87,9 @@ CONE = [[0.50, 0.75, 0.13, 0.26], [0.87, 0.26, 0.50, 0.75]]
 # shows only inside the rim, like a wrapped crepe.
 OPENING = {'ellipse': [0.5, 0.37, 0.285, 0.095],
            'contents': [0.29, 0.5, 0.71, 0.66],
-           # The finished cone (with its paper) grows into this frame to
-           # fill the space.
-           'frame': [0.16, 0.25, 0.86, 0.77],
+           # The finished cone (with its paper and the filling heaped above
+           # the rim) grows into this frame to fill the space.
+           'frame': [0.16, 0.18, 0.86, 0.77],
            # Served in a kraft paper cone, like the owner's reference photo.
            'sleeve': '#9C7650'}
 
