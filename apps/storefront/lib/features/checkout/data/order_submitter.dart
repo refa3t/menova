@@ -27,7 +27,8 @@ class NotConfirmed extends SubmitResult {
   const NotConfirmed();
 }
 
-/// The order's coupon ran out just before it was sent: nothing was written.
+/// The order's offer was refused (a coupon ran out, an offer ended or
+/// changed) just before it was sent: nothing was written.
 class OfferUnavailable extends SubmitResult {
   const OfferUnavailable();
 }
@@ -119,10 +120,11 @@ class OrderSubmitter implements OrderGateway {
     } on FirebaseException catch (e) {
       debugPrint('checkout: submit failed: ${e.code} ${e.message}');
       // permission-denied here means the id exists but belongs to someone
-      // else or the payload broke the rules: treat as a conflict.
-      return e.code == 'permission-denied'
-          ? const Conflict()
-          : const NotConfirmed();
+      // else or the payload broke the rules: a conflict, unless the order
+      // has an offer the server no longer accepts (ended by its clock,
+      // changed, used up), which the guest can drop and send again.
+      if (e.code != 'permission-denied') return const NotConfirmed();
+      return order.offer == null ? const Conflict() : const OfferUnavailable();
     }
   }
 }

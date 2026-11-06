@@ -298,7 +298,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               decoration: InputDecoration(labelText: AppStrings.orderNotes),
             ),
             const SizedBox(height: 8),
-            _CouponField(basis: basis, applied: applied),
+            _CouponField(
+              basis: basis,
+              applied: applied,
+              feePending: _fulfillment == Fulfillment.delivery && fee == null,
+            ),
             const SizedBox(height: 8),
             if (subtotal != null) ...[
               _TotalRow(AppStrings.itemsTotal, subtotal),
@@ -406,10 +410,17 @@ class _TotalRow extends StatelessWidget {
 /// The guest's coupon (P3-09): a code to apply, then what it gives this
 /// cart or why it gives nothing.
 class _CouponField extends ConsumerStatefulWidget {
-  const _CouponField({required this.basis, required this.applied});
+  const _CouponField({
+    required this.basis,
+    required this.applied,
+    required this.feePending,
+  });
 
   final OfferBasis? basis;
   final AppliedOffer? applied;
+
+  /// A delivery order whose fee is not priced yet (no location).
+  final bool feePending;
 
   @override
   ConsumerState<_CouponField> createState() => _CouponFieldState();
@@ -434,7 +445,10 @@ class _CouponFieldState extends ConsumerState<_CouponField> {
     final basis = widget.basis;
     if (coupon != null) {
       final miss = basis == null ? null : offerDiscount(coupon, basis).miss;
-      final note = miss != null
+      final note = miss == OfferMiss.nothingToTake && widget.feePending
+          // Free delivery waits for the fee, priced from the location.
+          ? AppStrings.deliveryNeedsLocation
+          : miss != null
           ? AppStrings.offerMiss(miss, coupon)
           : widget.applied?.offer.id == coupon.id
           ? AppStrings.couponApplied(coupon.code!)

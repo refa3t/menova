@@ -24,6 +24,19 @@ void main() {
     expect(diffRecord(null, live), (changes: live, base: null));
   });
 
+  test('clearing an optional field is a change that publishing applies', () {
+    final grouped = {...live, 'groupId': 'classic'};
+    final d = diffRecord(grouped, live); // the edit removed the group
+    expect(d.changes, {'groupId': null});
+    final draft = Draft(
+      target: 'products/p1',
+      kind: DraftKind.product,
+      changes: d.changes,
+      base: d.base,
+    );
+    expect(draft.applyTo(grouped).containsKey('groupId'), isFalse);
+  });
+
   test('publishing applies the draft on top of the live record', () {
     final draft = Draft(
       target: 'products/p1',

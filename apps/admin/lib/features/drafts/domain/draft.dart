@@ -51,7 +51,9 @@ class Draft {
 
   /// The record once published: the live one with the changes on top, so
   /// fields changed live meanwhile (availability) are kept.
-  Json applyTo(Json? live) => {...?live, ...changes};
+  Json applyTo(Json? live) => {...?live, ...changes}
+    // A field the draft cleared (null) is left out, as a full save would.
+    ..removeWhere((k, v) => v == null && changes.containsKey(k));
 
   /// Changed fields whose live value moved since the draft was saved:
   /// publishing replaces them.
@@ -66,12 +68,15 @@ class Draft {
 String draftIdFor(String target) => target.replaceAll('/', '__');
 
 /// The fields of [edited] that differ from [live] (every field for a new
-/// record), and the live values of those fields.
+/// record), and the live values of those fields. An optional field the
+/// edit cleared (absent from [edited]) is a change to null.
 ({Json changes, Json? base}) diffRecord(Json? live, Json edited) {
   if (live == null) return (changes: edited, base: null);
   final changes = <String, dynamic>{
     for (final e in edited.entries)
       if (!jsonEquals(live[e.key], e.value)) e.key: e.value,
+    for (final k in live.keys)
+      if (!edited.containsKey(k) && live[k] != null) k: null,
   };
   return (changes: changes, base: {for (final k in changes.keys) k: live[k]});
 }

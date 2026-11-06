@@ -162,8 +162,12 @@ class _OfferEditScreenState extends ConsumerState<OfferEditScreen> {
       isActive: _active,
       code: code,
       maxUses: _coupon ? maxUses : null,
-      // A coupon keeps its count; only orders change it.
-      uses: original?.uses ?? 0,
+      // A coupon keeps its count, as it is now (orders change it while the
+      // form is open); the rules refuse any other value.
+      uses:
+          existing.where((c) => c.id == original?.id).firstOrNull?.uses ??
+          original?.uses ??
+          0,
     );
     issues.addAll([
       for (final i in validateOffer(

@@ -91,7 +91,12 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
       }
     }
     _original = p;
-    _categoryId = p?.categoryId ?? widget.categoryId ?? defs.keys.firstOrNull;
+    // A new product keeps the category just picked in the form.
+    _categoryId =
+        p?.categoryId ??
+        _categoryId ??
+        widget.categoryId ??
+        defs.keys.firstOrNull;
     final def = defs[_categoryId];
     _nameAr.text = p?.names['ar'] ?? p?.name ?? '';
     _nameEn.text = p?.names['en'] ?? '';

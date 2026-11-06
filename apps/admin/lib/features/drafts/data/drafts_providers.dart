@@ -12,18 +12,23 @@ final draftsProvider = StreamProvider<List<Draft>>(
       .snapshots()
       .map(
         (s) => [
+          // A draft that does not read is skipped, not fatal to the list.
           for (final d in s.docs)
-            if (DraftKind.ofTarget(d['target'] as String) case final kind?)
-              Draft(
-                target: d['target'] as String,
-                kind: kind,
-                changes: (d['changes'] as Map).cast<String, dynamic>(),
-                base: (d.data()['base'] as Map?)?.cast<String, dynamic>(),
-                isNew: d.data()['isNew'] as bool? ?? false,
-                by: d.data()['by'] as String?,
-                byEmail: d.data()['byEmail'] as String?,
-                at: (d.data()['at'] as Timestamp?)?.toDate(),
-              ),
+            if ((d.data()['target'], d.data()['changes']) case (
+              final String target,
+              final Map changes,
+            ))
+              if (DraftKind.ofTarget(target) case final kind?)
+                Draft(
+                  target: target,
+                  kind: kind,
+                  changes: changes.cast<String, dynamic>(),
+                  base: (d.data()['base'] as Map?)?.cast<String, dynamic>(),
+                  isNew: d.data()['isNew'] as bool? ?? false,
+                  by: d.data()['by'] as String?,
+                  byEmail: d.data()['byEmail'] as String?,
+                  at: (d.data()['at'] as Timestamp?)?.toDate(),
+                ),
         ]..sort((a, b) => (b.at ?? DateTime(0)).compareTo(a.at ?? DateTime(0))),
       ),
 );

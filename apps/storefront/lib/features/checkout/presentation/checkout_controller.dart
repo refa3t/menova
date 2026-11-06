@@ -236,20 +236,11 @@ class CheckoutController extends Notifier<CheckoutState> {
         _clearRequest(); // The next attempt gets a fresh id.
         state = const CheckoutConflict();
       case OfferUnavailable():
-        // The coupon ran out meanwhile: nothing was written; show the
-        // discount going and let the guest confirm without it.
-        final coupon = couponOf(ref.read(couponProvider));
-        if (coupon != null) {
-          // Used up, or removed when it had no limit.
-          final max = coupon.maxUses;
-          ref
-              .read(couponProvider.notifier)
-              .refreshed(
-                max == null
-                    ? null
-                    : Offer.fromJson({...coupon.toJson(), 'uses': max}),
-              );
-        }
+        // The offer was refused meanwhile: nothing was written. Read the
+        // coupon again so the guest sees why, show the discount going, and
+        // let them confirm without it.
+        final code = couponOf(ref.read(couponProvider))?.code;
+        if (code != null) ref.read(couponProvider.notifier).apply(code);
         state = CheckoutPriceChanged([
           PriceDiff(
             lineId: discountLineId,
