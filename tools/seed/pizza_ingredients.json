@@ -10,7 +10,12 @@
       },
       "assetId": "ing_mozzarella",
       "assetFiles": [
-        "ing_mozzarella_01.webp"
+        "ing_mozzarella_g01.webp",
+        "ing_mozzarella_g02.webp",
+        "ing_mozzarella_g03.webp",
+        "ing_mozzarella_g04.webp",
+        "ing_mozzarella_g05.webp",
+        "ing_mozzarella_g06.webp"
       ],
       "extraPrice": 3000,
       "isAvailable": true,
@@ -205,7 +210,12 @@
       },
       "assetId": "ing_cheddar",
       "assetFiles": [
-        "ing_cheddar_01.webp"
+        "ing_cheddar_g01.webp",
+        "ing_cheddar_g02.webp",
+        "ing_cheddar_g03.webp",
+        "ing_cheddar_g04.webp",
+        "ing_cheddar_g05.webp",
+        "ing_cheddar_g06.webp"
       ],
       "extraPrice": 2500,
       "isAvailable": true,
@@ -220,7 +230,12 @@
       },
       "assetId": "ing_feta",
       "assetFiles": [
-        "ing_feta_01.webp"
+        "ing_feta_g01.webp",
+        "ing_feta_g02.webp",
+        "ing_feta_g03.webp",
+        "ing_feta_g04.webp",
+        "ing_feta_g05.webp",
+        "ing_feta_g06.webp"
       ],
       "extraPrice": 2000,
       "isAvailable": true,
@@ -235,7 +250,12 @@
       },
       "assetId": "ing_parmesan",
       "assetFiles": [
-        "ing_parmesan_01.webp"
+        "ing_parmesan_g01.webp",
+        "ing_parmesan_g02.webp",
+        "ing_parmesan_g03.webp",
+        "ing_parmesan_g04.webp",
+        "ing_parmesan_g05.webp",
+        "ing_parmesan_g06.webp"
       ],
       "extraPrice": 3000,
       "isAvailable": true,
@@ -355,7 +375,12 @@
       },
       "assetId": "ing_roumi",
       "assetFiles": [
-        "ing_roumi_01.webp"
+        "ing_roumi_g01.webp",
+        "ing_roumi_g02.webp",
+        "ing_roumi_g03.webp",
+        "ing_roumi_g04.webp",
+        "ing_roumi_g05.webp",
+        "ing_roumi_g06.webp"
       ],
       "extraPrice": 2500,
       "isAvailable": true,
@@ -445,7 +470,12 @@
       },
       "assetId": "ing_blue_cheese",
       "assetFiles": [
-        "ing_blue_cheese_01.webp"
+        "ing_blue_cheese_g01.webp",
+        "ing_blue_cheese_g02.webp",
+        "ing_blue_cheese_g03.webp",
+        "ing_blue_cheese_g04.webp",
+        "ing_blue_cheese_g05.webp",
+        "ing_blue_cheese_g06.webp"
       ],
       "extraPrice": 3500,
       "isAvailable": true,
@@ -574,6 +604,141 @@
         "ing_capers_01.webp"
       ],
       "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "ketchup",
+      "name": "كاتشب",
+      "names": {
+        "en": "Ketchup",
+        "ar": "كاتشب"
+      },
+      "assetId": "ing_ketchup",
+      "assetFiles": [
+        "ing_ketchup_cup.webp"
+      ],
+      "extraPrice": 500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "mayonnaise",
+      "name": "مايونيز",
+      "names": {
+        "en": "Mayonnaise",
+        "ar": "مايونيز"
+      },
+      "assetId": "ing_mayonnaise",
+      "assetFiles": [
+        "ing_mayonnaise_cup.webp"
+      ],
+      "extraPrice": 500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "garlic_sauce",
+      "name": "ثومية",
+      "names": {
+        "en": "Garlic sauce",
+        "ar": "ثومية"
+      },
+      "assetId": "ing_garlic_sauce",
+      "assetFiles": [
+        "ing_garlic_sauce_cup.webp"
+      ],
+      "extraPrice": 1000,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "bbq_sauce",
+      "name": "صوص باربكيو",
+      "names": {
+        "en": "BBQ sauce",
+        "ar": "صوص باربكيو"
+      },
+      "assetId": "ing_bbq_sauce",
+      "assetFiles": [
+        "ing_bbq_sauce_cup.webp"
+      ],
+      "extraPrice": 1000,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "ranch_sauce",
+      "name": "صوص رانش",
+      "names": {
+        "en": "Ranch sauce",
+        "ar": "صوص رانش"
+      },
+      "assetId": "ing_ranch_sauce",
+      "assetFiles": [
+        "ing_ranch_sauce_cup.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "hot_sauce",
+      "name": "صوص حار",
+      "names": {
+        "en": "Hot sauce",
+        "ar": "صوص حار"
+      },
+      "assetId": "ing_hot_sauce",
+      "assetFiles": [
+        "ing_hot_sauce_cup.webp"
+      ],
+      "extraPrice": 1000,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "honey_mustard",
+      "name": "هني ماستر",
+      "names": {
+        "en": "Honey mustard",
+        "ar": "هني ماستر"
+      },
+      "assetId": "ing_honey_mustard",
+      "assetFiles": [
+        "ing_honey_mustard_cup.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "cheddar_sauce",
+      "name": "صوص شيدر",
+      "names": {
+        "en": "Cheddar sauce",
+        "ar": "صوص شيدر"
+      },
+      "assetId": "ing_cheddar_sauce",
+      "assetFiles": [
+        "ing_cheddar_sauce_cup.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "pesto_sauce",
+      "name": "صوص بيستو",
+      "names": {
+        "en": "Pesto sauce",
+        "ar": "صوص بيستو"
+      },
+      "assetId": "ing_pesto_sauce",
+      "assetFiles": [
+        "ing_pesto_sauce_cup.webp"
+      ],
+      "extraPrice": 2000,
       "isAvailable": true,
       "sizeMultipliers": {}
     }

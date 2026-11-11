@@ -8,6 +8,7 @@ Every price and owner decision here is TEMP until OWNER_INPUTS.md is filled.
 import glob
 import json
 import os
+import re
 from pathlib import Path
 
 # key, Arabic name (PIZZA_CATALOG.md section 2)
@@ -29,6 +30,42 @@ INGREDIENTS = [
     ('calamari', 'حلقات حبار'), ('anchovy', 'أنشوجة'),
     ('chili_red', 'فلفل حار أحمر'), ('capers', 'كبر'),
 ]
+
+# Sauces (owner request: poured as a liquid and spread evenly, and the
+# sauces every restaurant offers as extras): id, Arabic, English, extra EGP,
+# colour the canvas pours (ARGB). Egyptian-market prices set by the
+# developer at the owner's request. Icons: tools/process_sauce_assets.py.
+SAUCES = [
+    ('ketchup', 'كاتشب', 'Ketchup', 5, 0xFFB01E1A),
+    ('mayonnaise', 'مايونيز', 'Mayonnaise', 5, 0xFFF3EAC4),
+    ('garlic_sauce', 'ثومية', 'Garlic sauce', 10, 0xFFFAF6E8),
+    ('bbq_sauce', 'صوص باربكيو', 'BBQ sauce', 10, 0xFF6E2C17),
+    ('ranch_sauce', 'صوص رانش', 'Ranch sauce', 15, 0xFFEFEDE0),
+    ('hot_sauce', 'صوص حار', 'Hot sauce', 10, 0xFFD8401C),
+    ('honey_mustard', 'هني ماستر', 'Honey mustard', 15, 0xFFD9A030),
+    ('cheddar_sauce', 'صوص شيدر', 'Cheddar sauce', 15, 0xFFF0A21C),
+    ('pesto_sauce', 'صوص بيستو', 'Pesto sauce', 20, 0xFF4F7A2C),
+]
+SAUCE_IDS = [k for k, *_ in SAUCES]
+# Each sauce is poured at its own angle (degrees, 0-180: params are never
+# negative), so two sauces cross.
+SAUCE_ANGLES = [35, 145, 70, 110, 0, 90, 20, 125, 55]
+# How the sauces are poured on the pizza: passes per unit, line width, wave
+# (of the base radius), up to near the crust.
+SAUCE_POUR = {'lines': 7, 'lineWidth': 0.04, 'wave': 0.006, 'radius': 0.8}
+# A recipe with a sauce other than tomato (PRODUCTS below) shows it poured
+# on top, as a default the customer can take off.
+PRODUCT_SAUCE = {'bbq': 'bbq_sauce', 'ranch': 'ranch_sauce',
+                 'hot': 'hot_sauce', 'pesto': 'pesto_sauce'}
+# Cheeses drawn in code (owner request: grated, spread evenly, not piles):
+# their pieces are ing_<id>_gNN.webp (tools/process_cheese_assets.py); the
+# photo ing_<id>_01.webp is kept only as the colour reference. Each piece
+# is a generous sprinkle (owner: a lot of cheese, not a little), scattered
+# with a minimum gap (even, without the rings' circles) out to near the
+# crust: id -> minimum gap between pieces.
+CHEESE_GAP = {'mozzarella': 0.2, 'cheddar': 0.22, 'roumi': 0.23,
+              'parmesan': 0.25, 'feta': 0.27, 'blue_cheese': 0.29}
+DRAWN_CHEESES = list(CHEESE_GAP)
 
 # id, Arabic name, sauce, default ingredients (PIZZA_CATALOG.md section 1).
 # Quattro Stagioni is excluded: it needs a quartered base (half-and-half).
@@ -84,9 +121,9 @@ PRODUCTS = [
 # Motion per ingredient: (enter, exit, pieces per unit). ANIMATIONS.md 4.
 # Proposed values, calibrated against the approved reference (AC-11/12).
 MOTION = {
-    'mozzarella': ('shower', 'dissolve', 14), 'cheddar': ('shower', 'dissolve', 14),
-    'roumi': ('shower', 'dissolve', 14), 'feta': ('shower', 'dissolve', 12),
-    'blue_cheese': ('shower', 'dissolve', 10), 'parmesan': ('sprinkle', 'dissolve', 20),
+    'mozzarella': ('shower', 'dissolve', 30), 'cheddar': ('shower', 'dissolve', 24),
+    'roumi': ('shower', 'dissolve', 22), 'feta': ('sprinkle', 'dissolve', 16),
+    'blue_cheese': ('sprinkle', 'dissolve', 14), 'parmesan': ('sprinkle', 'dissolve', 18),
     'pepperoni': ('drop', 'liftFade', 10), 'salami_spicy': ('drop', 'liftFade', 10),
     'ham': ('drop', 'liftFade', 9), 'sausage': ('drop', 'liftFade', 9),
     'bacon': ('drop', 'liftFade', 10), 'ground_beef': ('shower', 'dissolve', 24),
@@ -105,12 +142,12 @@ MOTION = {
     'oregano': ('sprinkle', 'dissolve', 18), 'parsley': ('sprinkle', 'dissolve', 18),
 }
 
-# Smaller pieces for dense scatter (crumbs, kernels, herbs); spread cheeses
-# stay larger so they read as a covering layer.
+# Smaller pieces for dense scatter (crumbs, kernels, herbs, grated cheese:
+# a few shreds or crumbles per piece, many pieces).
 PIECE_SIZE = {
-    'mozzarella': 0.2, 'cheddar': 0.2, 'roumi': 0.12, 'ground_beef': 0.09,
-    'corn': 0.08, 'oregano': 0.09, 'parsley': 0.09, 'parmesan': 0.1,
-    'capers': 0.09,
+    'mozzarella': 0.2, 'cheddar': 0.19, 'roumi': 0.18, 'ground_beef': 0.09,
+    'corn': 0.08, 'oregano': 0.09, 'parsley': 0.09, 'parmesan': 0.18,
+    'capers': 0.09, 'feta': 0.17, 'blue_cheese': 0.17,
 }
 
 # Menu groups (owner request), in display order, and each product's group.
@@ -226,6 +263,29 @@ EXTRA_PRICE = {
 }
 
 
+def asset_files(files, key: str) -> list:
+    """An ingredient's image files: its photo variants (ing_<id>_NN), its
+    drawn cheese pieces (ing_<id>_gNN) or its sauce icon (ing_<id>_cup).
+    Matched exactly, so ids that share a start (cheddar, cheddar_sauce) never
+    take each other's files."""
+    kind = ('cup' if key in SAUCE_IDS else r'g\d+' if key in DRAWN_CHEESES
+            else r'\d+')
+    return [f for f in files
+            if re.fullmatch(rf'ing_{re.escape(key)}_{kind}\.webp', f)]
+
+
+
+def sauce_params(sauces, angles, pour) -> dict:
+    """Placement params of poured sauces: colour, angle and pour each."""
+    params = {}
+    for i, (k, *_, colour) in enumerate(sauces):
+        params[f'color:{k}'] = colour
+        params[f'angle:{k}'] = angles[i % len(angles)]
+        for p, v in pour.items():
+            params[f'{p}:{k}'] = v
+    return params
+
+
 def dump(path: str, data) -> None:
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     with open(path, 'w', encoding='utf-8') as f:
@@ -239,9 +299,11 @@ def main() -> None:
     assert set(PRODUCT_GROUP) == {p[0] for p in PRODUCTS}
     assert set(PRODUCT_TIER) == {p[0] for p in PRODUCTS}
     assert set(EXTRA_PRICE) == keys, set(EXTRA_PRICE) ^ keys
-    for pid, _, _, defaults in PRODUCTS:
+    for pid, _, sauce, defaults in PRODUCTS:
         unknown = set(defaults) - keys
         assert not unknown, f'{pid}: unknown ingredients {unknown}'
+        assert sauce == 'tomato' or sauce in PRODUCT_SAUCE, (pid, sauce)
+    assert not keys & set(SAUCE_IDS)
     files = sorted(os.path.basename(f)
                    for f in glob.glob('assets_src/pizza/ingredients/*.webp'))
 
@@ -251,15 +313,20 @@ def main() -> None:
         'name': 'بيتزا',
         'names': {'en': 'Pizza', 'ar': 'بيتزا'},
         'base': {'shape': 'circle', 'rawAssetId': 'base_pizza_regular_raw'},
-        'allowedIngredientIds': [k for k, _ in INGREDIENTS],
+        'allowedIngredientIds': [k for k, _ in INGREDIENTS] + SAUCE_IDS,
         # TEMP: calibrated during the P1-B00 drawing prototype.
         'placement': {'strategy': 'rings', 'params': {
             'pieceSize': 0.13, 'piecesPerUnit': 9, 'radius': 0.74, 'minGap': 0.16,
             **{f'piecesPerUnit:{k}': v[2] for k, v in MOTION.items()},
             **{f'pieceSize:{k}': v for k, v in PIECE_SIZE.items()},
-            # Spread cheeses pack tighter to cover the base.
-            **{f'{p}:{ing}': v for ing in ('mozzarella', 'cheddar')
-               for p, v in (('minGap', 0.12), ('radius', 0.72))}}},
+            # The small cheese pieces spread out to near the crust.
+            **{f'radius:{k}': 0.72 for k in DRAWN_CHEESES},
+            **{f'minGap:{k}': v for k, v in CHEESE_GAP.items()},
+            **sauce_params(SAUCES, SAUCE_ANGLES, SAUCE_POUR)},
+            'byIngredient': {**{k: 'scatter' for k in DRAWN_CHEESES},
+                             **{k: 'sauce' for k in SAUCE_IDS}}},
+        # Sauces are poured over everything else.
+        'layerOverrides': {k: 40 for k in SAUCE_IDS},
         'constraints': {'maxQty': 2},
         'sizes': [
             {'id': 's', 'name': 'صغير', 'names': {'en': 'Small', 'ar': 'صغير'}, 'scale': 0.82},
@@ -296,6 +363,10 @@ def main() -> None:
         ],
         'productGroups': [{'id': g, 'name': n, 'names': {'en': GROUP_EN[g], 'ar': n}}
                           for g, n in PRODUCT_GROUPS],
+        # Every pizza offers the sauces as extras, in a section of their own.
+        'addOnGroups': [{'id': 'sauces', 'name': 'الصوصات',
+                         'names': {'en': 'Sauces', 'ar': 'الصوصات'},
+                         'ingredientIds': SAUCE_IDS}],
         'ingredientMotion': {
             k: {'enter': v[0], 'exit': v[1]} for k, v in MOTION.items()
         },
@@ -321,13 +392,15 @@ def main() -> None:
     })
 
     ingredients = []
-    for k, name in INGREDIENTS:
-        variants = [f for f in files if f.startswith(f'ing_{k}_')]
+    entries = ([(k, name, INGREDIENT_EN[k], EXTRA_PRICE[k]) for k, name in INGREDIENTS]
+               + [(k, ar, en, extra) for k, ar, en, extra, _ in SAUCES])
+    for k, name, en, extra in entries:
+        variants = asset_files(files, k)
         assert variants, f'no asset files for {k}'
         ingredients.append({
-            'id': k, 'name': name, 'names': {'en': INGREDIENT_EN[k], 'ar': name},
+            'id': k, 'name': name, 'names': {'en': en, 'ar': name},
             'assetId': f'ing_{k}', 'assetFiles': variants,
-            'extraPrice': EXTRA_PRICE[k] * EGP, 'isAvailable': True,
+            'extraPrice': extra * EGP, 'isAvailable': True,
             'sizeMultipliers': {},
         })
     dump('tools/seed/pizza_ingredients.json', {
@@ -344,7 +417,8 @@ def main() -> None:
         'imageAssetId': f'final_pizza_{pid}',
         'defaults': [{'ingredientId': d, 'qty': 1, 'removable': True,
                       'refundOnRemove': False, 'refundAmount': 0}
-                     for d in defaults],
+                     for d in defaults + ([PRODUCT_SAUCE[sauce]]
+                                          if sauce in PRODUCT_SAUCE else [])],
         'isAvailable': True,
         'sizeDeltas': {
             size: (PRICE_TIERS[PRODUCT_TIER[pid]][t] -
@@ -363,8 +437,8 @@ def main() -> None:
         'excluded': {'quattro_stagioni': 'Needs a quartered base (half-and-half,'
                      ' CLAUDE.md section 10 Q3). Not supported in phase 1.'},
         'pendingNotes': [
-            'Non-tomato sauces (bbq, ranch, hot, pesto) need Drizzle placement '
-            '(phase 2); shown on the tomato base until then.',
+            'Non-tomato sauces (bbq, ranch, hot, pesto) are poured on top as '
+            'a removable default; the base still shows tomato.',
             'Final product images (final_pizza_*) not delivered yet.',
         ],
         'products': products,

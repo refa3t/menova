@@ -83,4 +83,124 @@ void main() {
     await tester.pumpAndSettle();
     expect(add, findsOneWidget, reason: 'button returns to idle');
   });
+
+  group('add-on groups (owner request: the sauces restaurants offer)', () {
+    Asset asset(String id, String kind) => Asset(
+      id: id,
+      kind: kind,
+      name: id,
+      publicId: id,
+      secureUrl: 'https://example.test/$id.png',
+      version: 1,
+      layerOrder: kind == 'base' ? 0 : 20,
+      allowedCategoryIds: const ['cat'],
+    );
+    CategoryDefinition withSauces(List<String> productGroupIds) =>
+        CategoryDefinition(
+          id: 'cat',
+          definitionVersion: 1,
+          name: 'C',
+          base: const BaseSpec(shape: 'circle', rawAssetId: 'base'),
+          allowedIngredientIds: const [
+            'cheese',
+            'olive',
+            'pepper',
+            'ketchup',
+            'mayo',
+          ],
+          placement: const PlacementSpec(
+            strategy: 'scatter',
+            params: {'color:ketchup': 0xFFB01E1A, 'color:mayo': 0xFFF3EAC4},
+            byIngredient: {'ketchup': 'sauce', 'mayo': 'sauce'},
+          ),
+          constraints: const CustomizationConstraints(maxQty: 2),
+          sizes: const [SizeOption(id: 's', name: 'صغير')],
+          optionGroups: const [],
+          animation: const [StepSpec(step: 'Oven')],
+          assetSpecs: const {},
+          productGroups: const [ProductGroup(id: 'other', name: 'O')],
+          addOnGroups: [
+            AddOnGroup(
+              id: 'sauces',
+              name: 'الصوصات',
+              names: const {'en': 'Sauces', 'ar': 'الصوصات'},
+              ingredientIds: const ['ketchup', 'mayo'],
+              productGroupIds: productGroupIds,
+            ),
+          ],
+        );
+
+    Future<ProviderContainer> open(
+      WidgetTester tester,
+      CategoryDefinition definition,
+    ) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final ids = ['cheese', 'olive', 'pepper', 'ketchup', 'mayo'];
+      final menu = Menu.assemble(
+        definitions: {'cat': definition},
+        contents: const [
+          CategoryContent(categoryId: 'cat', isVisible: true, displayOrder: 0),
+        ],
+        products: const [product],
+        ingredients: [for (final id in ids) ing(id)],
+        assets: [
+          asset('base', 'base'),
+          for (final id in ids) asset('a_$id', 'ingredient'),
+        ],
+      );
+      final container = ProviderContainer(
+        overrides: [
+          menuProvider.overrideWith((ref) async => menu),
+          sharedPreferencesProvider.overrideWithValue(prefs),
+        ],
+      );
+      addTearDown(container.dispose);
+      await tester.binding.setSurfaceSize(const Size(1200, 2400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(home: BuilderScreen(productId: 'p1')),
+        ),
+      );
+      await tester.pumpAndSettle();
+      return container;
+    }
+
+    testWidgets('sauces get their own section and add as extras', (
+      tester,
+    ) async {
+      await open(tester, withSauces(const []));
+      expect(find.text('Sauces'), findsOneWidget);
+      expect(find.text(AppStrings.ingredients), findsOneWidget);
+      // The product's own ingredients in its grid, the sauces in theirs.
+      expect(find.text('n_cheese'), findsOneWidget);
+      expect(find.text('n_olive'), findsOneWidget);
+      expect(find.text('n_pepper'), findsNothing);
+      expect(find.text('n_ketchup'), findsOneWidget);
+      expect(find.text('n_mayo'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('n_ketchup')).dy,
+        greaterThan(tester.getTopLeft(find.text('Sauces')).dy),
+      );
+
+      await tester.tap(find.text('n_ketchup'));
+      await tester.pumpAndSettle();
+      expect(find.text('×1'), findsOneWidget);
+      expect(
+        find.text('${AppStrings.addToCart} · ${AppStrings.price(11500)}'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a group for other product groups is not offered', (
+      tester,
+    ) async {
+      await open(tester, withSauces(const ['other']));
+      expect(find.text('Sauces'), findsNothing);
+      expect(find.text('n_ketchup'), findsNothing);
+      expect(find.text('n_cheese'), findsOneWidget);
+    });
+  });
 }

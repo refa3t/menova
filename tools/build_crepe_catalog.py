@@ -8,26 +8,54 @@ Outputs: definitions/crepe.json, definitions/crepe.temp.json,
          tools/seed/crepe_ingredients.json, tools/seed/crepe_products.json,
          CREPE_CATALOG.md (readable: products, ingredients, extras, prices)
 
-Savoury crepes reuse the pizza ingredients (one record and one image per
-ingredient, defined in tools/seed/pizza_ingredients.json); only the new
-sweet ingredients are defined here (images: tools/process_crepe_assets.py).
+Savoury crepes reuse the pizza ingredients and savoury sauces (one record
+and one image per ingredient, defined in tools/seed/pizza_ingredients.json);
+only the new sweet ingredients and sauces are defined here (images:
+tools/process_crepe_assets.py, tools/process_sauce_assets.py).
 """
 import glob
 import json
 import os
+import re
 from pathlib import Path
+
+from build_pizza_catalog import SAUCES as PIZZA_SAUCES, sauce_params
 
 EGP = 100
 
 # New ingredients introduced by the crepe: id, Arabic, English, extra EGP,
 # pieces per unit, piece size, enter motion.
 NEW_INGREDIENTS = [
-    ('nutella', 'نوتيلا', 'Nutella', 20, 5, 0.2, 'drop'),
-    ('white_chocolate', 'شوكولاتة بيضاء', 'White chocolate', 20, 3, 0.24, 'drop'),
-    ('lotus', 'لوتس', 'Lotus', 25, 6, 0.16, 'sprinkle'),
-    ('banana', 'موز', 'Banana', 10, 8, 0.12, 'toss'),
-    ('strawberry', 'فراولة', 'Strawberry', 15, 7, 0.13, 'toss'),
+    ('lotus', 'لوتس', 'Lotus', 25, 12, 0.16, 'sprinkle'),
+    ('banana', 'موز', 'Banana', 10, 14, 0.12, 'toss'),
+    ('strawberry', 'فراولة', 'Strawberry', 15, 12, 0.13, 'toss'),
 ]
+
+# Sweet sauces (owner request: poured as a liquid and spread evenly, and the
+# sauces restaurants offer as extras): id, Arabic, English, extra EGP,
+# colour the canvas pours (ARGB). Nutella and white chocolate were drawn as
+# drops before; now they are poured like every sauce.
+SWEET_SAUCES = [
+    ('nutella', 'نوتيلا', 'Nutella', 20, 0xFF4A2614),
+    ('white_chocolate', 'شوكولاتة بيضاء', 'White chocolate', 20, 0xFFF3E9D2),
+    ('chocolate_sauce', 'صوص شوكولاتة', 'Chocolate sauce', 15, 0xFF3A1D10),
+    ('caramel_sauce', 'صوص كراميل', 'Caramel sauce', 15, 0xFFB8691E),
+    ('lotus_sauce', 'صوص لوتس', 'Lotus sauce', 20, 0xFFA8652E),
+    ('strawberry_sauce', 'صوص فراولة', 'Strawberry sauce', 15, 0xFFC21A34),
+    ('honey', 'عسل', 'Honey', 15, 0xFFE0A11C),
+    ('pistachio_sauce', 'صوص بستاشيو', 'Pistachio sauce', 30, 0xFF97AE55),
+]
+# The pizza's savoury sauces, offered on savoury crepes (pesto stays a
+# pizza sauce).
+SAVORY_SAUCES = [x for x in PIZZA_SAUCES if x[0] != 'pesto_sauce']
+# Poured across the filling in near-upright passes; two sauces cross.
+SAUCE_ANGLES = [62, 118, 90, 76, 104, 50, 130]
+SAUCE_POUR = {'lines': 11, 'lineWidth': 0.042, 'wave': 0.005}
+SAUCE_IDS = [x[0] for x in SAVORY_SAUCES + SWEET_SAUCES]
+
+# Pieces of a shared ingredient on the crepe, relative to the pizza: the
+# filling area is smaller, so fewer pieces keep it about as full.
+CREPE_DENSITY = 0.6
 
 # Reused pizza ingredients the crepe allows (savoury fillings).
 SHARED = [
@@ -73,9 +101,6 @@ PRODUCTS = [
      ['nutella', 'banana', 'strawberry']),
 ]
 
-# Sauces drizzled in lines over the filling: id, pieces per unit, size.
-DRIZZLED = [('nutella', 48, 0.085), ('white_chocolate', 27, 0.12)]
-
 # Fold lines of the cone, in fractions of the product box: each folds the
 # part on its outer side (left, then right) over the filling. They meet in a
 # point at the straight edge (owner: an upside-down triangle) and open
@@ -86,7 +111,8 @@ CONE = [[0.50, 0.75, 0.13, 0.26], [0.87, 0.26, 0.50, 0.75]]
 # (contents x0, y0, x1, y1); the outside is crepe all round, so the filling
 # shows only inside the rim, like a wrapped crepe.
 OPENING = {'ellipse': [0.5, 0.37, 0.285, 0.095],
-           'contents': [0.29, 0.5, 0.71, 0.66],
+           # The whole filling area (FILLING below, in box fractions).
+           'contents': [0.16, 0.415, 0.84, 0.685],
            # The finished cone (with its paper and the filling heaped above
            # the rim) grows into this frame to fill the space.
            'frame': [0.16, 0.18, 0.86, 0.77],
@@ -95,6 +121,11 @@ OPENING = {'ellipse': [0.5, 0.37, 0.285, 0.095],
 
 # Shown on the home page after the pizza.
 CATEGORY_ORDER = 1
+
+# Where the filling and sauces go on the half moon (owner request: a larger
+# area): a strip `bandWidth` high around `offsetY`, inside `radius` (of the
+# base radius; the half moon's straight edge is at y = 0.5).
+FILLING = {'radius': 0.68, 'bandWidth': 0.27, 'offsetY': 0.1}
 
 
 def dump(path: str, data) -> None:
@@ -109,8 +140,16 @@ def main() -> None:
     pizza_ing = {i['id']: i for i in json.load(
         open('tools/seed/pizza_ingredients.json', encoding='utf-8'))['ingredients']}
     new_ids = [i[0] for i in NEW_INGREDIENTS]
-    allowed = SHARED + new_ids
-    assert all(s in pizza_ing for s in SHARED), set(SHARED) - set(pizza_ing)
+    savory_ids = [x[0] for x in SAVORY_SAUCES]
+    sweet_ids = [x[0] for x in SWEET_SAUCES]
+    allowed = SHARED + savory_ids + new_ids + sweet_ids
+    shared = SHARED + savory_ids
+    assert all(s in pizza_ing for s in shared), set(shared) - set(pizza_ing)
+    # The contents box of the opening is the filling area.
+    f = FILLING
+    assert OPENING['contents'] == [
+        round((1 - f['radius']) / 2, 3), round((1 + f['offsetY'] - f['bandWidth']) / 2, 3),
+        round((1 + f['radius']) / 2, 3), round((1 + f['offsetY'] + f['bandWidth']) / 2, 3)]
     for pid, *_, defaults in PRODUCTS:
         assert set(defaults) <= set(allowed), (pid, set(defaults) - set(allowed))
     files = sorted(os.path.basename(f) for f in
@@ -118,23 +157,22 @@ def main() -> None:
 
     pp = pizza_def['placement']['params']
     # Fillings lie in a band across the middle (where the crepe is folded
-    # over them); chocolate sauces are drizzled in lines (P2-04).
+    # over them), sauces are poured over them (P2-04, owner request).
     # The crepe is a half moon (owner request): curved side up, straight
-    # edge at 3/4 of the height. The filling sits in its middle (offsetY),
-    # in a short band, with the sauces drizzled over it.
-    params = {'pieceSize': 0.12, 'piecesPerUnit': 7, 'radius': 0.42,
-              'bandWidth': 0.13, 'offsetY': 0.16, 'minGap': 0.09,
-              'lines': 2, 'wave': 0.035}
+    # edge at 3/4 of the height. The filling covers most of it (FILLING).
+    params = {'pieceSize': 0.12, 'piecesPerUnit': 12, **FILLING,
+              'minGap': 0.1}
     for k in SHARED:
-        for p in ('piecesPerUnit', 'pieceSize'):
-            if f'{p}:{k}' in pp:
-                params[f'{p}:{k}'] = pp[f'{p}:{k}']
+        if f'piecesPerUnit:{k}' in pp:
+            params[f'piecesPerUnit:{k}'] = max(
+                3, round(pp[f'piecesPerUnit:{k}'] * CREPE_DENSITY))
+        if f'pieceSize:{k}' in pp:
+            params[f'pieceSize:{k}'] = pp[f'pieceSize:{k}']
     for k, _, _, _, per, size, _ in NEW_INGREDIENTS:
         params[f'piecesPerUnit:{k}'] = per
         params[f'pieceSize:{k}'] = size
-    for k, per, size in DRIZZLED:
-        params[f'piecesPerUnit:{k}'] = per
-        params[f'pieceSize:{k}'] = size
+    params.update(sauce_params(SAVORY_SAUCES, SAUCE_ANGLES, SAUCE_POUR))
+    params.update(sauce_params(SWEET_SAUCES, SAUCE_ANGLES, SAUCE_POUR))
     motion = {k: pizza_def['ingredientMotion'][k] for k in SHARED
               if k in pizza_def['ingredientMotion']}
     for k, *_, enter in NEW_INGREDIENTS:
@@ -149,7 +187,9 @@ def main() -> None:
                  'cookedAssetId': 'base_crepe_cooked'},
         'allowedIngredientIds': allowed,
         'placement': {'strategy': 'band', 'params': params,
-                      'byIngredient': {k: 'drizzle' for k, *_ in DRIZZLED}},
+                      'byIngredient': {k: 'sauce' for k in SAUCE_IDS}},
+        # Sauces are poured over the filling.
+        'layerOverrides': {k: 40 for k in SAUCE_IDS},
         'constraints': {'maxQty': 2},
         'sizes': [],
         'optionGroups': [],
@@ -186,6 +226,12 @@ def main() -> None:
         ],
         'productGroups': [{'id': g, 'name': ar, 'names': {'en': en, 'ar': ar}}
                           for g, ar, en in GROUPS],
+        # Savoury crepes offer the savoury sauces, sweet ones the sweet.
+        'addOnGroups': [
+            {'id': f'{g}_sauces', 'name': 'الصوصات',
+             'names': {'en': 'Sauces', 'ar': 'الصوصات'},
+             'ingredientIds': ids, 'productGroupIds': [g]}
+            for g, ids in (('savory', savory_ids), ('sweet', sweet_ids))],
         'ingredientMotion': motion,
         'assetSpecs': pizza_def['assetSpecs'],
     })
@@ -199,8 +245,12 @@ def main() -> None:
     })
 
     ingredients = []
-    for k, ar, en, extra, *_ in NEW_INGREDIENTS:
-        variants = [f for f in files if f.startswith(f'ing_{k}_')]
+    for k, ar, en, extra, *_ in NEW_INGREDIENTS + SWEET_SAUCES:
+        # Pieces: ing_<id>_NN; a sauce: its icon ing_<id>_cup (matched
+        # exactly: honey never takes another sauce's file).
+        kind = 'cup' if k in sweet_ids else r'\d+'
+        variants = [f for f in files
+                    if re.fullmatch(rf'ing_{re.escape(k)}_{kind}\.webp', f)]
         assert variants, f'no asset files for {k}'
         ingredients.append({
             'id': k, 'name': ar, 'names': {'en': en, 'ar': ar},
@@ -209,8 +259,9 @@ def main() -> None:
             'sizeMultipliers': {},
         })
     dump('tools/seed/crepe_ingredients.json', {
-        '_note': 'Ingredients the crepe introduces. Savoury fillings reuse '
-                 'the pizza records (tools/seed/pizza_ingredients.json).',
+        '_note': 'Ingredients and sauces the crepe introduces. Savoury '
+                 'fillings and sauces reuse the pizza records '
+                 '(tools/seed/pizza_ingredients.json).',
         'ingredients': ingredients,
     })
 
@@ -234,10 +285,10 @@ def main() -> None:
     })
 
     # Readable catalog: products, ingredients, extras and prices.
-    names = {k: pizza_ing[k]['name'] for k in SHARED}
-    names.update({k: ar for k, ar, *_ in NEW_INGREDIENTS})
-    extra = {k: pizza_ing[k]['extraPrice'] // EGP for k in SHARED}
-    extra.update({k: e for k, _, _, e, *_ in NEW_INGREDIENTS})
+    names = {k: pizza_ing[k]['name'] for k in shared}
+    names.update({k: ar for k, ar, *_ in NEW_INGREDIENTS + SWEET_SAUCES})
+    extra = {k: pizza_ing[k]['extraPrice'] // EGP for k in shared}
+    extra.update({k: e for k, _, _, e, *_ in NEW_INGREDIENTS + SWEET_SAUCES})
     lines = [
         '# CREPE_CATALOG.md — منيو الكريب ومكوناته وإضافاته وأسعاره',
         '',
@@ -255,29 +306,36 @@ def main() -> None:
                      f'{"، ".join(names[d] for d in defaults)} | {price} ج |')
     lines += ['', '## 2) المكونات', '',
               '| المعرّف | الاسم | المصدر | الصورة |', '| --- | --- | --- | --- |']
-    for k in allowed:
+    for k in SHARED + new_ids:
         src = 'جديد للكريب' if k in new_ids else 'مشترك مع البيتزا'
         img = ('مرسومة بالكود (3 تنويعات)' if k in new_ids
                else 'صور البيتزا الحالية')
         lines.append(f'| `{k}` | {names[k]} | {src} | {img} |')
-    lines += ['', '## 3) الإضافات وأسعارها', '',
+    lines += ['', '## 3) الصوصات (إضافات)', '',
+              '> تُصب سائلة بالتساوي فوق الحشو (بطلب المالك). الحادق يظهر في قسم «الصوصات» للكريب الحادق والحلو للكريب الحلو، وتُضاف حتى 2 فوق الافتراضي. الصوص الحادق مشترك مع البيتزا بنفس السعر.',
+              '', '| المعرّف | الاسم | يُعرض مع | السعر |', '| --- | --- | --- | --- |']
+    for k in savory_ids + sweet_ids:
+        group = 'الكريب الحادق' if k in savory_ids else 'الكريب الحلو'
+        lines.append(f'| `{k}` | {names[k]} | {group} | {extra[k]} ج |')
+    lines += ['', '## 4) الإضافات وأسعارها', '',
               '> الإضافة تزيد كمية مكوّن موجود في المنتج، بحد أقصى 2 فوق الافتراضي (`maxQty`). سعر المكوّن المشترك هو نفسه في البيتزا والكريب (مصدر واحد).',
               '', '| المكوّن | سعر الإضافة |', '| --- | --- |']
-    for k in sorted(allowed, key=lambda x: (extra[x], names[x])):
+    for k in sorted(SHARED + new_ids, key=lambda x: (extra[x], names[x])):
         lines.append(f'| {names[k]} | {extra[k]} ج |')
-    lines += ['', '## 4) ملخص الأسعار', '',
+    lines += ['', '## 5) ملخص الأسعار', '',
               '| القسم | أقل سعر | أعلى سعر | عدد الأصناف |',
               '| --- | --- | --- | --- |']
     for g, ar, _ in GROUPS:
         ps = [p[4] for p in PRODUCTS if p[3] == g]
         lines.append(f'| {ar} | {min(ps)} ج | {max(ps)} ج | {len(ps)} |')
-    lines += ['', '## 5) الصور', '',
+    lines += ['', '## 6) الصور', '',
               '| الملف | الوصف |', '| --- | --- |',
               '| `assets_src/crepe/bases/base_crepe_raw.webp` | عجينة نيئة |',
               '| `assets_src/crepe/bases/base_crepe_cooked.webp` | كريب مسوّى (بعد الجريل) |',
               '| `assets_src/animation/crepe_back.webp` | ظهر الكريب (الوجه الخارجي بعد الطي، P2-06) |',
               '| `assets_src/animation/griddle_surface.webp` | سطح الجريل (لحركة الجريل P2-05) |',
               '| `assets_src/crepe/ingredients/ing_<id>_0N.webp` | المكونات الحلوة الجديدة، 3 تنويعات لكل مكوّن |',
+              '| `assets_src/crepe/ingredients/ing_<id>_cup.webp` | أيقونة كل صوص حلو (الصوص نفسه يُرسم سائلاً بالكود) |',
               '', 'كل الصور مرسومة بالكود (`tools/process_crepe_assets.py`) وتُستبدل بصور حقيقية بنفس الاسم دون تعديل كود.', '']
     Path('CREPE_CATALOG.md').write_text('\n'.join(lines), encoding='utf-8')
     print(f'{len(allowed)} ingredients ({len(new_ids)} new), '

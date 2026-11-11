@@ -30,61 +30,182 @@
     "corn",
     "olive_black",
     "garlic",
-    "nutella",
-    "white_chocolate",
+    "ketchup",
+    "mayonnaise",
+    "garlic_sauce",
+    "bbq_sauce",
+    "ranch_sauce",
+    "hot_sauce",
+    "honey_mustard",
+    "cheddar_sauce",
     "lotus",
     "banana",
-    "strawberry"
+    "strawberry",
+    "nutella",
+    "white_chocolate",
+    "chocolate_sauce",
+    "caramel_sauce",
+    "lotus_sauce",
+    "strawberry_sauce",
+    "honey",
+    "pistachio_sauce"
   ],
   "placement": {
     "strategy": "band",
     "params": {
       "pieceSize": 0.12,
-      "piecesPerUnit": 7,
-      "radius": 0.42,
-      "bandWidth": 0.13,
-      "offsetY": 0.16,
-      "minGap": 0.09,
-      "lines": 2,
-      "wave": 0.035,
-      "piecesPerUnit:mozzarella": 14,
+      "piecesPerUnit": 12,
+      "radius": 0.68,
+      "bandWidth": 0.27,
+      "offsetY": 0.1,
+      "minGap": 0.1,
+      "piecesPerUnit:mozzarella": 18,
       "pieceSize:mozzarella": 0.2,
       "piecesPerUnit:cheddar": 14,
-      "pieceSize:cheddar": 0.2,
-      "piecesPerUnit:roumi": 14,
-      "pieceSize:roumi": 0.12,
-      "piecesPerUnit:feta": 12,
-      "piecesPerUnit:chicken": 12,
-      "piecesPerUnit:ground_beef": 24,
+      "pieceSize:cheddar": 0.19,
+      "piecesPerUnit:roumi": 13,
+      "pieceSize:roumi": 0.18,
+      "piecesPerUnit:feta": 10,
+      "pieceSize:feta": 0.17,
+      "piecesPerUnit:chicken": 7,
+      "piecesPerUnit:ground_beef": 14,
       "pieceSize:ground_beef": 0.09,
-      "piecesPerUnit:sausage": 9,
-      "piecesPerUnit:basterma": 9,
-      "piecesPerUnit:tuna": 14,
-      "piecesPerUnit:mortadella": 9,
-      "piecesPerUnit:shrimp": 6,
-      "piecesPerUnit:mushroom": 12,
-      "piecesPerUnit:bell_pepper_green": 10,
-      "piecesPerUnit:onion": 14,
-      "piecesPerUnit:tomato": 8,
-      "piecesPerUnit:corn": 30,
+      "piecesPerUnit:sausage": 5,
+      "piecesPerUnit:basterma": 5,
+      "piecesPerUnit:tuna": 8,
+      "piecesPerUnit:mortadella": 5,
+      "piecesPerUnit:shrimp": 4,
+      "piecesPerUnit:mushroom": 7,
+      "piecesPerUnit:bell_pepper_green": 6,
+      "piecesPerUnit:onion": 8,
+      "piecesPerUnit:tomato": 5,
+      "piecesPerUnit:corn": 18,
       "pieceSize:corn": 0.08,
-      "piecesPerUnit:olive_black": 14,
-      "piecesPerUnit:garlic": 14,
-      "piecesPerUnit:nutella": 48,
-      "pieceSize:nutella": 0.085,
-      "piecesPerUnit:white_chocolate": 27,
-      "pieceSize:white_chocolate": 0.12,
-      "piecesPerUnit:lotus": 6,
+      "piecesPerUnit:olive_black": 8,
+      "piecesPerUnit:garlic": 8,
+      "piecesPerUnit:lotus": 12,
       "pieceSize:lotus": 0.16,
-      "piecesPerUnit:banana": 8,
+      "piecesPerUnit:banana": 14,
       "pieceSize:banana": 0.12,
-      "piecesPerUnit:strawberry": 7,
-      "pieceSize:strawberry": 0.13
+      "piecesPerUnit:strawberry": 12,
+      "pieceSize:strawberry": 0.13,
+      "color:ketchup": 4289732122,
+      "angle:ketchup": 62,
+      "lines:ketchup": 11,
+      "lineWidth:ketchup": 0.042,
+      "wave:ketchup": 0.005,
+      "color:mayonnaise": 4294175428,
+      "angle:mayonnaise": 118,
+      "lines:mayonnaise": 11,
+      "lineWidth:mayonnaise": 0.042,
+      "wave:mayonnaise": 0.005,
+      "color:garlic_sauce": 4294637288,
+      "angle:garlic_sauce": 90,
+      "lines:garlic_sauce": 11,
+      "lineWidth:garlic_sauce": 0.042,
+      "wave:garlic_sauce": 0.005,
+      "color:bbq_sauce": 4285410327,
+      "angle:bbq_sauce": 76,
+      "lines:bbq_sauce": 11,
+      "lineWidth:bbq_sauce": 0.042,
+      "wave:bbq_sauce": 0.005,
+      "color:ranch_sauce": 4293914080,
+      "angle:ranch_sauce": 104,
+      "lines:ranch_sauce": 11,
+      "lineWidth:ranch_sauce": 0.042,
+      "wave:ranch_sauce": 0.005,
+      "color:hot_sauce": 4292362268,
+      "angle:hot_sauce": 50,
+      "lines:hot_sauce": 11,
+      "lineWidth:hot_sauce": 0.042,
+      "wave:hot_sauce": 0.005,
+      "color:honey_mustard": 4292452400,
+      "angle:honey_mustard": 130,
+      "lines:honey_mustard": 11,
+      "lineWidth:honey_mustard": 0.042,
+      "wave:honey_mustard": 0.005,
+      "color:cheddar_sauce": 4293960220,
+      "angle:cheddar_sauce": 62,
+      "lines:cheddar_sauce": 11,
+      "lineWidth:cheddar_sauce": 0.042,
+      "wave:cheddar_sauce": 0.005,
+      "color:nutella": 4283049492,
+      "angle:nutella": 62,
+      "lines:nutella": 11,
+      "lineWidth:nutella": 0.042,
+      "wave:nutella": 0.005,
+      "color:white_chocolate": 4294175186,
+      "angle:white_chocolate": 118,
+      "lines:white_chocolate": 11,
+      "lineWidth:white_chocolate": 0.042,
+      "wave:white_chocolate": 0.005,
+      "color:chocolate_sauce": 4281998608,
+      "angle:chocolate_sauce": 90,
+      "lines:chocolate_sauce": 11,
+      "lineWidth:chocolate_sauce": 0.042,
+      "wave:chocolate_sauce": 0.005,
+      "color:caramel_sauce": 4290275614,
+      "angle:caramel_sauce": 76,
+      "lines:caramel_sauce": 11,
+      "lineWidth:caramel_sauce": 0.042,
+      "wave:caramel_sauce": 0.005,
+      "color:lotus_sauce": 4289226030,
+      "angle:lotus_sauce": 104,
+      "lines:lotus_sauce": 11,
+      "lineWidth:lotus_sauce": 0.042,
+      "wave:lotus_sauce": 0.005,
+      "color:strawberry_sauce": 4290910772,
+      "angle:strawberry_sauce": 50,
+      "lines:strawberry_sauce": 11,
+      "lineWidth:strawberry_sauce": 0.042,
+      "wave:strawberry_sauce": 0.005,
+      "color:honey": 4292911388,
+      "angle:honey": 130,
+      "lines:honey": 11,
+      "lineWidth:honey": 0.042,
+      "wave:honey": 0.005,
+      "color:pistachio_sauce": 4288130645,
+      "angle:pistachio_sauce": 62,
+      "lines:pistachio_sauce": 11,
+      "lineWidth:pistachio_sauce": 0.042,
+      "wave:pistachio_sauce": 0.005
     },
     "byIngredient": {
-      "nutella": "drizzle",
-      "white_chocolate": "drizzle"
+      "ketchup": "sauce",
+      "mayonnaise": "sauce",
+      "garlic_sauce": "sauce",
+      "bbq_sauce": "sauce",
+      "ranch_sauce": "sauce",
+      "hot_sauce": "sauce",
+      "honey_mustard": "sauce",
+      "cheddar_sauce": "sauce",
+      "nutella": "sauce",
+      "white_chocolate": "sauce",
+      "chocolate_sauce": "sauce",
+      "caramel_sauce": "sauce",
+      "lotus_sauce": "sauce",
+      "strawberry_sauce": "sauce",
+      "honey": "sauce",
+      "pistachio_sauce": "sauce"
     }
+  },
+  "layerOverrides": {
+    "ketchup": 40,
+    "mayonnaise": 40,
+    "garlic_sauce": 40,
+    "bbq_sauce": 40,
+    "ranch_sauce": 40,
+    "hot_sauce": 40,
+    "honey_mustard": 40,
+    "cheddar_sauce": 40,
+    "nutella": 40,
+    "white_chocolate": 40,
+    "chocolate_sauce": 40,
+    "caramel_sauce": 40,
+    "lotus_sauce": 40,
+    "strawberry_sauce": 40,
+    "honey": 40,
+    "pistachio_sauce": 40
   },
   "constraints": {
     "maxQty": 2
@@ -132,10 +253,10 @@
             0.095
           ],
           "contents": [
-            0.29,
-            0.5,
-            0.71,
-            0.66
+            0.16,
+            0.415,
+            0.84,
+            0.685
           ],
           "frame": [
             0.16,
@@ -179,10 +300,10 @@
             0.095
           ],
           "contents": [
-            0.29,
-            0.5,
-            0.71,
-            0.66
+            0.16,
+            0.415,
+            0.84,
+            0.685
           ],
           "frame": [
             0.16,
@@ -226,10 +347,10 @@
             0.095
           ],
           "contents": [
-            0.29,
-            0.5,
-            0.71,
-            0.66
+            0.16,
+            0.415,
+            0.84,
+            0.685
           ],
           "frame": [
             0.16,
@@ -272,10 +393,10 @@
             0.095
           ],
           "contents": [
-            0.29,
-            0.5,
-            0.71,
-            0.66
+            0.16,
+            0.415,
+            0.84,
+            0.685
           ],
           "frame": [
             0.16,
@@ -320,10 +441,10 @@
             0.095
           ],
           "contents": [
-            0.29,
-            0.5,
-            0.71,
-            0.66
+            0.16,
+            0.415,
+            0.84,
+            0.685
           ],
           "frame": [
             0.16,
@@ -360,6 +481,50 @@
       }
     }
   ],
+  "addOnGroups": [
+    {
+      "id": "savory_sauces",
+      "name": "الصوصات",
+      "names": {
+        "en": "Sauces",
+        "ar": "الصوصات"
+      },
+      "ingredientIds": [
+        "ketchup",
+        "mayonnaise",
+        "garlic_sauce",
+        "bbq_sauce",
+        "ranch_sauce",
+        "hot_sauce",
+        "honey_mustard",
+        "cheddar_sauce"
+      ],
+      "productGroupIds": [
+        "savory"
+      ]
+    },
+    {
+      "id": "sweet_sauces",
+      "name": "الصوصات",
+      "names": {
+        "en": "Sauces",
+        "ar": "الصوصات"
+      },
+      "ingredientIds": [
+        "nutella",
+        "white_chocolate",
+        "chocolate_sauce",
+        "caramel_sauce",
+        "lotus_sauce",
+        "strawberry_sauce",
+        "honey",
+        "pistachio_sauce"
+      ],
+      "productGroupIds": [
+        "sweet"
+      ]
+    }
+  ],
   "ingredientMotion": {
     "mozzarella": {
       "enter": "shower",
@@ -374,7 +539,7 @@
       "exit": "dissolve"
     },
     "feta": {
-      "enter": "shower",
+      "enter": "sprinkle",
       "exit": "dissolve"
     },
     "chicken": {
@@ -430,14 +595,6 @@
       "exit": "liftFade"
     },
     "garlic": {
-      "enter": "drop",
-      "exit": "liftFade"
-    },
-    "nutella": {
-      "enter": "drop",
-      "exit": "liftFade"
-    },
-    "white_chocolate": {
       "enter": "drop",
       "exit": "liftFade"
     },

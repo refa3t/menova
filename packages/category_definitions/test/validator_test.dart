@@ -13,6 +13,8 @@ CategoryDefinition def({
   String baseAsset = 'base',
   Map<String, int> layerOverrides = const {},
   Map<String, String> byIngredient = const {},
+  List<ProductGroup> productGroups = const [],
+  List<AddOnGroup> addOnGroups = const [],
 }) => CategoryDefinition(
   id: 'cat',
   definitionVersion: 1,
@@ -26,6 +28,8 @@ CategoryDefinition def({
   animation: animation,
   assetSpecs: const {},
   layerOverrides: layerOverrides,
+  productGroups: productGroups,
+  addOnGroups: addOnGroups,
 );
 
 List<String> check(CategoryDefinition d) => validateDefinition(
@@ -117,5 +121,38 @@ void main() {
     for (final reasons in r.rejected.values) {
       expect(reasons, contains('placement.strategy'));
     }
+  });
+
+  test('add-on groups offer allowed ingredients to known product groups', () {
+    const groups = [ProductGroup(id: 'sweet', name: 'Sweet')];
+    AddOnGroup group({
+      String id = 'sauces',
+      List<String> ingredients = const ['i1'],
+      List<String> productGroups = const ['sweet'],
+    }) => AddOnGroup(
+      id: id,
+      name: 'Sauces',
+      ingredientIds: ingredients,
+      productGroupIds: productGroups,
+    );
+    expect(check(def(productGroups: groups, addOnGroups: [group()])), isEmpty);
+    expect(
+      check(
+        def(
+          productGroups: groups,
+          addOnGroups: [
+            group(ingredients: ['i2']),
+            group(productGroups: ['savory']),
+            group(id: 'empty', ingredients: []),
+          ],
+        ),
+      ),
+      [
+        'addOnGroups[0].ingredientIds',
+        'addOnGroups[1].id',
+        'addOnGroups[1].productGroupIds',
+        'addOnGroups[2].ingredientIds',
+      ],
+    );
   });
 }

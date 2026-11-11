@@ -5,6 +5,11 @@ void main() {
   test('bundled pizza definition loads', () {
     final r = loadBundledDefinitions();
     expect(r.rejected, isEmpty);
-    expect(r.definitions['pizza']!.allowedIngredientIds, hasLength(38));
+    // 38 toppings and 9 sauces.
+    expect(r.definitions['pizza']!.allowedIngredientIds, hasLength(47));
+    expect(
+      r.definitions['pizza']!.addOnGroups.single.ingredientIds,
+      hasLength(9),
+    );
   });
 }

@@ -100,5 +100,53 @@
     "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1793246301/menova/assets/i09yk46il3gqwdf0dpan.webp",
     "version": 1793246301,
     "bytes": 16980
+  },
+  "ing_caramel_sauce_cup.webp": {
+    "publicId": "menova/assets/incsr04cfdhys9hidita",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1793985255/menova/assets/incsr04cfdhys9hidita.webp",
+    "version": 1793985255,
+    "bytes": 8412
+  },
+  "ing_chocolate_sauce_cup.webp": {
+    "publicId": "menova/assets/z7phfuwp0gq8rn9rwib4",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1793985256/menova/assets/z7phfuwp0gq8rn9rwib4.webp",
+    "version": 1793985256,
+    "bytes": 7938
+  },
+  "ing_honey_cup.webp": {
+    "publicId": "menova/assets/puieorubvijlqcpga24t",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1793985257/menova/assets/puieorubvijlqcpga24t.webp",
+    "version": 1793985257,
+    "bytes": 8326
+  },
+  "ing_lotus_sauce_cup.webp": {
+    "publicId": "menova/assets/pzz7vubgtxn5jymueyin",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1793985258/menova/assets/pzz7vubgtxn5jymueyin.webp",
+    "version": 1793985258,
+    "bytes": 8320
+  },
+  "ing_nutella_cup.webp": {
+    "publicId": "menova/assets/zf7u1qrwnibnfpt8of0y",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1793985259/menova/assets/zf7u1qrwnibnfpt8of0y.webp",
+    "version": 1793985259,
+    "bytes": 7972
+  },
+  "ing_pistachio_sauce_cup.webp": {
+    "publicId": "menova/assets/acytbvv4kwgeerytf3nd",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1793985261/menova/assets/acytbvv4kwgeerytf3nd.webp",
+    "version": 1793985261,
+    "bytes": 8500
+  },
+  "ing_strawberry_sauce_cup.webp": {
+    "publicId": "menova/assets/sk38mnkm8l94igaaqt6s",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1793985262/menova/assets/sk38mnkm8l94igaaqt6s.webp",
+    "version": 1793985262,
+    "bytes": 8886
+  },
+  "ing_white_chocolate_cup.webp": {
+    "publicId": "menova/assets/oxvkcgonv9chlvmynyyl",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1793985263/menova/assets/oxvkcgonv9chlvmynyyl.webp",
+    "version": 1793985263,
+    "bytes": 7284
   }
 }

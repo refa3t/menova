@@ -141,4 +141,54 @@ void main() {
       ..['basePrice'] = 100.5;
     expect(() => Product.fromJson(floatPrice), throwsFormatException);
   });
+
+  test('add-on groups round-trip and are offered by product group', () {
+    final def = CategoryDefinition.fromJson({
+      'id': 'c',
+      'definitionVersion': 1,
+      'name': 'C',
+      'base': {'shape': 'circle', 'rawAssetId': 'b'},
+      'allowedIngredientIds': ['a', 'b'],
+      'placement': {'strategy': 'scatter'},
+      'constraints': {'maxQty': 2},
+      'sizes': <Object>[],
+      'optionGroups': <Object>[],
+      'animation': [
+        {'step': 'Oven'},
+      ],
+      'productGroups': [
+        {'id': 'savory', 'name': 'S'},
+        {'id': 'sweet', 'name': 'W'},
+      ],
+      'addOnGroups': [
+        {
+          'id': 'sauces',
+          'name': 'الصوصات',
+          'names': {'en': 'Sauces'},
+          'ingredientIds': ['a'],
+        },
+        {
+          'id': 'sweet_sauces',
+          'name': 'W',
+          'ingredientIds': ['b'],
+          'productGroupIds': ['sweet'],
+        },
+      ],
+    });
+    expect(CategoryDefinition.fromJson(def.toJson()), def);
+    expect(def.addOnGroups.first.names['en'], 'Sauces');
+    expect(
+      [for (final g in def.addOnGroupsFor('sweet')) g.id],
+      ['sauces', 'sweet_sauces'],
+    );
+    expect([for (final g in def.addOnGroupsFor('savory')) g.id], ['sauces']);
+    expect([for (final g in def.addOnGroupsFor(null)) g.id], ['sauces']);
+    // Optional: a definition without it keeps its JSON as before.
+    final plain = CategoryDefinition.fromJson({
+      ...def.toJson(),
+      'addOnGroups': null,
+    });
+    expect(plain.addOnGroups, isEmpty);
+    expect(plain.toJson().containsKey('addOnGroups'), isFalse);
+  });
 }

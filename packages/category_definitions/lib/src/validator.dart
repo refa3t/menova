@@ -113,6 +113,24 @@ List<DefinitionIssue> validateDefinition(
       issue('productGroups[$i].id', 'duplicate "${g.id}"');
     }
   }
+  final addOnIds = <String>{};
+  for (final (i, g) in d.addOnGroups.indexed) {
+    final path = 'addOnGroups[$i]';
+    if (!addOnIds.add(g.id)) issue('$path.id', 'duplicate "${g.id}"');
+    if (g.ingredientIds.isEmpty) {
+      issue('$path.ingredientIds', 'must not be empty');
+    }
+    for (final id in g.ingredientIds) {
+      if (!allowed.contains(id)) {
+        issue('$path.ingredientIds', 'ingredient "$id" is not allowed');
+      }
+    }
+    for (final id in g.productGroupIds) {
+      if (!productGroupIds.contains(id)) {
+        issue('$path.productGroupIds', 'unknown product group "$id"');
+      }
+    }
+  }
 
   // Limits.
   if (d.constraints.maxQty < 1) issue('constraints.maxQty', 'must be >= 1');

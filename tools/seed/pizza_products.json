@@ -8,7 +8,7 @@
     "quattro_stagioni": "Needs a quartered base (half-and-half, CLAUDE.md section 10 Q3). Not supported in phase 1."
   },
   "pendingNotes": [
-    "Non-tomato sauces (bbq, ranch, hot, pesto) need Drizzle placement (phase 2); shown on the tomato base until then.",
+    "Non-tomato sauces (bbq, ranch, hot, pesto) are poured on top as a removable default; the base still shows tomato.",
     "Final product images (final_pizza_*) not delivered yet."
   ],
   "products": [
@@ -662,6 +662,13 @@
           "removable": true,
           "refundOnRemove": false,
           "refundAmount": 0
+        },
+        {
+          "ingredientId": "bbq_sauce",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
         }
       ],
       "isAvailable": true,
@@ -713,6 +720,13 @@
         },
         {
           "ingredientId": "cherry_tomato",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "ranch_sauce",
           "qty": 1,
           "removable": true,
           "refundOnRemove": false,
@@ -1268,6 +1282,13 @@
           "removable": true,
           "refundOnRemove": false,
           "refundAmount": 0
+        },
+        {
+          "ingredientId": "hot_sauce",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
         }
       ],
       "isAvailable": true,
@@ -1388,6 +1409,13 @@
         },
         {
           "ingredientId": "parmesan",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "pesto_sauce",
           "qty": 1,
           "removable": true,
           "refundOnRemove": false,

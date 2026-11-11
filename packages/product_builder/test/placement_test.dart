@@ -154,6 +154,128 @@ void main() {
     });
   });
 
+  group('sauce (owner request: liquid, evenly spread)', () {
+    const sauce = SaucePlacement();
+    const disc = {'lines': 6, 'radius': 0.7, 'angle': 30, 'wave': 0.02};
+    // The crepe: a strip across a half moon.
+    const strip = {
+      'lines': 7,
+      'radius': 0.42,
+      'bandWidth': 0.13,
+      'offsetY': 0.16,
+      'angle': 80,
+      'wave': 0.01,
+    };
+    List<({double x, double y})> pour(
+      Map<String, num> params, {
+      int unit = 0,
+      double density = 1,
+      String id = 'ketchup',
+    }) {
+      final lines = sauce.lines(
+        ingredientId: id,
+        unit: unit,
+        params: params,
+        density: density,
+      );
+      expect(lines, hasLength(1), reason: 'one continuous stroke');
+      return lines.single;
+    }
+
+    // Offset of a point across the passes (angle 30 degrees).
+    double across(({double x, double y}) p) =>
+        -p.x * sin(pi / 6) + p.y * cos(pi / 6);
+
+    test('places no pieces: the canvas draws it as a liquid', () {
+      expect(
+        sauce.place(
+          ingredientId: 'ketchup',
+          unit: 0,
+          variantCount: 1,
+          params: disc,
+        ),
+        isEmpty,
+      );
+      expect(placementStrategies['sauce'], isA<LinePlacement>());
+    });
+
+    test('one zigzag of evenly spaced passes over the whole disc', () {
+      final stroke = pour(disc);
+      expect(stroke, equals(pour(disc)), reason: 'deterministic');
+      for (final p in stroke) {
+        // The rounded turns stay (nearly) on the surface too.
+        expect(sqrt(p.x * p.x + p.y * p.y), lessThan(0.7 + 0.05));
+      }
+      // Six passes, each at its own offset, one spacing (1.4 / 6) apart.
+      final rows = <int>{for (final p in stroke) (across(p) / 0.02).round()};
+      final centres = [for (var l = 0; l < 6; l++) -0.7 + 1.4 / 6 * (l + 0.5)];
+      for (final c in centres) {
+        expect(
+          rows.any((r) => (r * 0.02 - c).abs() < 0.03),
+          isTrue,
+          reason: 'a pass near $c',
+        );
+      }
+      // Back and forth: the stroke crosses the disc six times.
+      final along = [
+        for (final p in stroke) p.x * cos(pi / 6) + p.y * sin(pi / 6),
+      ];
+      var turns = 0;
+      for (var i = 2; i < along.length; i++) {
+        final a = along[i - 1] - along[i - 2], b = along[i] - along[i - 1];
+        if (a * b < 0) turns++;
+      }
+      expect(turns, inInclusiveRange(5, 10));
+    });
+
+    test('an extra unit pours between the earlier passes', () {
+      double nearest(List<double> xs, double v) =>
+          xs.map((x) => (x - v).abs()).reduce(min);
+      // Mid-pass points only (the turns are near the edge).
+      List<double> middles(List<({double x, double y})> stroke) => [
+        for (final p in stroke)
+          if ((p.x * cos(pi / 6) + p.y * sin(pi / 6)).abs() < 0.15) across(p),
+      ];
+      final first = middles(pour(disc));
+      final second = middles(pour(disc, unit: 1));
+      const spacing = 1.4 / 6;
+      // The second unit's passes sit half a spacing from the first's.
+      expect(second, isNotEmpty);
+      for (final v in second) {
+        expect(nearest(first, v), greaterThan(spacing * 0.3));
+      }
+    });
+
+    test('a larger size pours more passes', () {
+      double extent(List<({double x, double y})> s) {
+        final xs = s.map(across).toList();
+        return xs.reduce(max) - xs.reduce(min);
+      }
+
+      final small = pour(disc), large = pour(disc, density: 1.49);
+      expect(large.length, greaterThan(small.length));
+      expect(extent(large), greaterThan(extent(small)));
+    });
+
+    test('a strip keeps the sauce on it (the crepe filling)', () {
+      final stroke = pour(strip, id: 'nutella');
+      expect(stroke.length, greaterThan(20));
+      for (final p in stroke) {
+        expect(p.y, inInclusiveRange(0.16 - 0.13 - 0.01, 0.16 + 0.13 + 0.01));
+        expect(p.x.abs(), lessThan(0.42 + 0.01));
+      }
+      // Near-vertical passes spread along the whole strip.
+      final xs = stroke.map((p) => p.x).toList();
+      expect(xs.reduce(max) - xs.reduce(min), greaterThan(0.6));
+    });
+
+    test('each sauce has its own angle unless the definition sets one', () {
+      final params = {'lines': 4, 'radius': 0.7};
+      final a = pour(params, id: 'ketchup'), b = pour(params, id: 'mayonnaise');
+      expect(a.first, isNot(b.first));
+    });
+  });
+
   test('a definition can give single ingredients their own strategy', () {
     const spec = PlacementSpec(
       strategy: 'band',

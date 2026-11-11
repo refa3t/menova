@@ -19,6 +19,7 @@ class CategoryDefinition {
     this.layerOverrides = const {},
     this.ingredientMotion = const {},
     this.productGroups = const [],
+    this.addOnGroups = const [],
   });
 
   final String id;
@@ -52,6 +53,11 @@ class CategoryDefinition {
   /// (e.g. chicken, meats). Empty means no grouping.
   final List<ProductGroup> productGroups;
 
+  /// Ingredients offered to products as extras in sections of their own
+  /// (e.g. sauces), besides each product's own ingredients. Empty means
+  /// none.
+  final List<AddOnGroup> addOnGroups;
+
   factory CategoryDefinition.fromJson(Json j) => CategoryDefinition(
     id: req(j, 'id'),
     definitionVersion: req(j, 'definitionVersion'),
@@ -74,6 +80,9 @@ class CategoryDefinition {
     productGroups: j['productGroups'] == null
         ? const []
         : reqList(j, 'productGroups', ProductGroup.fromJson),
+    addOnGroups: j['addOnGroups'] == null
+        ? const []
+        : reqList(j, 'addOnGroups', AddOnGroup.fromJson),
   );
 
   Json toJson() => {
@@ -94,6 +103,8 @@ class CategoryDefinition {
       for (final e in ingredientMotion.entries) e.key: e.value.toJson(),
     },
     'productGroups': [for (final g in productGroups) g.toJson()],
+    if (addOnGroups.isNotEmpty)
+      'addOnGroups': [for (final g in addOnGroups) g.toJson()],
   };
 
   @override
@@ -113,7 +124,8 @@ class CategoryDefinition {
       mapEq(other.assetSpecs, assetSpecs) &&
       mapEq(other.layerOverrides, layerOverrides) &&
       mapEq(other.ingredientMotion, ingredientMotion) &&
-      listEq(other.productGroups, productGroups);
+      listEq(other.productGroups, productGroups) &&
+      listEq(other.addOnGroups, addOnGroups);
 
   @override
   int get hashCode => Object.hash(
@@ -132,7 +144,16 @@ class CategoryDefinition {
     mapHash(layerOverrides),
     mapHash(ingredientMotion),
     Object.hashAll(productGroups),
+    Object.hashAll(addOnGroups),
   );
+
+  /// The add-on groups offered to products of [productGroupId].
+  List<AddOnGroup> addOnGroupsFor(String? productGroupId) => [
+    for (final g in addOnGroups)
+      if (g.productGroupIds.isEmpty ||
+          g.productGroupIds.contains(productGroupId))
+        g,
+  ];
 }
 
 /// Shape and base assets of the product canvas.
@@ -491,4 +512,62 @@ class ProductGroup {
 
   @override
   int get hashCode => Object.hash(id, name, mapHash(names));
+}
+
+/// Ingredients offered as extras in a section of their own (e.g. sauces),
+/// to every product of the category or only to some product groups.
+class AddOnGroup {
+  const AddOnGroup({
+    required this.id,
+    required this.name,
+    this.names = const {},
+    required this.ingredientIds,
+    this.productGroupIds = const [],
+  });
+
+  final String id;
+  final String name;
+
+  /// Display names by language code ('en', 'ar'); [name] is the fallback.
+  final Map<String, String> names;
+
+  /// In display order; each must be allowed by the category.
+  final List<String> ingredientIds;
+
+  /// The product groups offered this group. Empty means every product.
+  final List<String> productGroupIds;
+
+  factory AddOnGroup.fromJson(Json j) => AddOnGroup(
+    id: req(j, 'id'),
+    name: req(j, 'name'),
+    names: mapOf(j, 'names', (v) => v as String),
+    ingredientIds: strList(j, 'ingredientIds'),
+    productGroupIds: strList(j, 'productGroupIds'),
+  );
+
+  Json toJson() => {
+    'id': id,
+    'name': name,
+    'names': names,
+    'ingredientIds': ingredientIds,
+    if (productGroupIds.isNotEmpty) 'productGroupIds': productGroupIds,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      other is AddOnGroup &&
+      other.id == id &&
+      other.name == name &&
+      mapEq(other.names, names) &&
+      listEq(other.ingredientIds, ingredientIds) &&
+      listEq(other.productGroupIds, productGroupIds);
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    name,
+    mapHash(names),
+    Object.hashAll(ingredientIds),
+    Object.hashAll(productGroupIds),
+  );
 }

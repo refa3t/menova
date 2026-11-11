@@ -264,6 +264,158 @@ class DrizzlePlacement implements PlacementStrategy {
   }
 }
 
+/// A strategy whose ingredient is drawn as lines rather than pieces: a
+/// liquid (sauce). The canvas draws each polyline, in normalized base
+/// coordinates like [PiecePlacement].
+abstract interface class LinePlacement implements PlacementStrategy {
+  /// The lines of quantity unit [unit] (0-based) of [ingredientId].
+  /// Deterministic, like [PlacementStrategy.place].
+  List<List<({double x, double y})>> lines({
+    required String ingredientId,
+    required int unit,
+    required Map<String, num> params,
+    double density = 1,
+  });
+}
+
+/// Sauce (owner request: liquid, evenly spread, not lumps): each unit is
+/// poured as one continuous zigzag, like a squeeze bottle drawn back and
+/// forth: `lines` evenly spaced, gently wavy passes (`wave`) across the
+/// whole surface (the disc of `radius`, or only the strip `bandWidth` high,
+/// as in [BandPlacement]), joined by rounded turns and tilted by `angle`
+/// degrees (each sauce its own angle by default, so two sauces cross).
+/// Every extra unit pours its passes between the earlier ones. It places no
+/// pieces: the canvas draws the lines as a liquid in the sauce's `color`.
+class SaucePlacement implements LinePlacement {
+  const SaucePlacement();
+
+  /// Where a unit's passes sit, as a fraction of the spacing: unit 0 in the
+  /// middle of each slot, unit 1 between unit 0's passes, then quarters.
+  static const _slots = [0.5, 0.0, 0.25, 0.75, 0.125, 0.625, 0.375, 0.875];
+
+  @override
+  List<PiecePlacement> place({
+    required String ingredientId,
+    required int unit,
+    required int variantCount,
+    required Map<String, num> params,
+    double density = 1,
+  }) => const [];
+
+  @override
+  List<List<({double x, double y})>> lines({
+    required String ingredientId,
+    required int unit,
+    required Map<String, num> params,
+    double density = 1,
+  }) {
+    num? param(String key) => params['$key:$ingredientId'] ?? params[key];
+    // The spacing is a length: a larger size (more area) keeps it with
+    // sqrt(density) more passes.
+    final count = max(1, ((param('lines') ?? 4) * sqrt(density)).round());
+    final radius = (param('radius') ?? 0.78).toDouble();
+    final band = param('bandWidth')?.toDouble();
+    final half = band == null ? radius : min(band, radius);
+    final ox = (param('offsetX') ?? 0).toDouble();
+    final oy = (param('offsetY') ?? 0).toDouble();
+    final wave = (param('wave') ?? 0.02).toDouble();
+    final degrees =
+        param('angle')?.toDouble() ??
+        (stableSeed('$ingredientId#angle') % 90 - 45).toDouble();
+    final a = degrees * pi / 180;
+    final dx = cos(a), dy = sin(a); // along a pass
+    final nx = -sin(a), ny = cos(a); // across the passes
+
+    // The region's extent across the passes: its extreme points are the
+    // disc's own (when inside the strip) or the strip's corners on the rim.
+    final corner = sqrt(max(0.0, radius * radius - half * half));
+    final across = [
+      for (final sign in const [-1.0, 1.0])
+        if ((sign * radius * ny).abs() <= half + 1e-9) sign * radius,
+      for (final (x, y) in [
+        (corner, half),
+        (-corner, half),
+        (corner, -half),
+        (-corner, -half),
+      ])
+        x * nx + y * ny,
+    ];
+    final lo = across.reduce(min), hi = across.reduce(max);
+    final spacing = (hi - lo) / count;
+    if (spacing <= 0) return const [];
+
+    // The part of the pass at offset [s] inside the region, as an interval
+    // of t along it (empty when it misses), short of the edge by the room
+    // its rounded turn takes, so the turns stay on the surface too.
+    final room = 0.45 * spacing;
+    (double, double)? span(double s) {
+      if (s.abs() >= radius) return null;
+      final r = sqrt(radius * radius - s * s);
+      var t0 = -r, t1 = r;
+      // The strip: |s * ny + t * dy| <= half.
+      if (dy.abs() < 1e-9) {
+        if ((s * ny).abs() > half) return null;
+      } else {
+        final p = (-half - s * ny) / dy, q = (half - s * ny) / dy;
+        t0 = max(t0, min(p, q));
+        t1 = min(t1, max(p, q));
+      }
+      t0 += room;
+      t1 -= room;
+      return t1 - t0 > 0.04 ? (t0, t1) : null;
+    }
+
+    final slot = _slots[unit % _slots.length];
+    final phase = (stableSeed('$ingredientId#wave#$unit') % 628) / 100;
+    const step = 0.02, freq = 17.0;
+    final passes = <List<({double x, double y})>>[];
+    for (var l = 0; l <= count; l++) {
+      final s = lo + spacing * (l + slot);
+      if (s <= lo + 1e-9 || s >= hi - 1e-9) continue;
+      final interval = span(s);
+      if (interval == null) continue;
+      final (t0, t1) = interval;
+      final n = max(2, ((t1 - t0) / step).ceil());
+      final pass = [
+        for (var i = 0; i <= n; i++)
+          () {
+            final t = t0 + (t1 - t0) * i / n;
+            final w = s + wave * sin(freq * t + phase + l);
+            return (x: dx * t + nx * w + ox, y: dy * t + ny * w + oy);
+          }(),
+      ];
+      // Back and forth: every other pass runs the other way.
+      passes.add(passes.length.isOdd ? pass.reversed.toList() : pass);
+    }
+    if (passes.isEmpty) return const [];
+
+    // One stroke: each pass joined to the next by a rounded turn (a cubic
+    // leaving along the pass and coming back the other way).
+    final stroke = [...passes.first];
+    for (final pass in passes.skip(1)) {
+      final p0 = stroke.last, p3 = pass.first;
+      final prev = stroke[stroke.length - 2];
+      final ux = p0.x - prev.x, uy = p0.y - prev.y;
+      final ul = sqrt(ux * ux + uy * uy);
+      final gap = sqrt(pow(p3.x - p0.x, 2) + pow(p3.y - p0.y, 2));
+      final k = 0.6 * gap / (ul == 0 ? 1 : ul);
+      final p1 = (x: p0.x + ux * k, y: p0.y + uy * k);
+      final p2 = (x: p3.x + ux * k, y: p3.y + uy * k);
+      for (var i = 1; i < 10; i++) {
+        final t = i / 10, u = 1 - t;
+        final b0 = u * u * u, b1 = 3 * u * u * t, b2 = 3 * u * t * t;
+        final b3 = t * t * t;
+        stroke.add((
+          x: b0 * p0.x + b1 * p1.x + b2 * p2.x + b3 * p3.x,
+          y: b0 * p0.y + b1 * p1.y + b2 * p2.y + b3 * p3.y,
+        ));
+      }
+      stroke.addAll(pass);
+    }
+    return [stroke];
+  }
+}
+
 /// Small deterministic PRNG (mulberry32). `dart:math` Random is not
 /// guaranteed identical across VM and web, and on web its first outputs are
 /// correlated for nearby seeds, which made pieces line up in a band.
@@ -308,6 +460,7 @@ const placementStrategies = <String, PlacementStrategy>{
   'rings': RingsPlacement(),
   'band': BandPlacement(),
   'drizzle': DrizzlePlacement(),
+  'sauce': SaucePlacement(),
 };
 
 /// The registered strategies a definition assigns to single ingredients

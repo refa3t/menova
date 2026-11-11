@@ -19,6 +19,8 @@ void main() {
         Product.fromJson(p as Map<String, dynamic>),
     ];
     final strategy = placementStrategies[def.placement.strategy]!;
+    // Poured sauces place no pieces (their own strategy draws lines).
+    final strategies = strategiesByIngredient(def.placement);
     final large = BuilderState.open(
       definition: def,
       product: products.first,
@@ -32,7 +34,7 @@ void main() {
       for (final d in p.defaults) {
         final units = d.qty + def.constraints.maxQty;
         for (var u = 0; u < units; u++) {
-          pieces += strategy
+          pieces += (strategies[d.ingredientId] ?? strategy)
               .place(
                 ingredientId: d.ingredientId,
                 unit: u,

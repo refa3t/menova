@@ -326,10 +326,17 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
     ];
     // The grid offers this product's own ingredients only (owner request),
     // plus anything already selected, e.g. an extra on an edited cart line.
+    // The add-on groups offered to the product (e.g. sauces) each get a
+    // section of their own, their ingredients only there.
+    final addOns = def.addOnGroupsFor(state.product.groupId);
+    final inAddOns = {for (final g in addOns) ...g.ingredientIds};
+    final byId = {for (final i in available) i.id: i};
     final productIds = {for (final d in state.product.defaults) d.ingredientId};
     final gridItems = [
       for (final i in available)
-        if (productIds.contains(i.id) || state.qtyOf(i.id) > 0) i,
+        if (!inAddOns.contains(i.id) &&
+            (productIds.contains(i.id) || state.qtyOf(i.id) > 0))
+          i,
     ];
 
     void report(BuilderRejection? r) {
@@ -400,6 +407,25 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
           ].join(' · ');
     final price = ref.watch(priceProvider(widget.builderKey));
     final sizeId = state.selection.sizeId;
+
+    Widget grid(Iterable<Ingredient> items) => IngredientGrid(
+      items: [
+        for (final i in items)
+          IngredientTileData(
+            id: i.id,
+            name: AppStrings.localized(i.name, i.names),
+            imageUrl: urlsFor(i).first,
+            qty: state.qtyOf(i.id),
+            defaultQty: state.defaultQtyOf(i.id),
+            canRemove: state.canRemove(i.id),
+            priceLabel: AppStrings.plusPrice(
+              (i.extraPrice * i.multiplierFor(sizeId)).round(),
+            ),
+          ),
+      ],
+      onAdd: (id) => report(controller.add(id)),
+      onRemove: (id) => report(controller.remove(id)),
+    );
 
     Widget section(IconData icon, String title, Widget child) => Padding(
       padding: const EdgeInsets.only(top: 20),
@@ -479,28 +505,20 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
                 onSelected: (id) => report(controller.selectOption(g.id, id)),
               ),
             ),
-        section(
-          Icons.restaurant_menu,
-          AppStrings.ingredients,
-          IngredientGrid(
-            items: [
-              for (final i in gridItems)
-                IngredientTileData(
-                  id: i.id,
-                  name: AppStrings.localized(i.name, i.names),
-                  imageUrl: urlsFor(i).first,
-                  qty: state.qtyOf(i.id),
-                  defaultQty: state.defaultQtyOf(i.id),
-                  canRemove: state.canRemove(i.id),
-                  priceLabel: AppStrings.plusPrice(
-                    (i.extraPrice * i.multiplierFor(sizeId)).round(),
-                  ),
-                ),
-            ],
-            onAdd: (id) => report(controller.add(id)),
-            onRemove: (id) => report(controller.remove(id)),
+        if (gridItems.isNotEmpty)
+          section(
+            Icons.restaurant_menu,
+            AppStrings.ingredients,
+            grid(gridItems),
           ),
-        ),
+        for (final g in addOns)
+          if ([for (final id in g.ingredientIds) ?byId[id]] case final items
+              when items.isNotEmpty)
+            section(
+              Icons.add_circle_outline,
+              AppStrings.localized(g.name, g.names),
+              grid(items),
+            ),
         section(
           Icons.edit_note,
           AppStrings.notes,

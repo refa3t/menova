@@ -52,6 +52,20 @@ void main() {
     });
   }
 
+  test('every poured sauce has its colour', () {
+    for (final id in ids) {
+      final def = CategoryDefinition.fromJson(read('definitions/$id.json'));
+      for (final e in def.placement.byIngredient.entries) {
+        if (placementStrategies[e.value] is! LinePlacement) continue;
+        expect(
+          def.placement.params['color:${e.key}'],
+          isNotNull,
+          reason: '$id: ${e.key}',
+        );
+      }
+    }
+  });
+
   test('every bundled definition loads', () {
     final loaded = loadBundledDefinitions(
       placementStrategies: placementStrategies.keys.toSet(),

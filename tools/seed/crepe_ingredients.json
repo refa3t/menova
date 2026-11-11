@@ -1,40 +1,6 @@
 {
-  "_note": "Ingredients the crepe introduces. Savoury fillings reuse the pizza records (tools/seed/pizza_ingredients.json).",
+  "_note": "Ingredients and sauces the crepe introduces. Savoury fillings and sauces reuse the pizza records (tools/seed/pizza_ingredients.json).",
   "ingredients": [
-    {
-      "id": "nutella",
-      "name": "نوتيلا",
-      "names": {
-        "en": "Nutella",
-        "ar": "نوتيلا"
-      },
-      "assetId": "ing_nutella",
-      "assetFiles": [
-        "ing_nutella_01.webp",
-        "ing_nutella_02.webp",
-        "ing_nutella_03.webp"
-      ],
-      "extraPrice": 2000,
-      "isAvailable": true,
-      "sizeMultipliers": {}
-    },
-    {
-      "id": "white_chocolate",
-      "name": "شوكولاتة بيضاء",
-      "names": {
-        "en": "White chocolate",
-        "ar": "شوكولاتة بيضاء"
-      },
-      "assetId": "ing_white_chocolate",
-      "assetFiles": [
-        "ing_white_chocolate_01.webp",
-        "ing_white_chocolate_02.webp",
-        "ing_white_chocolate_03.webp"
-      ],
-      "extraPrice": 2000,
-      "isAvailable": true,
-      "sizeMultipliers": {}
-    },
     {
       "id": "lotus",
       "name": "لوتس",
@@ -83,6 +49,126 @@
         "ing_strawberry_03.webp"
       ],
       "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "nutella",
+      "name": "نوتيلا",
+      "names": {
+        "en": "Nutella",
+        "ar": "نوتيلا"
+      },
+      "assetId": "ing_nutella",
+      "assetFiles": [
+        "ing_nutella_cup.webp"
+      ],
+      "extraPrice": 2000,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "white_chocolate",
+      "name": "شوكولاتة بيضاء",
+      "names": {
+        "en": "White chocolate",
+        "ar": "شوكولاتة بيضاء"
+      },
+      "assetId": "ing_white_chocolate",
+      "assetFiles": [
+        "ing_white_chocolate_cup.webp"
+      ],
+      "extraPrice": 2000,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "chocolate_sauce",
+      "name": "صوص شوكولاتة",
+      "names": {
+        "en": "Chocolate sauce",
+        "ar": "صوص شوكولاتة"
+      },
+      "assetId": "ing_chocolate_sauce",
+      "assetFiles": [
+        "ing_chocolate_sauce_cup.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "caramel_sauce",
+      "name": "صوص كراميل",
+      "names": {
+        "en": "Caramel sauce",
+        "ar": "صوص كراميل"
+      },
+      "assetId": "ing_caramel_sauce",
+      "assetFiles": [
+        "ing_caramel_sauce_cup.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "lotus_sauce",
+      "name": "صوص لوتس",
+      "names": {
+        "en": "Lotus sauce",
+        "ar": "صوص لوتس"
+      },
+      "assetId": "ing_lotus_sauce",
+      "assetFiles": [
+        "ing_lotus_sauce_cup.webp"
+      ],
+      "extraPrice": 2000,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "strawberry_sauce",
+      "name": "صوص فراولة",
+      "names": {
+        "en": "Strawberry sauce",
+        "ar": "صوص فراولة"
+      },
+      "assetId": "ing_strawberry_sauce",
+      "assetFiles": [
+        "ing_strawberry_sauce_cup.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "honey",
+      "name": "عسل",
+      "names": {
+        "en": "Honey",
+        "ar": "عسل"
+      },
+      "assetId": "ing_honey",
+      "assetFiles": [
+        "ing_honey_cup.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "pistachio_sauce",
+      "name": "صوص بستاشيو",
+      "names": {
+        "en": "Pistachio sauce",
+        "ar": "صوص بستاشيو"
+      },
+      "assetId": "ing_pistachio_sauce",
+      "assetFiles": [
+        "ing_pistachio_sauce_cup.webp"
+      ],
+      "extraPrice": 3000,
       "isAvailable": true,
       "sizeMultipliers": {}
     }
