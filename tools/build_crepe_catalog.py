@@ -19,7 +19,8 @@ import os
 import re
 from pathlib import Path
 
-from build_pizza_catalog import SAUCES as PIZZA_SAUCES, sauce_params
+from build_pizza_catalog import (DRAWN_CHEESES, SAUCES as PIZZA_SAUCES,
+                                 sauce_params, sprite_fill)
 
 EGP = 100
 
@@ -126,6 +127,10 @@ CATEGORY_ORDER = 1
 # area): a strip `bandWidth` high around `offsetY`, inside `radius` (of the
 # base radius; the half moon's straight edge is at y = 0.5).
 FILLING = {'radius': 0.68, 'bandWidth': 0.27, 'offsetY': 0.1}
+# The fillings' layout (owner request: spread evenly, in harmony): every
+# filling mixed over the strip, piece centres inside it, and as full on
+# every crepe whatever its number of fillings (share of the strip).
+FILLING_LAYOUT = {'inset': 0, 'coverage': 0.55}
 
 
 def dump(path: str, data) -> None:
@@ -161,16 +166,21 @@ def main() -> None:
     # The crepe is a half moon (owner request): curved side up, straight
     # edge at 3/4 of the height. The filling covers most of it (FILLING).
     params = {'pieceSize': 0.12, 'piecesPerUnit': 12, **FILLING,
-              'minGap': 0.1}
+              **FILLING_LAYOUT, 'minGap': 0.1}
     for k in SHARED:
         if f'piecesPerUnit:{k}' in pp:
             params[f'piecesPerUnit:{k}'] = max(
                 3, round(pp[f'piecesPerUnit:{k}'] * CREPE_DENSITY))
-        if f'pieceSize:{k}' in pp:
-            params[f'pieceSize:{k}'] = pp[f'pieceSize:{k}']
+        for key in ('pieceSize', 'fill'):
+            if f'{key}:{k}' in pp:
+                params[f'{key}:{k}'] = pp[f'{key}:{k}']
     for k, _, _, _, per, size, _ in NEW_INGREDIENTS:
         params[f'piecesPerUnit:{k}'] = per
         params[f'pieceSize:{k}'] = size
+        params[f'fill:{k}'] = sprite_fill(
+            f'assets_src/crepe/ingredients/{f}' for f in files
+            if re.fullmatch(rf'ing_{re.escape(k)}_\d+\.webp', f))
+    cheeses = [k for k in SHARED if k in DRAWN_CHEESES]
     params.update(sauce_params(SAVORY_SAUCES, SAUCE_ANGLES, SAUCE_POUR))
     params.update(sauce_params(SWEET_SAUCES, SAUCE_ANGLES, SAUCE_POUR))
     motion = {k: pizza_def['ingredientMotion'][k] for k in SHARED
@@ -186,10 +196,14 @@ def main() -> None:
         'base': {'shape': 'circle', 'rawAssetId': 'base_crepe_raw',
                  'cookedAssetId': 'base_crepe_cooked'},
         'allowedIngredientIds': allowed,
-        'placement': {'strategy': 'band', 'params': params,
-                      'byIngredient': {k: 'sauce' for k in SAUCE_IDS}},
-        # Sauces are poured over the filling.
-        'layerOverrides': {k: 40 for k in SAUCE_IDS},
+        # Owner request: the fillings spread together evenly over the strip
+        # (`even`); the grated cheese is a layer of its own under them, and
+        # the sauces are poured over the filling.
+        'placement': {'strategy': 'even', 'params': params,
+                      'byIngredient': {**{k: 'band' for k in cheeses},
+                                       **{k: 'sauce' for k in SAUCE_IDS}}},
+        'layerOverrides': {**{k: 10 for k in cheeses},
+                           **{k: 40 for k in SAUCE_IDS}},
         'constraints': {'maxQty': 2},
         'sizes': [],
         'optionGroups': [],

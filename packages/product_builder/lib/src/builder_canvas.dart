@@ -36,6 +36,9 @@ class CanvasLayer {
 /// profile; a removed unit leaves with the exit profile, last piece first.
 /// An ingredient whose strategy is a [LinePlacement] (a sauce) is drawn as
 /// liquid lines instead: poured in when added, faded out when removed.
+/// Ingredients whose strategy is a [JointPlacement] are laid out together:
+/// those on the first frame as one batch, each unit added later around the
+/// pieces already there, so no piece ever moves while the product is open.
 class BuilderCanvas extends StatefulWidget {
   const BuilderCanvas({
     super.key,
@@ -85,19 +88,106 @@ class _BuilderCanvasState extends State<BuilderCanvas> {
   /// change of the selection).
   final _lines = <String, List<List<({double x, double y})>>>{};
 
+  /// Pieces per unit of the ingredients placed on their own, computed once.
+  final _pieces = <String, List<PiecePlacement>>{};
+
+  /// Ingredients laid out together, per joint strategy.
+  final _joint = <JointPlacement, _JointLayout>{};
+
+  PlacementStrategy _strategyOf(String id) =>
+      widget.strategyByIngredient[id] ?? widget.strategy;
+
+  /// Adds the units shown for the first time to their joint layouts (the
+  /// first ones as a batch, later ones after them) and lays out what is new.
+  void _updateJoint() {
+    final added = <JointPlacement, List<PlacementUnit>>{};
+    for (final l in widget.layers) {
+      if (_strategyOf(l.ingredientId) case final JointPlacement s) {
+        final g = _joint.putIfAbsent(s, _JointLayout.new);
+        for (var u = 0; u < (_shownUnits[l.ingredientId] ?? 0); u++) {
+          if (g.index.containsKey((l.ingredientId, u))) continue;
+          (added[s] ??= []).add(
+            PlacementUnit(
+              ingredientId: l.ingredientId,
+              unit: u,
+              variantCount: l.imageUrls.length,
+            ),
+          );
+        }
+      }
+    }
+    // Same layout inputs: keep what is laid out, else lay it all out again
+    // (e.g. a larger size carries more pieces).
+    final key = Object.hash(
+      widget.density,
+      identityHashCode(widget.placementParams),
+    );
+    for (final MapEntry(key: s, value: g) in _joint.entries) {
+      for (final u in added[s] ?? const <PlacementUnit>[]) {
+        g.index[(u.ingredientId, u.unit)] = g.units.length;
+        g.units.add(u);
+      }
+      if (g.together == 0) g.together = g.units.length;
+      final keep = g.key == key ? g.pieces : const <List<PiecePlacement>>[];
+      if (keep.length == g.units.length) continue;
+      g.pieces = s.placeAll(
+        units: g.units,
+        params: widget.placementParams,
+        together: g.together,
+        density: widget.density,
+        placed: keep,
+      );
+      g.key = key;
+    }
+  }
+
+  List<PiecePlacement> _piecesOf(
+    PlacementStrategy strategy,
+    CanvasLayer layer,
+    int unit,
+  ) {
+    if (strategy is JointPlacement) {
+      final g = _joint[strategy]!;
+      return g.pieces[g.index[(layer.ingredientId, unit)]!];
+    }
+    return _pieces.putIfAbsent(
+      '${layer.ingredientId}#$unit@${widget.density}'
+      '@${identityHashCode(widget.placementParams)}'
+      '@${identityHashCode(strategy)}@${layer.imageUrls.length}',
+      () => strategy.place(
+        ingredientId: layer.ingredientId,
+        unit: unit,
+        variantCount: layer.imageUrls.length,
+        params: widget.placementParams,
+        density: widget.density,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     for (final l in widget.layers) {
       final prev = _shownUnits[l.ingredientId] ?? 0;
       if (l.qty > prev) _shownUnits[l.ingredientId] = l.qty;
     }
-    final layers = [...widget.layers]
-      ..sort((a, b) => a.layerOrder.compareTo(b.layerOrder));
+    _updateJoint();
+    // By layer order; layers of one order keep the order they are given.
+    final layers = [
+      for (final (_, l)
+          in [...widget.layers.indexed]..sort((a, b) {
+            final c = a.$2.layerOrder.compareTo(b.$2.layerOrder);
+            return c != 0 ? c : a.$1.compareTo(b.$1);
+          }))
+        l,
+    ];
+    // A larger size draws more pieces, not bigger ones.
+    final shrink = pieceShrink(widget.density);
     double pieceSizeOf(String id) =>
         (widget.placementParams['pieceSize:$id'] ??
                 widget.placementParams['pieceSize'] ??
                 0.14)
-            .toDouble();
+            .toDouble() /
+        shrink;
 
     // Isolates canvas repaints from the surrounding controls (P1-B06).
     return RepaintBoundary(
@@ -121,21 +211,13 @@ class _BuilderCanvasState extends State<BuilderCanvas> {
                     exitProfiles[defaultExitProfile]!;
                 final size = side * pieceSizeOf(layer.ingredientId);
                 final units = _shownUnits[layer.ingredientId] ?? 0;
-                final strategy =
-                    widget.strategyByIngredient[layer.ingredientId] ??
-                    widget.strategy;
+                final strategy = _strategyOf(layer.ingredientId);
                 if (strategy is LinePlacement) {
                   children.addAll(_sauceUnits(layer, units, strategy));
                   continue;
                 }
                 for (var unit = 0; unit < units; unit++) {
-                  final pieces = strategy.place(
-                    ingredientId: layer.ingredientId,
-                    unit: unit,
-                    variantCount: layer.imageUrls.length,
-                    params: widget.placementParams,
-                    density: widget.density,
-                  );
+                  final pieces = _piecesOf(strategy, layer, unit);
                   final seed = '${layer.ingredientId}#$unit';
                   final enterDelays = staggerDelays(
                     count: pieces.length,
@@ -227,7 +309,9 @@ class _BuilderCanvasState extends State<BuilderCanvas> {
     final params = widget.placementParams;
     num? param(String key) => params['$key:$id'] ?? params[key];
     final color = Color((param('color') ?? 0xFF7A3B1E).toInt());
-    final width = (param('lineWidth') ?? 0.03).toDouble();
+    // Thinner at a larger size, like the pieces: it has more passes.
+    final width =
+        (param('lineWidth') ?? 0.03).toDouble() / pieceShrink(widget.density);
     for (var unit = 0; unit < units; unit++) {
       final seed = '$id#$unit';
       final lines = _lines.putIfAbsent(
@@ -411,6 +495,23 @@ class _PieceState extends State<_Piece> with TickerProviderStateMixin {
       },
     );
   }
+}
+
+/// The units a [JointPlacement] lays out on one canvas, in the order they
+/// were first shown, and their pieces.
+class _JointLayout {
+  final units = <PlacementUnit>[];
+
+  /// Position of (ingredient, unit) in [units].
+  final index = <(String, int), int>{};
+
+  /// How many of the first [units] were shown together (the batch).
+  int together = 0;
+
+  List<List<PiecePlacement>> pieces = const [];
+
+  /// Layout inputs [pieces] were made with.
+  Object? key;
 }
 
 /// Stand-in for the base while it loads or when it fails.

@@ -55,7 +55,8 @@ class ScatterPlacement implements PlacementStrategy {
     num? param(String key) => params['$key:$ingredientId'] ?? params[key];
     final count = ((param('piecesPerUnit') ?? 8) * density).round();
     final radius = (param('radius') ?? 0.78).toDouble();
-    final minGap = (param('minGap') ?? 0.18).toDouble();
+    // Pieces are drawn smaller at a larger size (pieceShrink): so are gaps.
+    final minGap = (param('minGap') ?? 0.18).toDouble() / pieceShrink(density);
     final rnd = StableRandom(stableSeed('$ingredientId#$unit'));
     final pieces = <PiecePlacement>[];
     var attempts = 0;
@@ -170,7 +171,7 @@ class BandPlacement implements PlacementStrategy {
     final count = ((param('piecesPerUnit') ?? 8) * density).round();
     final radius = (param('radius') ?? 0.8).toDouble();
     final half = (param('bandWidth') ?? 0.42).toDouble(); // of the diameter
-    final minGap = (param('minGap') ?? 0.14).toDouble();
+    final minGap = (param('minGap') ?? 0.14).toDouble() / pieceShrink(density);
     // Optional centre of the strip (e.g. the middle of a half-moon base).
     final ox = (param('offsetX') ?? 0).toDouble();
     final oy = (param('offsetY') ?? 0).toDouble();
@@ -261,6 +262,321 @@ class DrizzlePlacement implements PlacementStrategy {
       }
     }
     return pieces;
+  }
+}
+
+/// How much smaller pieces are drawn at [density]: a larger size carries
+/// more pieces of the same look, not bigger ones (the canvas itself grows
+/// with the size, by the square root of [density]).
+double pieceShrink(double density) => sqrt(max(density, 1e-6));
+
+/// One quantity unit of an ingredient, as a [JointPlacement] lays it out.
+class PlacementUnit {
+  const PlacementUnit({
+    required this.ingredientId,
+    required this.unit,
+    this.variantCount = 1,
+  });
+
+  final String ingredientId;
+
+  /// 0-based quantity unit.
+  final int unit;
+  final int variantCount;
+}
+
+/// A strategy that lays out several ingredients together, so their pieces
+/// share the surface instead of each ingredient on its own (where two
+/// ingredients can land on each other).
+abstract interface class JointPlacement implements PlacementStrategy {
+  /// Pieces for each of [units], in the same order. The first [together]
+  /// units are one batch (e.g. the product as opened), laid out the same
+  /// whatever their order in the list; every later unit comes after them,
+  /// in list order, around everything before it, so adding a unit never
+  /// moves an earlier one. [placed] may hold the result for a prefix of
+  /// [units] (same inputs, the whole batch at least): it is kept, and only
+  /// the rest is laid out. Deterministic, like [PlacementStrategy.place].
+  List<List<PiecePlacement>> placeAll({
+    required List<PlacementUnit> units,
+    required Map<String, num> params,
+    int together = 0,
+    double density = 1,
+    List<List<PiecePlacement>> placed = const [],
+  });
+}
+
+/// Even (owner request: every topping spread evenly, in harmony with the
+/// others): each piece of each ingredient goes where it has the most room
+/// among a few random spots (best-candidate sampling), away from the pieces
+/// already there and from the edge of the area. Ingredients mix over the
+/// whole surface, with alike gaps everywhere: no rings, no clusters, no
+/// piece on another while there is room.
+///
+/// The area is the disc of `radius` around `offsetX`/`offsetY`, or only the
+/// strip `bandWidth` high across it (as in [BandPlacement]). With `inset` 1
+/// (the default) the pieces' edges stay inside it, with 0 their centres. A
+/// piece's room is a circle of `fill` (default 0.8) of its box, `pieceSize`
+/// of the base diameter as the canvas draws it.
+///
+/// With `coverage` set, the batch's counts (`piecesPerUnit`) are scaled
+/// (by 0.5 to 1.5) so its pieces' rooms cover that share of the area: a
+/// product with one topping and one with seven look alike full. Every later
+/// unit takes the batch's factor.
+class EvenPlacement implements JointPlacement {
+  const EvenPlacement();
+
+  /// Random spots tried per piece: more is more even, and slower.
+  static const _tries = 24;
+
+  /// How far `coverage` may scale the counts.
+  static const _fewest = 0.5, _most = 1.5;
+
+  /// The room (radius, in base radii) a piece of [ingredientId] takes at
+  /// scale 1 and [density].
+  static double roomOf(
+    String ingredientId,
+    Map<String, num> params,
+    double density,
+  ) {
+    num? param(String key) => params['$key:$ingredientId'] ?? params[key];
+    final size = (param('pieceSize') ?? 0.14).toDouble();
+    final fill = (param('fill') ?? 0.8).toDouble();
+    return size * fill / pieceShrink(density);
+  }
+
+  /// Pieces per unit of [ingredientId] at [density], before `coverage`.
+  static int countOf(
+    String ingredientId,
+    Map<String, num> params,
+    double density,
+  ) => max(
+    0,
+    ((params['piecesPerUnit:$ingredientId'] ?? params['piecesPerUnit'] ?? 8) *
+            density)
+        .round(),
+  );
+
+  /// The unit laid out alone, as a batch of its own.
+  @override
+  List<PiecePlacement> place({
+    required String ingredientId,
+    required int unit,
+    required int variantCount,
+    required Map<String, num> params,
+    double density = 1,
+  }) => placeAll(
+    units: [
+      PlacementUnit(
+        ingredientId: ingredientId,
+        unit: unit,
+        variantCount: variantCount,
+      ),
+    ],
+    params: params,
+    together: 1,
+    density: density,
+  ).single;
+
+  @override
+  List<List<PiecePlacement>> placeAll({
+    required List<PlacementUnit> units,
+    required Map<String, num> params,
+    int together = 0,
+    double density = 1,
+    List<List<PiecePlacement>> placed = const [],
+  }) {
+    final area = _EvenArea(params);
+    final batch = together.clamp(0, units.length);
+    // A kept prefix holds the whole batch, or it is laid out again.
+    final kept = min(placed.length, units.length);
+    final start = kept >= batch ? kept : 0;
+    final counts = [
+      for (final u in units) countOf(u.ingredientId, params, density),
+    ];
+    final roomOfUnit = [
+      for (final u in units) roomOf(u.ingredientId, params, density),
+    ];
+    var factor = 1.0;
+    final target = params['coverage']?.toDouble();
+    if (target != null && batch > 0) {
+      var covered = 0.0;
+      for (var i = 0; i < batch; i++) {
+        covered += counts[i] * pi * roomOfUnit[i] * roomOfUnit[i];
+      }
+      if (covered > 0) {
+        factor = (target * area.size / covered).clamp(_fewest, _most);
+      }
+    }
+    final streams = [
+      for (var i = 0; i < units.length; i++)
+        _EvenStream(units[i], (counts[i] * factor).round(), roomOfUnit[i]),
+    ];
+    final out = [
+      for (var i = 0; i < units.length; i++)
+        i < start ? placed[i] : <PiecePlacement>[],
+    ];
+    final rooms = <_Room>[
+      for (var i = 0; i < start; i++)
+        for (final p in out[i]) _Room(p.dx, p.dy, streams[i].room * p.scale),
+    ];
+
+    void put(int i) {
+      final (piece, room) = streams[i].next(area, rooms);
+      out[i].add(piece);
+      rooms.add(room);
+    }
+
+    if (start == 0 && batch > 0) {
+      // The batch: larger pieces first, while there is room for them, and
+      // smaller ones in the gaps; units of alike size in turn, each spread
+      // over its turn by its count, so none is left only the gaps the
+      // others leave. The order depends on the units, not on where they
+      // are in the list.
+      final shrink = pieceShrink(density);
+      int sizeOf(int i) => (streams[i].room * shrink * 50).round();
+      int byUnit(int a, int b) {
+        final ra = streams[a].room, rb = streams[b].room;
+        if (ra != rb) return rb.compareTo(ra);
+        final c = units[a].ingredientId.compareTo(units[b].ingredientId);
+        return c != 0 ? c : units[a].unit.compareTo(units[b].unit);
+      }
+
+      final turns =
+          [
+            for (var i = 0; i < batch; i++)
+              for (var j = 0; j < streams[i].count; j++)
+                (unit: i, at: (j + 0.5) / streams[i].count),
+          ]..sort((a, b) {
+            final s = sizeOf(b.unit).compareTo(sizeOf(a.unit));
+            if (s != 0) return s;
+            final c = a.at.compareTo(b.at);
+            return c != 0 ? c : byUnit(a.unit, b.unit);
+          });
+      for (final t in turns) {
+        put(t.unit);
+      }
+    }
+    for (var i = max(start, batch); i < units.length; i++) {
+      for (var j = 0; j < streams[i].count; j++) {
+        put(i);
+      }
+    }
+    return out;
+  }
+}
+
+/// A piece's room: a circle in base radii.
+class _Room {
+  const _Room(this.x, this.y, this.r);
+
+  final double x;
+  final double y;
+  final double r;
+}
+
+/// Where [EvenPlacement] may put pieces.
+class _EvenArea {
+  _EvenArea(Map<String, num> params)
+    : radius = (params['radius'] ?? 0.86).toDouble(),
+      band = params['bandWidth']?.toDouble(),
+      inset = (params['inset'] ?? 1).toDouble(),
+      ox = (params['offsetX'] ?? 0).toDouble(),
+      oy = (params['offsetY'] ?? 0).toDouble();
+
+  final double radius;
+  final double? band;
+  final double inset;
+  final double ox;
+  final double oy;
+
+  /// The area's size, in base radii squared.
+  double get size {
+    if (band == null) return pi * radius * radius;
+    final h = min(band!, radius);
+    return 2 *
+        (h * sqrt(radius * radius - h * h) +
+            radius * radius * asin(h / radius));
+  }
+
+  /// How far the centre of a piece of room [r] may be from the middle, and
+  /// from the strip's middle line.
+  double _disc(double r) => max(0.0, radius - inset * r);
+  double _strip(double r) => max(0.0, band! - inset * r);
+
+  /// Distance from (x, y) to the nearest edge for a piece of room [r].
+  double clearance(double x, double y, double r) {
+    final dx = x - ox, dy = y - oy;
+    var c = _disc(r) - sqrt(dx * dx + dy * dy);
+    if (band != null) c = min(c, _strip(r) - dy.abs());
+    return c;
+  }
+
+  /// A uniform random spot for the centre of a piece of room [r].
+  (double, double) sample(StableRandom rnd, double r) {
+    final l = _disc(r);
+    if (band == null) {
+      final d = l * sqrt(rnd.nextDouble());
+      final a = rnd.nextDouble() * 2 * pi;
+      return (ox + d * cos(a), oy + d * sin(a));
+    }
+    final h = min(_strip(r), l);
+    for (var k = 0; k < 8; k++) {
+      final x = (rnd.nextDouble() * 2 - 1) * l;
+      final y = (rnd.nextDouble() * 2 - 1) * h;
+      if (x * x + y * y <= l * l) return (ox + x, oy + y);
+    }
+    return (ox, oy);
+  }
+}
+
+/// One unit's pieces for [EvenPlacement], from its own random sequence (the
+/// same whatever else is on the surface).
+class _EvenStream {
+  _EvenStream(PlacementUnit u, this.count, this.room)
+    : _rnd = StableRandom(stableSeed('${u.ingredientId}#even#${u.unit}')),
+      _variants = u.variantCount;
+
+  final StableRandom _rnd;
+  final int _variants;
+  final int count;
+  final double room;
+
+  /// The next piece: the spot with the most room out of a few tries,
+  /// counting the area's edge as a piece mirrored across it.
+  (PiecePlacement, _Room) next(_EvenArea area, List<_Room> rooms) {
+    final scale = 0.9 + _rnd.nextDouble() * 0.2;
+    final rotation = _rnd.nextDouble() * 2 * pi;
+    final variant = _variants <= 1 ? 0 : _rnd.nextInt(_variants);
+    final r = room * scale;
+    var best = double.negativeInfinity, bx = area.ox, by = area.oy;
+    for (var k = 0; k < EvenPlacement._tries; k++) {
+      final (x, y) = area.sample(_rnd, r);
+      var score = 2 * area.clearance(x, y, r);
+      if (score <= best) continue;
+      for (final o in rooms) {
+        final dx = x - o.x, dy = y - o.y;
+        final gap = sqrt(dx * dx + dy * dy) - r - o.r;
+        if (gap < score) {
+          score = gap;
+          if (score <= best) break;
+        }
+      }
+      if (score > best) {
+        best = score;
+        bx = x;
+        by = y;
+      }
+    }
+    return (
+      PiecePlacement(
+        dx: bx,
+        dy: by,
+        rotation: rotation,
+        scale: scale,
+        variant: variant,
+      ),
+      _Room(bx, by, r),
+    );
   }
 }
 
@@ -461,6 +777,7 @@ const placementStrategies = <String, PlacementStrategy>{
   'band': BandPlacement(),
   'drizzle': DrizzlePlacement(),
   'sauce': SaucePlacement(),
+  'even': EvenPlacement(),
 };
 
 /// The registered strategies a definition assigns to single ingredients

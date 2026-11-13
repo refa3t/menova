@@ -50,11 +50,15 @@ function stats(frames, longTasks) {
 async function record(page, ms, action) {
   await page.evaluate(() => {
     window.__f = []; window.__lt = 0; window.__rec = true;
-    new PerformanceObserver((l) => { window.__lt += l.getEntries().length; })
-      .observe({ type: 'longtask' });
+    // One loop and one observer per recording: the previous recording's
+    // must not keep counting into this one (each frame counted twice).
+    const gen = (window.__gen = (window.__gen ?? 0) + 1);
+    window.__obs?.disconnect();
+    window.__obs = new PerformanceObserver((l) => { window.__lt += l.getEntries().length; });
+    window.__obs.observe({ type: 'longtask' });
     let last = performance.now();
     const loop = (t) => {
-      if (!window.__rec) return;
+      if (!window.__rec || window.__gen !== gen) return;
       window.__f.push(t - last); last = t; requestAnimationFrame(loop);
     };
     requestAnimationFrame(loop);

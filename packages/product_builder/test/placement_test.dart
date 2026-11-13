@@ -276,6 +276,186 @@ void main() {
     });
   });
 
+  group('even (owner request: every topping spread evenly, in harmony)', () {
+    const even = EvenPlacement();
+    const p = <String, num>{
+      'radius': 0.88,
+      'pieceSize': 0.12,
+      'fill': 0.8,
+      'piecesPerUnit': 8,
+      'piecesPerUnit:olive': 14,
+      'pieceSize:olive': 0.07,
+    };
+    PlacementUnit u(String id, [int unit = 0]) =>
+        PlacementUnit(ingredientId: id, unit: unit, variantCount: 2);
+    final pizza = [u('pepperoni'), u('mushroom'), u('olive'), u('onion')];
+    double dist(PiecePlacement a, PiecePlacement b) =>
+        sqrt(pow(a.dx - b.dx, 2) + pow(a.dy - b.dy, 2));
+    double room(String id) => EvenPlacement.roomOf(id, p, 1);
+
+    test('is joint and registered', () {
+      expect(placementStrategies['even'], isA<JointPlacement>());
+    });
+
+    test('deterministic, and the batch is the same in any order', () {
+      final a = even.placeAll(units: pizza, params: p, together: 4);
+      final b = even.placeAll(units: pizza, params: p, together: 4);
+      final c = even
+          .placeAll(units: pizza.reversed.toList(), params: p, together: 4)
+          .reversed
+          .toList();
+      for (var i = 0; i < pizza.length; i++) {
+        expect(a[i].length, b[i].length);
+        for (var j = 0; j < a[i].length; j++) {
+          expect(a[i][j].dx, b[i][j].dx);
+          expect(a[i][j].dx, closeTo(c[i][j].dx, 1e-12));
+          expect(a[i][j].dy, closeTo(c[i][j].dy, 1e-12));
+        }
+      }
+    });
+
+    test('a unit added later never moves the pieces already there', () {
+      final before = even.placeAll(units: pizza, params: p, together: 4);
+      final units = [...pizza, u('olive', 1), u('pepper')];
+      final after = even.placeAll(units: units, params: p, together: 4);
+      final kept = even.placeAll(
+        units: units,
+        params: p,
+        together: 4,
+        placed: before,
+      );
+      for (var i = 0; i < pizza.length; i++) {
+        for (var j = 0; j < before[i].length; j++) {
+          expect(after[i][j].dx, before[i][j].dx);
+          expect(after[i][j].dy, before[i][j].dy);
+        }
+      }
+      for (var i = 0; i < units.length; i++) {
+        for (var j = 0; j < after[i].length; j++) {
+          expect(kept[i][j].dx, after[i][j].dx);
+        }
+      }
+      expect(after[4], hasLength(14));
+    });
+
+    test('pieces keep inside the area and off each other while there is '
+        'room', () {
+      final out = even.placeAll(units: pizza, params: p, together: 4);
+      final all = [
+        for (final (i, pieces) in out.indexed)
+          for (final q in pieces) (q, room(pizza[i].ingredientId) * q.scale),
+      ];
+      for (final (q, r) in all) {
+        expect(
+          sqrt(q.dx * q.dx + q.dy * q.dy) + r,
+          lessThanOrEqualTo(0.88 + 1e-9),
+        );
+      }
+      for (var i = 0; i < all.length; i++) {
+        for (var j = i + 1; j < all.length; j++) {
+          expect(
+            dist(all[i].$1, all[j].$1),
+            greaterThan(all[i].$2 + all[j].$2),
+            reason: 'pieces $i and $j overlap',
+          );
+        }
+      }
+    });
+
+    test('spread over the whole surface: no ring, no empty middle', () {
+      final out = even.placeAll(units: pizza, params: p, together: 4);
+      final all = [for (final pieces in out) ...pieces];
+      // As many pieces in the inner half of the area as its share (1/4 of
+      // the disc's area is inside half its radius).
+      final inner = all.where((q) => sqrt(q.dx * q.dx + q.dy * q.dy) < 0.44);
+      expect(inner.length / all.length, inInclusiveRange(0.15, 0.35));
+      // No ingredient bunched on one side: its pieces centre on the middle.
+      for (final pieces in out) {
+        final cx = pieces.fold(0.0, (t, q) => t + q.dx) / pieces.length;
+        final cy = pieces.fold(0.0, (t, q) => t + q.dy) / pieces.length;
+        expect(sqrt(cx * cx + cy * cy), lessThan(0.3));
+      }
+    });
+
+    test('coverage: as full with one topping as with four', () {
+      final full = {...p, 'coverage': 0.45, 'piecesPerUnit:pepperoni': 30};
+      double covered(List<PlacementUnit> units) {
+        final out = even.placeAll(
+          units: units,
+          params: full,
+          together: units.length,
+        );
+        var sum = 0.0;
+        for (final (i, pieces) in out.indexed) {
+          for (final q in pieces) {
+            sum += pi * pow(room(units[i].ingredientId) * q.scale, 2);
+          }
+        }
+        return sum / (pi * 0.88 * 0.88);
+      }
+
+      expect(covered(pizza), closeTo(0.45, 0.06));
+      expect(covered([u('pepperoni')]), closeTo(0.45, 0.06));
+      // The batch's factor is kept for a unit added later.
+      final one = even.placeAll(
+        units: [u('pepperoni'), u('olive')],
+        params: full,
+        together: 1,
+      );
+      final k = 0.45 * 0.88 * 0.88 / (30 * pow(room('pepperoni'), 2));
+      expect(one[0], hasLength((30 * k).round()));
+      expect(one[1], hasLength((14 * k).round()));
+      // Within limits: a sparse product gets at most half again.
+      final sparse = even.place(
+        ingredientId: 'pepperoni',
+        unit: 0,
+        variantCount: 1,
+        params: {...full, 'piecesPerUnit:pepperoni': 4},
+      );
+      expect(sparse, hasLength(6));
+    });
+
+    test('a larger size: more pieces of the same look', () {
+      final small = even.place(
+        ingredientId: 'olive',
+        unit: 0,
+        variantCount: 1,
+        params: p,
+      );
+      final large = even.place(
+        ingredientId: 'olive',
+        unit: 0,
+        variantCount: 1,
+        params: p,
+        density: 1.5,
+      );
+      expect(large.length, (14 * 1.5).round());
+      expect(small, hasLength(14));
+      expect(
+        EvenPlacement.roomOf('olive', p, 1.5),
+        closeTo(room('olive') / sqrt(1.5), 1e-12),
+      );
+    });
+
+    test('a strip keeps the centres on it (the crepe filling)', () {
+      final strip = <String, num>{
+        ...p,
+        'radius': 0.68,
+        'bandWidth': 0.27,
+        'offsetY': 0.1,
+        'inset': 0,
+      };
+      final out = even.placeAll(units: pizza, params: strip, together: 4);
+      for (final q in [for (final pieces in out) ...pieces]) {
+        expect((q.dy - 0.1).abs(), lessThanOrEqualTo(0.27 + 1e-9));
+        expect(
+          sqrt(q.dx * q.dx + pow(q.dy - 0.1, 2)),
+          lessThanOrEqualTo(0.68 + 1e-9),
+        );
+      }
+    });
+  });
+
   test('a definition can give single ingredients their own strategy', () {
     const spec = PlacementSpec(
       strategy: 'band',

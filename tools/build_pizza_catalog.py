@@ -66,6 +66,10 @@ PRODUCT_SAUCE = {'bbq': 'bbq_sauce', 'ranch': 'ranch_sauce',
 CHEESE_GAP = {'mozzarella': 0.2, 'cheddar': 0.22, 'roumi': 0.23,
               'parmesan': 0.25, 'feta': 0.27, 'blue_cheese': 0.29}
 DRAWN_CHEESES = list(CHEESE_GAP)
+# Small toppings drawn in code (owner request: not piles): each piece a
+# loose sprinkle of kernels, crumbles, flakes or capers
+# (tools/process_bits_assets.py).
+DRAWN_BITS = ['corn', 'ground_beef', 'tuna', 'capers', 'oregano', 'parsley']
 
 # id, Arabic name, sauce, default ingredients (PIZZA_CATALOG.md section 1).
 # Quattro Stagioni is excluded: it needs a quartered base (half-and-half).
@@ -120,35 +124,57 @@ PRODUCTS = [
 
 # Motion per ingredient: (enter, exit, pieces per unit). ANIMATIONS.md 4.
 # Proposed values, calibrated against the approved reference (AC-11/12).
+# Toppings' counts are for a unit on its own; the `even` layout scales the
+# product's toppings together to one fullness (`coverage`, owner request).
 MOTION = {
     'mozzarella': ('shower', 'dissolve', 30), 'cheddar': ('shower', 'dissolve', 24),
     'roumi': ('shower', 'dissolve', 22), 'feta': ('sprinkle', 'dissolve', 16),
     'blue_cheese': ('sprinkle', 'dissolve', 14), 'parmesan': ('sprinkle', 'dissolve', 18),
-    'pepperoni': ('drop', 'liftFade', 10), 'salami_spicy': ('drop', 'liftFade', 10),
-    'ham': ('drop', 'liftFade', 9), 'sausage': ('drop', 'liftFade', 9),
-    'bacon': ('drop', 'liftFade', 10), 'ground_beef': ('shower', 'dissolve', 24),
-    'chicken': ('toss', 'liftFade', 12), 'basterma': ('drop', 'liftFade', 9),
-    'mortadella': ('drop', 'liftFade', 9), 'tuna': ('shower', 'dissolve', 14),
-    'shrimp': ('toss', 'liftFade', 6), 'calamari': ('toss', 'liftFade', 10),
-    'anchovy': ('toss', 'liftFade', 8), 'bell_pepper_green': ('drop', 'liftFade', 10),
-    'bell_pepper_red': ('drop', 'liftFade', 10), 'mushroom': ('drop', 'liftFade', 12),
-    'onion': ('drop', 'liftFade', 14), 'red_onion': ('drop', 'liftFade', 14),
-    'tomato': ('drop', 'liftFade', 8), 'cherry_tomato': ('drop', 'liftFade', 10),
+    'pepperoni': ('drop', 'liftFade', 8), 'salami_spicy': ('drop', 'liftFade', 8),
+    'ham': ('drop', 'liftFade', 9), 'sausage': ('drop', 'liftFade', 12),
+    'bacon': ('drop', 'liftFade', 10), 'ground_beef': ('shower', 'dissolve', 11),
+    'chicken': ('toss', 'liftFade', 14), 'basterma': ('drop', 'liftFade', 7),
+    'mortadella': ('drop', 'liftFade', 7), 'tuna': ('shower', 'dissolve', 9),
+    'shrimp': ('toss', 'liftFade', 7), 'calamari': ('toss', 'liftFade', 10),
+    'anchovy': ('toss', 'liftFade', 6), 'bell_pepper_green': ('drop', 'liftFade', 7),
+    'bell_pepper_red': ('drop', 'liftFade', 7), 'mushroom': ('drop', 'liftFade', 10),
+    'onion': ('drop', 'liftFade', 8), 'red_onion': ('drop', 'liftFade', 8),
+    'tomato': ('drop', 'liftFade', 6), 'cherry_tomato': ('drop', 'liftFade', 10),
     'olive_black': ('drop', 'liftFade', 14), 'olive_green': ('drop', 'liftFade', 14),
-    'corn': ('sprinkle', 'dissolve', 30), 'pineapple': ('drop', 'liftFade', 10),
-    'jalapeno': ('drop', 'liftFade', 14), 'chili_red': ('drop', 'liftFade', 12),
-    'artichoke': ('toss', 'liftFade', 8), 'capers': ('sprinkle', 'dissolve', 14),
-    'garlic': ('drop', 'liftFade', 14), 'basil': ('float', 'liftFade', 8),
-    'oregano': ('sprinkle', 'dissolve', 18), 'parsley': ('sprinkle', 'dissolve', 18),
+    'corn': ('sprinkle', 'dissolve', 12), 'pineapple': ('drop', 'liftFade', 16),
+    'jalapeno': ('drop', 'liftFade', 12), 'chili_red': ('drop', 'liftFade', 14),
+    'artichoke': ('toss', 'liftFade', 7), 'capers': ('sprinkle', 'dissolve', 10),
+    'garlic': ('drop', 'liftFade', 14), 'basil': ('float', 'liftFade', 7),
+    'oregano': ('sprinkle', 'dissolve', 12), 'parsley': ('sprinkle', 'dissolve', 12),
 }
 
-# Smaller pieces for dense scatter (crumbs, kernels, herbs, grated cheese:
-# a few shreds or crumbles per piece, many pieces).
+# Piece box per ingredient, of the base diameter (owner request: every
+# item in proportion to the others, as on a real small pizza).
 PIECE_SIZE = {
-    'mozzarella': 0.2, 'cheddar': 0.19, 'roumi': 0.18, 'ground_beef': 0.09,
-    'corn': 0.08, 'oregano': 0.09, 'parsley': 0.09, 'parmesan': 0.18,
-    'capers': 0.09, 'feta': 0.17, 'blue_cheese': 0.17,
+    # Grated cheese and herbs: a sprinkle of shreds, crumbles or flakes per
+    # piece (tools/process_cheese_assets.py, tools/process_bits_assets.py).
+    'mozzarella': 0.2, 'cheddar': 0.19, 'roumi': 0.18, 'parmesan': 0.18,
+    'feta': 0.17, 'blue_cheese': 0.17, 'oregano': 0.16, 'parsley': 0.16,
+    # Toppings.
+    'pepperoni': 0.15, 'salami_spicy': 0.15, 'ham': 0.115, 'sausage': 0.095,
+    'bacon': 0.12, 'ground_beef': 0.15, 'chicken': 0.1, 'basterma': 0.15,
+    'mortadella': 0.15, 'tuna': 0.15, 'shrimp': 0.14, 'calamari': 0.11,
+    'anchovy': 0.17, 'bell_pepper_green': 0.17, 'bell_pepper_red': 0.17,
+    'mushroom': 0.11, 'onion': 0.14, 'red_onion': 0.13, 'tomato': 0.15,
+    'cherry_tomato': 0.09, 'olive_black': 0.07, 'olive_green': 0.07,
+    'corn': 0.1, 'pineapple': 0.08, 'jalapeno': 0.09, 'chili_red': 0.06,
+    'artichoke': 0.13, 'capers': 0.09, 'garlic': 0.06, 'basil': 0.15,
 }
+
+# The toppings' layout (owner request: spread evenly, in harmony): up to
+# near the crust (of the base radius; the sauce ends at about 0.87), and as
+# full on every pizza, whatever its number of toppings (share of the area).
+TOPPING_LAYOUT = {'radius': 0.88, 'coverage': 0.5}
+
+# Herbs: a light dusting over the toppings, a layer of their own like the
+# cheese under them (gap between pieces, of the base radius).
+HERB_GAP = {'oregano': 0.3, 'parsley': 0.3}
+HERBS = list(HERB_GAP)
 
 # Menu groups (owner request), in display order, and each product's group.
 PRODUCT_GROUPS = [
@@ -263,13 +289,32 @@ EXTRA_PRICE = {
 }
 
 
+def sprite_fill(paths) -> float:
+    """How much of its box a topping's picture fills, as the radius of the
+    room the `even` layout keeps around it (of half the box): its area as a
+    circle, or most of its reach for a long or open shape (a strip, a ring),
+    whichever is larger, averaged over its variants."""
+    import numpy as np
+    from PIL import Image
+    fills = []
+    for path in paths:
+        a = np.asarray(Image.open(path).convert('RGBA'))[..., 3] > 127
+        h, w = a.shape
+        yy, xx = np.mgrid[0:h, 0:w]
+        r = np.hypot(xx - w / 2, yy - h / 2) / (w / 2)
+        area = float(np.sqrt(4 * a.mean() / np.pi))
+        reach = float(np.percentile(r[a], 98)) if a.any() else 0.0
+        fills.append(max(area, 0.85 * reach))
+    return round(sum(fills) / len(fills), 2) if fills else 0.8
+
+
 def asset_files(files, key: str) -> list:
     """An ingredient's image files: its photo variants (ing_<id>_NN), its
-    drawn cheese pieces (ing_<id>_gNN) or its sauce icon (ing_<id>_cup).
-    Matched exactly, so ids that share a start (cheddar, cheddar_sauce) never
-    take each other's files."""
-    kind = ('cup' if key in SAUCE_IDS else r'g\d+' if key in DRAWN_CHEESES
-            else r'\d+')
+    pieces drawn in code (ing_<id>_gNN: cheese and small toppings) or its
+    sauce icon (ing_<id>_cup). Matched exactly, so ids that share a start
+    (cheddar, cheddar_sauce) never take each other's files."""
+    kind = ('cup' if key in SAUCE_IDS
+            else r'g\d+' if key in DRAWN_CHEESES + DRAWN_BITS else r'\d+')
     return [f for f in files
             if re.fullmatch(rf'ing_{re.escape(key)}_{kind}\.webp', f)]
 
@@ -315,18 +360,29 @@ def main() -> None:
         'base': {'shape': 'circle', 'rawAssetId': 'base_pizza_regular_raw'},
         'allowedIngredientIds': [k for k, _ in INGREDIENTS] + SAUCE_IDS,
         # TEMP: calibrated during the P1-B00 drawing prototype.
-        'placement': {'strategy': 'rings', 'params': {
-            'pieceSize': 0.13, 'piecesPerUnit': 9, 'radius': 0.74, 'minGap': 0.16,
+        # Owner request: the toppings spread together evenly (`even`); the
+        # grated cheese under them and the herbs over them are layers of
+        # their own; the sauces are poured over everything.
+        'placement': {'strategy': 'even', 'params': {
+            **TOPPING_LAYOUT,
+            'pieceSize': 0.13, 'piecesPerUnit': 9, 'minGap': 0.16,
             **{f'piecesPerUnit:{k}': v[2] for k, v in MOTION.items()},
             **{f'pieceSize:{k}': v for k, v in PIECE_SIZE.items()},
+            **{f'fill:{k}': sprite_fill(
+                f'assets_src/pizza/ingredients/{f}' for f in asset_files(files, k))
+               for k, _ in INGREDIENTS
+               if k not in DRAWN_CHEESES and k not in HERBS},
             # The small cheese pieces spread out to near the crust.
             **{f'radius:{k}': 0.72 for k in DRAWN_CHEESES},
             **{f'minGap:{k}': v for k, v in CHEESE_GAP.items()},
+            **{f'radius:{k}': 0.74 for k in HERBS},
+            **{f'minGap:{k}': v for k, v in HERB_GAP.items()},
             **sauce_params(SAUCES, SAUCE_ANGLES, SAUCE_POUR)},
-            'byIngredient': {**{k: 'scatter' for k in DRAWN_CHEESES},
+            'byIngredient': {**{k: 'scatter' for k in DRAWN_CHEESES + HERBS},
                              **{k: 'sauce' for k in SAUCE_IDS}}},
-        # Sauces are poured over everything else.
-        'layerOverrides': {k: 40 for k in SAUCE_IDS},
+        'layerOverrides': {**{k: 10 for k in DRAWN_CHEESES},
+                           **{k: 30 for k in HERBS},
+                           **{k: 40 for k in SAUCE_IDS}},
         'constraints': {'maxQty': 2},
         'sizes': [
             {'id': 's', 'name': 'صغير', 'names': {'en': 'Small', 'ar': 'صغير'}, 'scale': 0.82},

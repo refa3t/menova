@@ -31,10 +31,24 @@ void main() {
     var worstId = '';
     for (final p in products) {
       var pieces = 0;
+      // Toppings laid out together (`even`): the defaults as the batch, the
+      // extras after them, as the canvas does.
+      final joint = <PlacementUnit>[];
+      final extras = <PlacementUnit>[];
       for (final d in p.defaults) {
+        final s = strategies[d.ingredientId] ?? strategy;
         final units = d.qty + def.constraints.maxQty;
         for (var u = 0; u < units; u++) {
-          pieces += (strategies[d.ingredientId] ?? strategy)
+          final unit = PlacementUnit(
+            ingredientId: d.ingredientId,
+            unit: u,
+            variantCount: 3,
+          );
+          if (s is JointPlacement) {
+            (u < d.qty ? joint : extras).add(unit);
+            continue;
+          }
+          pieces += s
               .place(
                 ingredientId: d.ingredientId,
                 unit: u,
@@ -43,6 +57,16 @@ void main() {
                 density: density,
               )
               .length;
+        }
+      }
+      if (strategy case final JointPlacement s) {
+        for (final unit in s.placeAll(
+          units: [...joint, ...extras],
+          params: def.placement.params,
+          together: joint.length,
+          density: density,
+        )) {
+          pieces += unit.length;
         }
       }
       if (pieces > worst) (worst, worstId) = (pieces, p.id);

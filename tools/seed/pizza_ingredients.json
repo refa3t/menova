@@ -165,7 +165,12 @@
       },
       "assetId": "ing_corn",
       "assetFiles": [
-        "ing_corn_01.webp"
+        "ing_corn_g01.webp",
+        "ing_corn_g02.webp",
+        "ing_corn_g03.webp",
+        "ing_corn_g04.webp",
+        "ing_corn_g05.webp",
+        "ing_corn_g06.webp"
       ],
       "extraPrice": 1000,
       "isAvailable": true,
@@ -195,7 +200,12 @@
       },
       "assetId": "ing_oregano",
       "assetFiles": [
-        "ing_oregano_01.webp"
+        "ing_oregano_g01.webp",
+        "ing_oregano_g02.webp",
+        "ing_oregano_g03.webp",
+        "ing_oregano_g04.webp",
+        "ing_oregano_g05.webp",
+        "ing_oregano_g06.webp"
       ],
       "extraPrice": 500,
       "isAvailable": true,
@@ -285,7 +295,12 @@
       },
       "assetId": "ing_ground_beef",
       "assetFiles": [
-        "ing_ground_beef_01.webp"
+        "ing_ground_beef_g01.webp",
+        "ing_ground_beef_g02.webp",
+        "ing_ground_beef_g03.webp",
+        "ing_ground_beef_g04.webp",
+        "ing_ground_beef_g05.webp",
+        "ing_ground_beef_g06.webp"
       ],
       "extraPrice": 3500,
       "isAvailable": true,
@@ -360,7 +375,12 @@
       },
       "assetId": "ing_parsley",
       "assetFiles": [
-        "ing_parsley_01.webp"
+        "ing_parsley_g01.webp",
+        "ing_parsley_g02.webp",
+        "ing_parsley_g03.webp",
+        "ing_parsley_g04.webp",
+        "ing_parsley_g05.webp",
+        "ing_parsley_g06.webp"
       ],
       "extraPrice": 500,
       "isAvailable": true,
@@ -395,7 +415,12 @@
       },
       "assetId": "ing_tuna",
       "assetFiles": [
-        "ing_tuna_01.webp"
+        "ing_tuna_g01.webp",
+        "ing_tuna_g02.webp",
+        "ing_tuna_g03.webp",
+        "ing_tuna_g04.webp",
+        "ing_tuna_g05.webp",
+        "ing_tuna_g06.webp"
       ],
       "extraPrice": 3500,
       "isAvailable": true,
@@ -601,7 +626,12 @@
       },
       "assetId": "ing_capers",
       "assetFiles": [
-        "ing_capers_01.webp"
+        "ing_capers_g01.webp",
+        "ing_capers_g02.webp",
+        "ing_capers_g03.webp",
+        "ing_capers_g04.webp",
+        "ing_capers_g05.webp",
+        "ing_capers_g06.webp"
       ],
       "extraPrice": 1500,
       "isAvailable": true,
