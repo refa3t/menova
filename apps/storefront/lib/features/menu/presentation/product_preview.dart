@@ -39,6 +39,7 @@ class ProductPreview extends StatelessWidget {
         strategyByIngredient: strategiesByIngredient(definition.placement),
         placementParams: definition.placement.params,
         density: state.sizeDensity,
+        surface: state.activeBase.surface,
         layers: [
           for (final e in state.selection.ingredients.entries)
             if (e.value > 0)

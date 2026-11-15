@@ -271,6 +271,11 @@ OPTION_GROUPS = [
          'base_pizza_stuffed_raw'),
     ]),
 ]
+# How far the toppings reach on a base, as a share of the regular base: the
+# stuffed crust's thick rim starts where its sauce ends, at about 0.73 of
+# the radius against 0.87 (measured on the images), so the toppings are
+# drawn inside it.
+BASE_SURFACE = {'base_pizza_stuffed_raw': 0.84}
 
 # Extra topping price per unit in EGP (same for every size, owner P0-05).
 EXTRA_PRICE = {
@@ -394,7 +399,9 @@ def main() -> None:
             'defaultChoiceId': default,
             'choices': [{
                 'id': c, 'name': ar, 'names': {'en': en, 'ar': ar},
-                **({'base': {'shape': 'circle', 'rawAssetId': base}}
+                **({'base': {'shape': 'circle', 'rawAssetId': base,
+                             **({'surface': BASE_SURFACE[base]}
+                                if base in BASE_SURFACE else {})}}
                    if base else {}),
             } for c, ar, en, _, base in choices],
         } for gid, gar, gen, default, choices in OPTION_GROUPS],

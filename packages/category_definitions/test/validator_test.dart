@@ -64,6 +64,32 @@ void main() {
     ]);
   });
 
+  test('a base surface outside (0, 1] is rejected', () {
+    OptionGroup crust(double surface) => OptionGroup(
+      id: 'g',
+      name: 'g',
+      defaultChoiceId: 'a',
+      choices: [
+        OptionChoice(
+          id: 'a',
+          name: 'a',
+          base: BaseSpec(
+            shape: 'circle',
+            rawAssetId: 'base2',
+            surface: surface,
+          ),
+        ),
+      ],
+    );
+    expect(check(def(groups: [crust(0.84)])), isEmpty);
+    expect(check(def(groups: [crust(0)])), [
+      'optionGroups[0].choices[0].base.surface',
+    ]);
+    expect(check(def(groups: [crust(1.2)])), [
+      'optionGroups[0].choices[0].base.surface',
+    ]);
+  });
+
   test('unregistered step or strategy is rejected', () {
     expect(check(def(strategy: 'spiral')), ['placement.strategy']);
     expect(check(def(animation: const [StepSpec(step: 'Fold')])), [

@@ -342,7 +342,8 @@
           },
           "base": {
             "shape": "circle",
-            "rawAssetId": "base_pizza_stuffed_raw"
+            "rawAssetId": "base_pizza_stuffed_raw",
+            "surface": 0.84
           }
         }
       ]

@@ -162,6 +162,7 @@ class BaseSpec {
     required this.shape,
     required this.rawAssetId,
     this.cookedAssetId,
+    this.surface = 1,
   });
 
   /// Registered shape key (e.g. `circle`), resolved by the builder engine.
@@ -169,16 +170,24 @@ class BaseSpec {
   final String rawAssetId;
   final String? cookedAssetId;
 
+  /// How far the toppings reach on this base, as a share of how far they
+  /// reach on the category's own base (radius). A base with a thicker rim
+  /// (e.g. stuffed crust) leaves less: the canvas draws the toppings that
+  /// much smaller around the centre, so none lies on the rim. In (0, 1].
+  final double surface;
+
   factory BaseSpec.fromJson(Json j) => BaseSpec(
     shape: req(j, 'shape'),
     rawAssetId: req(j, 'rawAssetId'),
     cookedAssetId: opt(j, 'cookedAssetId'),
+    surface: (j['surface'] as num?)?.toDouble() ?? 1,
   );
 
   Json toJson() => {
     'shape': shape,
     'rawAssetId': rawAssetId,
     if (cookedAssetId != null) 'cookedAssetId': cookedAssetId,
+    if (surface != 1) 'surface': surface,
   };
 
   @override
@@ -186,10 +195,11 @@ class BaseSpec {
       other is BaseSpec &&
       other.shape == shape &&
       other.rawAssetId == rawAssetId &&
-      other.cookedAssetId == cookedAssetId;
+      other.cookedAssetId == cookedAssetId &&
+      other.surface == surface;
 
   @override
-  int get hashCode => Object.hash(shape, rawAssetId, cookedAssetId);
+  int get hashCode => Object.hash(shape, rawAssetId, cookedAssetId, surface);
 }
 
 /// Registered placement strategy key plus its parameters (e.g. `scatter`).

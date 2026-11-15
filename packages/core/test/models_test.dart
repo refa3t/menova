@@ -127,6 +127,17 @@ void main() {
     expect(CategoryContent.fromJson(viaString(c.toJson())), c);
   });
 
+  test('a base declares how far the toppings reach on it (default all)', () {
+    const plain = BaseSpec(shape: 'circle', rawAssetId: 'b');
+    expect(plain.surface, 1);
+    expect(plain.toJson().containsKey('surface'), isFalse);
+    expect(BaseSpec.fromJson(viaString(plain.toJson())), plain);
+    const rim = BaseSpec(shape: 'circle', rawAssetId: 'b', surface: 0.84);
+    expect(rim.toJson()['surface'], 0.84);
+    expect(BaseSpec.fromJson(viaString(rim.toJson())), rim);
+    expect(rim == plain, isFalse);
+  });
+
   test('size multiplier defaults to 1', () {
     final i = Ingredient.fromJson(viaString(ingredientJson));
     expect(i.multiplierFor('m'), 1.5);

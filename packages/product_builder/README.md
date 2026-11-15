@@ -14,7 +14,41 @@ A placement strategy decides where an ingredient's pieces go on the base.
    Parameters come from `placement.params`; per-ingredient overrides use
    `<param>:<ingredientId>`.
 
-Registered: `scatter`, `rings`, `band`, `drizzle`, `sauce`.
+Registered: `scatter`, `rings`, `band`, `drizzle`, `sauce`, `even`.
+
+A larger size carries more pieces of the same look, not bigger ones: the
+canvas draws pieces (and sauce lines) smaller by `pieceShrink(density)`, as
+the canvas itself grows with the size, and `scatter` and `band` shrink their
+gaps alike.
+
+## Toppings together: JointPlacement
+
+A strategy that also implements `JointPlacement` (e.g. `even`) lays out
+several ingredients at once, so their pieces share the surface instead of
+landing on each other. The canvas keeps, per joint strategy, the units in
+the order they were first shown: those on the first frame are one batch
+(laid out the same whatever their order, so the menu card and the product
+page match), every later unit is laid out around the pieces already there.
+No piece moves while the product is open; a removed unit keeps its spots
+and comes back to them.
+
+`even` puts each piece where it has the most room among a few random spots
+(best-candidate sampling), away from the others and from the edge of the
+area, larger pieces first. The area is the disc of `radius` (how far the
+pieces' edges reach; with `inset` 0 their centres) or the strip `bandWidth`
+high around `offsetX`/`offsetY`. A piece's room is `fill:<id>` (default 0.8)
+of its box `pieceSize:<id>`. With `coverage`, the batch's counts are scaled
+(0.5 to 1.5) so its pieces cover that share of the area: a product with one
+topping and one with seven look alike full; later units take the batch's
+factor.
+
+## The base's surface
+
+A base may leave the toppings less room than the category's own base (e.g.
+a thicker rim): `BaseSpec.surface` (in (0, 1], default 1) is how far the
+toppings reach on it, as a share. The canvas (`surface`) draws the toppings'
+layer that much smaller around the centre, and moves it smoothly when the
+base changes; the layout itself is kept.
 
 ## Liquids: LinePlacement
 

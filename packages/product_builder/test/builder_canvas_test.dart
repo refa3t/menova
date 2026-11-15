@@ -20,6 +20,7 @@ void main() {
     WidgetTester tester,
     List<CanvasLayer> layers, {
     String key = 'canvas',
+    double surface = 1,
   }) => tester.pumpWidget(
     MaterialApp(
       home: Center(
@@ -31,6 +32,7 @@ void main() {
             layers: layers,
             strategy: const EvenPlacement(),
             placementParams: params,
+            surface: surface,
           ),
         ),
       ),
@@ -49,6 +51,27 @@ void main() {
     ))
       (p.key! as ValueKey<String>).value: Offset(p.left!, p.top!),
   };
+
+  testWidgets('a base with less surface (a thick rim) draws the toppings '
+      'inside it, and they move there when the base changes', (tester) async {
+    double scale() => tester
+        .widget<AnimatedScale>(
+          find
+              .ancestor(
+                of: find.byType(Stack).last,
+                matching: find.byType(AnimatedScale),
+              )
+              .first,
+        )
+        .scale;
+    await pump(tester, [layer('a', 1)]);
+    expect(scale(), 1);
+    final before = positions(tester);
+    await pump(tester, [layer('a', 1)], surface: 0.84);
+    expect(scale(), 0.84);
+    // The layout itself is kept: the whole layer is drawn smaller.
+    expect(positions(tester), before);
+  });
 
   group('joint layout (owner request: toppings spread evenly together)', () {
     testWidgets('adding a topping never moves the pieces already there', (

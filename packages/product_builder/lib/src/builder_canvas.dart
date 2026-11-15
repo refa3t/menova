@@ -49,6 +49,7 @@ class BuilderCanvas extends StatefulWidget {
     this.placementParams = const {},
     this.scale = 1,
     this.density = 1,
+    this.surface = 1,
     this.piecesKey,
   });
 
@@ -71,6 +72,11 @@ class BuilderCanvas extends StatefulWidget {
 
   /// Piece count factor (larger sizes carry more pieces).
   final double density;
+
+  /// How far the toppings reach on the current base (its `surface`): they
+  /// are drawn that much smaller around the centre, e.g. inside a thicker
+  /// rim, and move there smoothly when the base changes.
+  final double surface;
 
   @override
   State<BuilderCanvas> createState() => _BuilderCanvasState();
@@ -283,11 +289,23 @@ class _BuilderCanvasState extends State<BuilderCanvas> {
                       ),
                     ),
                   ),
-                  // The pieces on a layer of their own (see piecesKey).
+                  // The pieces on a layer of their own (see piecesKey),
+                  // within the base's surface.
                   Positioned.fill(
-                    child: RepaintBoundary(
-                      key: widget.piecesKey,
-                      child: Stack(clipBehavior: Clip.none, children: children),
+                    child: AnimatedScale(
+                      scale: widget.surface,
+                      duration:
+                          MediaQuery.maybeDisableAnimationsOf(context) ?? false
+                          ? Duration.zero
+                          : const Duration(milliseconds: 280),
+                      curve: Curves.easeOut,
+                      child: RepaintBoundary(
+                        key: widget.piecesKey,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: children,
+                        ),
+                      ),
                     ),
                   ),
                 ],

@@ -32,6 +32,9 @@ List<DefinitionIssue> validateDefinition(
 
   // Assets.
   void checkBase(String path, BaseSpec b) {
+    if (!(b.surface > 0 && b.surface <= 1)) {
+      issue('$path.surface', 'must be in (0, 1]');
+    }
     if (assetIds == null) return;
     if (!assetIds.contains(b.rawAssetId)) {
       issue('$path.rawAssetId', 'unknown asset "${b.rawAssetId}"');

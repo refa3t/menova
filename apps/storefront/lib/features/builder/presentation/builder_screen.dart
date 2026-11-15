@@ -390,6 +390,7 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
               placementParams: def.placement.params,
               scale: state.sizeScale,
               density: state.sizeDensity,
+              surface: state.activeBase.surface,
               layers: layers,
             ),
           ),

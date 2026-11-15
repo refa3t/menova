@@ -36,6 +36,10 @@ void main() {
     final stuffed = plain.selectOption('crust', 'stuffed_crust').state;
     expect(plain.activeBase.rawAssetId, 'base_pizza_regular_raw');
     expect(stuffed.activeBase.rawAssetId, 'base_pizza_stuffed_raw');
+    // Its thick rim leaves the toppings less room (the canvas draws them
+    // inside it).
+    expect(plain.activeBase.surface, 1);
+    expect(stuffed.activeBase.surface, lessThan(0.9));
 
     int total(BuilderState s) => priceItem(
       definition: def,
