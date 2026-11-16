@@ -168,29 +168,40 @@ def piece(cheese: str, v: int) -> Image.Image:
         ImageFilter.GaussianBlur(N * 0.012))
     sa = np.asarray(shadow, np.float32) / 255 * 0.32
     alpha = layer.alpha + sa * (1 - layer.alpha)
+    return downscale(layer.rgb, alpha, PIECE)
 
-    # Reduce with premultiplied colour (the shadow is black), so edges keep
-    # their colour.
+
+def downscale(rgb: np.ndarray, alpha: np.ndarray, size: int) -> Image.Image:
+    """Reduces a drawing to [size] px. [rgb] is premultiplied by [alpha] (a
+    shadow is black), so edges keep their colour."""
     def down(channel):
         img = Image.fromarray(channel.astype(np.float32), 'F')
-        return np.asarray(img.resize((PIECE, PIECE), Image.LANCZOS), np.float32)
+        return np.asarray(img.resize((size, size), Image.LANCZOS), np.float32)
 
     a = np.clip(down(alpha), 0, 1)
-    rgb = np.stack([down(layer.rgb[..., i]) for i in range(3)], -1)
-    rgb = rgb / np.maximum(a, 1e-4)[..., None]
-    img = Image.fromarray(np.clip(rgb, 0, 255).astype(np.uint8)).convert('RGBA')
+    out = np.stack([down(rgb[..., i]) for i in range(3)], -1)
+    out = out / np.maximum(a, 1e-4)[..., None]
+    img = Image.fromarray(np.clip(out, 0, 255).astype(np.uint8)).convert('RGBA')
     img.putalpha(Image.fromarray((a * 255).astype(np.uint8)))
     return img
 
 
 def save(img: Image.Image, path: str) -> None:
-    q = 92
-    while True:
-        img.save(path, 'WEBP', quality=q, method=6)
-        if os.path.getsize(path) <= MAX or q <= 50:
-            break
-        q -= 6
-    print(f'{path}: {os.path.getsize(path) // 1024} KB')
+    """Writes [img] as WebP at [path], lowering the quality until it fits the
+    ingredient image limit (MAX). Stops with an error if it still does not
+    at quality 50, leaving any earlier file at [path] as it was."""
+    os.makedirs(os.path.dirname(path) or '.', exist_ok=True)
+    tmp = f'{path}.tmp'
+    for q in range(92, 49, -6):
+        img.save(tmp, 'WEBP', quality=q, method=6)
+        size = os.path.getsize(tmp)
+        if size <= MAX:
+            os.replace(tmp, path)
+            print(f'{path}: {size // 1024} KB')
+            return
+    os.remove(tmp)
+    raise SystemExit(f'{path}: {size / 1024:.1f} KB even at quality {q}, '
+                     f'over the {MAX // 1024} KB ingredient image limit')
 
 
 def main() -> None:

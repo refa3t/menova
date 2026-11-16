@@ -49,13 +49,25 @@ SWEET_SAUCES = [
 # The pizza's savoury sauces, offered on savoury crepes (pesto stays a
 # pizza sauce).
 SAVORY_SAUCES = [x for x in PIZZA_SAUCES if x[0] != 'pesto_sauce']
-# Poured across the filling in near-upright passes; two sauces cross.
-SAUCE_ANGLES = [62, 118, 90, 76, 104, 50, 130]
+# Each sauce is poured across the filling in near-upright passes at its own
+# angle (degrees, in the order of its list; flatter passes would crowd the
+# narrow strip), so two sauces on one crepe cross instead of one hiding the
+# other. Savoury: spread evenly, 12 degrees apart. Sweet: Nutella (the
+# default of most sweet crepes) and white chocolate (with it on the
+# two-chocolates crepe) take the two ends, at least DEFAULT_SAUCE_GAP from
+# every other sweet sauce (closer, their passes run largely together); the
+# six others share the middle, about 9 degrees apart.
+SAVORY_SAUCE_ANGLES = [60, 120, 84, 72, 108, 48, 132, 96]
+SWEET_SAUCE_ANGLES = [48, 132, 94, 77, 103, 68, 112, 86]
+DEFAULT_SAUCE_GAP = 20
 SAUCE_POUR = {'lines': 11, 'lineWidth': 0.042, 'wave': 0.005}
 SAUCE_IDS = [x[0] for x in SAVORY_SAUCES + SWEET_SAUCES]
 
-# Pieces of a shared ingredient on the crepe, relative to the pizza: the
-# filling area is smaller, so fewer pieces keep it about as full.
+# Pieces of a shared ingredient on the crepe, relative to the pizza (the
+# filling area is smaller). The `even` fillings are rescaled to the strip's
+# `coverage` anyway (by a factor kept within 0.5 to 1.5), which cancels this
+# out; it still sets the `band` cheeses' counts, and the fillings' counts
+# when that factor is at its limit.
 CREPE_DENSITY = 0.6
 
 # Reused pizza ingredients the crepe allows (savoury fillings).
@@ -157,6 +169,17 @@ def main() -> None:
         round((1 + f['radius']) / 2, 3), round((1 + f['offsetY'] + f['bandWidth']) / 2, 3)]
     for pid, *_, defaults in PRODUCTS:
         assert set(defaults) <= set(allowed), (pid, set(defaults) - set(allowed))
+    # A crepe's default sauces are on every one of it, and any other sauce
+    # of its group may join them: keep them well apart from the others.
+    for sauces, angles in ((SAVORY_SAUCES, SAVORY_SAUCE_ANGLES),
+                           (SWEET_SAUCES, SWEET_SAUCE_ANGLES)):
+        angle = {k: a for (k, *_), a in zip(sauces, angles)}
+        for pid, *_, defaults in PRODUCTS:
+            for d in set(defaults) & set(angle):
+                near = [k for k, a in angle.items() if k != d and min(
+                    abs(a - angle[d]) % 180,
+                    180 - abs(a - angle[d]) % 180) < DEFAULT_SAUCE_GAP]
+                assert not near, (pid, d, near)
     files = sorted(os.path.basename(f) for f in
                    glob.glob('assets_src/crepe/ingredients/*.webp'))
 
@@ -181,8 +204,8 @@ def main() -> None:
             f'assets_src/crepe/ingredients/{f}' for f in files
             if re.fullmatch(rf'ing_{re.escape(k)}_\d+\.webp', f))
     cheeses = [k for k in SHARED if k in DRAWN_CHEESES]
-    params.update(sauce_params(SAVORY_SAUCES, SAUCE_ANGLES, SAUCE_POUR))
-    params.update(sauce_params(SWEET_SAUCES, SAUCE_ANGLES, SAUCE_POUR))
+    params.update(sauce_params(SAVORY_SAUCES, SAVORY_SAUCE_ANGLES, SAUCE_POUR))
+    params.update(sauce_params(SWEET_SAUCES, SWEET_SAUCE_ANGLES, SAUCE_POUR))
     motion = {k: pizza_def['ingredientMotion'][k] for k in SHARED
               if k in pizza_def['ingredientMotion']}
     for k, *_, enter in NEW_INGREDIENTS:

@@ -19,11 +19,11 @@ from PIL import Image, ImageFilter
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from build_crepe_catalog import SWEET_SAUCES  # noqa: E402
 from build_pizza_catalog import SAUCES  # noqa: E402
+from process_cheese_assets import downscale, save  # noqa: E402
 
 SIZE = 200
 SS = 4
 N = SIZE * SS
-MAX = 150 * 1024
 
 # Bits in the sauce: colour, count, radius (of the icon).
 BITS = {
@@ -93,30 +93,7 @@ def icon(sauce: str, argb: int) -> Image.Image:
     shadow = np.asarray(shadow, np.float32) / 255
     shadow = np.roll(shadow, (int(N * 0.03), int(N * 0.012)), axis=(0, 1)) * 0.35
     alpha = cover + shadow * (1 - cover)
-    prem = rgb * cover[..., None]
-
-    def down(channel):
-        img = Image.fromarray(channel.astype(np.float32), 'F')
-        return np.asarray(img.resize((SIZE, SIZE), Image.LANCZOS), np.float32)
-
-    a = np.clip(down(alpha), 0, 1)
-    out = np.stack([down(prem[..., i]) for i in range(3)], -1)
-    out = out / np.maximum(a, 1e-4)[..., None]
-    img = Image.fromarray(np.clip(out, 0, 255).astype(np.uint8)).convert('RGBA')
-    img.putalpha(Image.fromarray((a * 255).astype(np.uint8)))
-    return img
-
-
-
-def save(img: Image.Image, path: str) -> None:
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    q = 92
-    while True:
-        img.save(path, 'WEBP', quality=q, method=6)
-        if os.path.getsize(path) <= MAX or q <= 50:
-            break
-        q -= 6
-    print(f'{path}: {os.path.getsize(path) // 1024} KB')
+    return downscale(rgb * cover[..., None], alpha, SIZE)
 
 
 def main() -> None:

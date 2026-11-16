@@ -24,7 +24,8 @@ import sys
 import numpy as np
 from PIL import Image, ImageFilter
 
-from process_cheese_assets import MAX, N, PIECE, Layer, noise, smooth, spots
+from process_cheese_assets import (N, PIECE, Layer, downscale, noise, save,
+                                   smooth, spots)
 
 VARIANTS = 6
 
@@ -165,29 +166,7 @@ def piece(item: str, v: int) -> Image.Image:
         ImageFilter.GaussianBlur(N * 0.01))
     sa = np.asarray(shadow, np.float32) / 255 * 0.3
     alpha = layer.alpha + sa * (1 - layer.alpha)
-
-    # Reduce with premultiplied colour (the shadow is black), so edges keep
-    # their colour.
-    def down(channel):
-        img = Image.fromarray(channel.astype(np.float32), 'F')
-        return np.asarray(img.resize((PIECE, PIECE), Image.LANCZOS), np.float32)
-
-    a = np.clip(down(alpha), 0, 1)
-    rgb = np.stack([down(layer.rgb[..., i]) for i in range(3)], -1)
-    rgb = rgb / np.maximum(a, 1e-4)[..., None]
-    img = Image.fromarray(np.clip(rgb, 0, 255).astype(np.uint8)).convert('RGBA')
-    img.putalpha(Image.fromarray((a * 255).astype(np.uint8)))
-    return img
-
-
-def save(img: Image.Image, path: str) -> None:
-    q = 92
-    while True:
-        img.save(path, 'WEBP', quality=q, method=6)
-        if os.path.getsize(path) <= MAX or q <= 50:
-            break
-        q -= 6
-    print(f'{path}: {os.path.getsize(path) // 1024} KB')
+    return downscale(layer.rgb, alpha, PIECE)
 
 
 def main() -> None:

@@ -326,11 +326,17 @@ def asset_files(files, key: str) -> list:
 
 
 def sauce_params(sauces, angles, pour) -> dict:
-    """Placement params of poured sauces: colour, angle and pour each."""
+    """Placement params of poured sauces: colour, angle and pour each. Each
+    sauce takes the angle at its place in [angles], and they must all differ:
+    two sauces at one angle (or 180 degrees apart, the same direction) pour
+    on the same passes, so one hides the other."""
+    own = {a % 180 for a in angles[:len(sauces)]}
+    assert len(own) == len(sauces), (
+        f'{len(sauces)} sauces need as many different angles: {angles}')
     params = {}
-    for i, (k, *_, colour) in enumerate(sauces):
+    for (k, *_, colour), angle in zip(sauces, angles):
         params[f'color:{k}'] = colour
-        params[f'angle:{k}'] = angles[i % len(angles)]
+        params[f'angle:{k}'] = angle
         for p, v in pour.items():
             params[f'{p}:{k}'] = v
     return params
