@@ -61,8 +61,15 @@ List<DefinitionIssue> validateDefinition(
       issue(path, 'unregistered "${e.value}"');
     }
   }
+  // No param is negative. The area the pieces fill must also have a size:
+  // a 0 band lays every piece on one line, and a 0 radius divides by 0.
   for (final e in d.placement.params.entries) {
-    if (e.value < 0) issue('placement.params.${e.key}', 'must be >= 0');
+    final path = 'placement.params.${e.key}';
+    if (_areaParams.contains(e.key.split(':').first)) {
+      if (!(e.value > 0)) issue(path, 'must be > 0');
+    } else if (e.value < 0) {
+      issue(path, 'must be >= 0');
+    }
   }
   if (d.animation.isEmpty) issue('animation', 'must have at least one step');
   for (final (i, s) in d.animation.indexed) {
@@ -110,22 +117,50 @@ List<DefinitionIssue> validateDefinition(
     }
   }
 
+  void checkNames(String path, String name, Map<String, String> names) {
+    if (name.trim().isEmpty) issue('$path.name', 'must not be empty');
+    for (final e in names.entries) {
+      if (e.value.trim().isEmpty) {
+        issue('$path.names.${e.key}', 'must not be empty');
+      }
+    }
+  }
+
   final productGroupIds = <String>{};
   for (final (i, g) in d.productGroups.indexed) {
-    if (!productGroupIds.add(g.id)) {
-      issue('productGroups[$i].id', 'duplicate "${g.id}"');
-    }
+    final path = 'productGroups[$i]';
+    if (!productGroupIds.add(g.id)) issue('$path.id', 'duplicate "${g.id}"');
+    checkNames(path, g.name, g.names);
   }
   final addOnIds = <String>{};
   for (final (i, g) in d.addOnGroups.indexed) {
     final path = 'addOnGroups[$i]';
     if (!addOnIds.add(g.id)) issue('$path.id', 'duplicate "${g.id}"');
+    checkNames(path, g.name, g.names);
     if (g.ingredientIds.isEmpty) {
       issue('$path.ingredientIds', 'must not be empty');
     }
-    for (final id in g.ingredientIds) {
+    // One ingredient has one quantity, so a product shows it on one tile:
+    // once per group, and in no other group offered to the same products.
+    final listed = <String>{};
+    for (final (k, id) in g.ingredientIds.indexed) {
       if (!allowed.contains(id)) {
         issue('$path.ingredientIds', 'ingredient "$id" is not allowed');
+      }
+      if (!listed.add(id)) {
+        issue('$path.ingredientIds[$k]', 'duplicate "$id"');
+        continue;
+      }
+      for (final (h, earlier) in d.addOnGroups.take(i).indexed) {
+        if (_offeredTogether(earlier, g) &&
+            earlier.ingredientIds.contains(id)) {
+          issue(
+            '$path.ingredientIds[$k]',
+            '"$id" is also in addOnGroups[$h] ("${earlier.id}"); a product '
+                'offered both would show it twice',
+          );
+          break;
+        }
       }
     }
     for (final id in g.productGroupIds) {
@@ -168,3 +203,14 @@ List<DefinitionIssue> validateDefinition(
   }
   return issues;
 }
+
+/// Placement params sizing the area the pieces fill, as a key or in its
+/// per-ingredient form `key:<ingredientId>`.
+const _areaParams = {'radius', 'bandWidth'};
+
+/// Whether some product is offered both [a] and [b]. A group without
+/// product groups is offered to every product.
+bool _offeredTogether(AddOnGroup a, AddOnGroup b) =>
+    a.productGroupIds.isEmpty ||
+    b.productGroupIds.isEmpty ||
+    a.productGroupIds.any(b.productGroupIds.contains);

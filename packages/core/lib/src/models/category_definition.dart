@@ -180,7 +180,7 @@ class BaseSpec {
     shape: req(j, 'shape'),
     rawAssetId: req(j, 'rawAssetId'),
     cookedAssetId: opt(j, 'cookedAssetId'),
-    surface: (j['surface'] as num?)?.toDouble() ?? 1,
+    surface: opt<num>(j, 'surface')?.toDouble() ?? 1,
   );
 
   Json toJson() => {
@@ -289,7 +289,7 @@ class SizeOption {
     id: req(j, 'id'),
     name: req(j, 'name'),
     names: mapOf(j, 'names', (v) => v as String),
-    scale: toDouble(j['scale'] ?? 1),
+    scale: opt<num>(j, 'scale')?.toDouble() ?? 1,
   );
 
   Json toJson() => {'id': id, 'name': name, 'names': names, 'scale': scale};
@@ -416,7 +416,7 @@ class StepSpec {
 
   factory StepSpec.fromJson(Json j) => StepSpec(
     step: req(j, 'step'),
-    weight: toDouble(j['weight'] ?? 1),
+    weight: opt<num>(j, 'weight')?.toDouble() ?? 1,
     params: mapOf(j, 'params', (v) => v),
   );
 
@@ -541,7 +541,8 @@ class AddOnGroup {
   /// Display names by language code ('en', 'ar'); [name] is the fallback.
   final Map<String, String> names;
 
-  /// In display order; each must be allowed by the category.
+  /// In display order; each must be allowed by the category and listed once
+  /// among all the groups a product is offered (one tile per quantity).
   final List<String> ingredientIds;
 
   /// The product groups offered this group. Empty means every product.

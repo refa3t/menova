@@ -138,6 +138,31 @@ void main() {
     expect(rim == plain, isFalse);
   });
 
+  test('a mistyped optional number is a FormatException naming it', () {
+    Matcher rejects(String field) => throwsA(
+      isA<FormatException>().having(
+        (e) => e.message,
+        'message',
+        contains('"$field"'),
+      ),
+    );
+    const base = {'shape': 'circle', 'rawAssetId': 'b'};
+    expect(
+      () => BaseSpec.fromJson({...base, 'surface': '0.84'}),
+      rejects('surface'),
+    );
+    expect(
+      () => SizeOption.fromJson({'id': 's', 'name': 'S', 'scale': '1'}),
+      rejects('scale'),
+    );
+    expect(
+      () => StepSpec.fromJson({'step': 'Oven', 'weight': '2'}),
+      rejects('weight'),
+    );
+    // A whole number is still a number (JSON decodes 1 as an int).
+    expect(BaseSpec.fromJson({...base, 'surface': 1}).surface, 1);
+  });
+
   test('size multiplier defaults to 1', () {
     final i = Ingredient.fromJson(viaString(ingredientJson));
     expect(i.multiplierFor('m'), 1.5);
