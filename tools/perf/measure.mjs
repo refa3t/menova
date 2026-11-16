@@ -66,7 +66,10 @@ async function record(page, ms, action) {
   if (action) await action();
   await sleep(ms);
   const { f, lt } = await page.evaluate(() => {
-    window.__rec = false; return { f: window.__f, lt: window.__lt };
+    window.__rec = false;
+    // Long tasks the observer has not delivered to its callback yet.
+    window.__lt += window.__obs.takeRecords().length;
+    return { f: window.__f, lt: window.__lt };
   });
   return stats(f, lt);
 }
@@ -143,8 +146,9 @@ try {
   };
   await twice('margherita default', '/product/pizza_margherita');
   // P2-09: the crepe (griddle, fold, shrink) on the same harness.
-  await twice('crepe fruit (drizzle + band)', '/product/crepe_fruit');
-  await twice('crepe tuna (band)', '/product/crepe_tuna');
+  // Fillings are laid out `even`, sauces poured (`sauce`), cheese in a band.
+  await twice('crepe fruit (even fillings + poured Nutella)', '/product/crepe_fruit');
+  await twice('crepe tuna (even fillings + band cheese)', '/product/crepe_tuna');
 
   console.log(JSON.stringify({ site, cpuThrottle: `${cpu}x`, results }, null, 2));
 } finally {
