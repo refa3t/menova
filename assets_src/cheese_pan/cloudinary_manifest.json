@@ -1,0 +1,50 @@
+{
+  "base_cheese_pan_cooked.webp": {
+    "publicId": "menova/assets/unnvcvssvoozo1cxj481",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1795160714/menova/assets/unnvcvssvoozo1cxj481.webp",
+    "version": 1795160714,
+    "bytes": 53276
+  },
+  "base_cheese_pan_raw.webp": {
+    "publicId": "menova/assets/ppektalzxkbhunnnuvml",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1795160717/menova/assets/ppektalzxkbhunnnuvml.webp",
+    "version": 1795160717,
+    "bytes": 153172
+  },
+  "ing_hot_dog_01.webp": {
+    "publicId": "menova/assets/yyzbzqq8ahxz3ob0mqk4",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1795160718/menova/assets/yyzbzqq8ahxz3ob0mqk4.webp",
+    "version": 1795160718,
+    "bytes": 6538
+  },
+  "ing_hot_dog_02.webp": {
+    "publicId": "menova/assets/hqvf25jk5eqehxui0yoh",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1795160719/menova/assets/hqvf25jk5eqehxui0yoh.webp",
+    "version": 1795160719,
+    "bytes": 6250
+  },
+  "ing_hot_dog_03.webp": {
+    "publicId": "menova/assets/tkk1ujgfmmluo4sjfinl",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1795160720/menova/assets/tkk1ujgfmmluo4sjfinl.webp",
+    "version": 1795160720,
+    "bytes": 6482
+  },
+  "ing_smoked_turkey_01.webp": {
+    "publicId": "menova/assets/gfdsudgmqxw18yxn2brt",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1795160721/menova/assets/gfdsudgmqxw18yxn2brt.webp",
+    "version": 1795160721,
+    "bytes": 8074
+  },
+  "ing_smoked_turkey_02.webp": {
+    "publicId": "menova/assets/w8db5uue1iiorez1zh7k",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1795160724/menova/assets/w8db5uue1iiorez1zh7k.webp",
+    "version": 1795160724,
+    "bytes": 7796
+  },
+  "ing_smoked_turkey_03.webp": {
+    "publicId": "menova/assets/mcmwczmaz3kozneusgp8",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1795160725/menova/assets/mcmwczmaz3kozneusgp8.webp",
+    "version": 1795160725,
+    "bytes": 7774
+  }
+}
