@@ -55,6 +55,9 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
   bool _saving = false;
   List<String> _issues = const [];
 
+  /// Error shown on a field, by validator path (`basePrice`, `groupId`...).
+  Map<String, String> _fieldErrors = const {};
+
   @override
   void dispose() {
     for (final c in [
@@ -131,20 +134,28 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
     List<Draft> drafts,
   ) {
     final money = <String>[];
-    int moneyOf(TextEditingController c, String label) {
+    final fieldErrors = <String, String>{};
+    int moneyOf(TextEditingController c, String label, String field) {
       final v = AppStrings.parseEgp(c.text);
-      if (v == null) money.add('$label: ${AppStrings.invalidMoney}');
+      if (v == null) {
+        money.add('$label: ${AppStrings.invalidMoney}');
+        fieldErrors[field] = AppStrings.invalidMoney;
+      }
       return v ?? 0;
     }
 
-    final base = moneyOf(_basePrice, AppStrings.basePrice);
+    final base = moneyOf(_basePrice, AppStrings.basePrice, 'basePrice');
     final sizes = {
       for (final e in _sizeDeltas.entries)
-        e.key: moneyOf(e.value, AppStrings.sizePrices),
+        e.key: moneyOf(e.value, AppStrings.sizePrices, 'sizeDeltas.${e.key}'),
     };
     final options = {
       for (final e in _optionDeltas.entries)
-        e.key: moneyOf(e.value, AppStrings.optionPrices),
+        e.key: moneyOf(
+          e.value,
+          AppStrings.optionPrices,
+          'optionDeltas.${e.key}',
+        ),
     };
     final order = int.tryParse(_displayOrder.text.trim());
     if (order == null) money.add(AppStrings.issue('displayOrder'));
@@ -175,16 +186,21 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
       displayOrder: order ?? 0,
       groupId: _groupId,
     );
-    final issues = [
-      ...money,
-      for (final i in validateProduct(
-        product,
-        def,
-        ingredientIds: ingredients.keys.toSet(),
-      ))
-        AppStrings.issue(i.path),
-    ];
-    setState(() => _issues = issues.toSet().toList());
+    final issues = [...money];
+    for (final i in validateProduct(
+      product,
+      def,
+      ingredientIds: ingredients.keys.toSet(),
+    )) {
+      final message = AppStrings.productIssue(i.path, product, def);
+      issues.add(message);
+      // An unreadable number keeps its own message on the field.
+      fieldErrors.putIfAbsent(i.path, () => message);
+    }
+    setState(() {
+      _issues = issues.toSet().toList();
+      _fieldErrors = fieldErrors;
+    });
     return issues.isEmpty ? product : null;
   }
 
@@ -247,13 +263,23 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
             !_defaults.any((d) => d.ingredientId == id))
           id,
     ];
-    Widget money(TextEditingController c, String label, {String? hint}) =>
-        TextField(
-          controller: c,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          textDirection: TextDirection.ltr,
-          decoration: InputDecoration(labelText: label, helperText: hint),
-        );
+    final groupRequired = productGroupRequired(def);
+    Widget money(
+      TextEditingController c,
+      String label,
+      String field, {
+      String? hint,
+    }) => TextField(
+      controller: c,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      textDirection: TextDirection.ltr,
+      decoration: InputDecoration(
+        labelText: label,
+        helperText: hint,
+        errorText: _fieldErrors[field],
+        errorMaxLines: 4,
+      ),
+    );
     const gap = SizedBox(height: 12);
 
     return Scaffold(
@@ -327,6 +353,7 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
               money(
                 _basePrice,
                 AppStrings.basePrice,
+                'basePrice',
                 hint: AppStrings.basePriceHint,
               ),
               if (def.sizes.isNotEmpty) ...[
@@ -344,6 +371,7 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
                         child: money(
                           _sizeDeltas[s.id]!,
                           s.names['ar'] ?? s.name,
+                          'sizeDeltas.${s.id}',
                         ),
                       ),
                   ],
@@ -365,6 +393,7 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
                           child: money(
                             _optionDeltas[c.id]!,
                             c.names['ar'] ?? c.name,
+                            'optionDeltas.${c.id}',
                           ),
                         ),
                   ],
@@ -374,14 +403,21 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
                 gap,
                 DropdownButtonFormField<String?>(
                   initialValue: _groupId,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: AppStrings.group,
+                    helperText: groupRequired
+                        ? AppStrings.groupNeeded(def)
+                        : null,
+                    errorText: _fieldErrors['groupId'],
+                    errorMaxLines: 2,
                   ),
                   items: [
-                    const DropdownMenuItem(
-                      value: null,
-                      child: Text(AppStrings.noGroup),
-                    ),
+                    // A required group has no "none" choice.
+                    if (!groupRequired)
+                      const DropdownMenuItem(
+                        value: null,
+                        child: Text(AppStrings.noGroup),
+                      ),
                     for (final g in def.productGroups)
                       DropdownMenuItem(
                         value: g.id,

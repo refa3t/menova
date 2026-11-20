@@ -41,6 +41,7 @@ class _IngredientEditScreenState extends ConsumerState<IngredientEditScreen> {
   bool _available = true;
   bool _saving = false;
   List<String> _issues = const [];
+  String? _priceError;
 
   @override
   void dispose() {
@@ -85,15 +86,19 @@ class _IngredientEditScreenState extends ConsumerState<IngredientEditScreen> {
       isAvailable: _available,
       sizeMultipliers: original.sizeMultipliers,
     );
+    final found = validateIngredient(after, ingredientAssets: ingredientAssets);
     final issues = [
       if (price == null) '${AppStrings.extraPrice}: ${AppStrings.invalidMoney}',
-      for (final i in validateIngredient(
-        after,
-        ingredientAssets: ingredientAssets,
-      ))
-        AppStrings.issue(i.path),
+      for (final i in found) AppStrings.issue(i.path),
     ];
-    setState(() => _issues = issues.toSet().toList());
+    setState(() {
+      _issues = issues.toSet().toList();
+      _priceError = price == null
+          ? AppStrings.invalidMoney
+          : found.any((i) => i.path == 'extraPrice')
+          ? AppStrings.issue('extraPrice')
+          : null;
+    });
     if (issues.isNotEmpty) return;
     setState(() => _saving = true);
     try {
@@ -178,9 +183,11 @@ class _IngredientEditScreenState extends ConsumerState<IngredientEditScreen> {
                   decimal: true,
                 ),
                 textDirection: TextDirection.ltr,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: AppStrings.extraPrice,
                   helperText: AppStrings.extraPriceHint,
+                  errorText: _priceError,
+                  errorMaxLines: 2,
                 ),
               ),
               gap,

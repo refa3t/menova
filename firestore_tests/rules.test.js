@@ -289,6 +289,34 @@ test('admins save products only with an audit entry', async () => {
   await assertFails(owner.doc('products/p9').update({ basePrice: 1500 }));
 });
 
+// Owner price caps, in piasters (also PriceCaps in the admin panel): each
+// size 0 < base + delta <= 1000 EGP, size deltas >= 0, options 0..200 EGP.
+test('product prices stay within the caps', async () => {
+  const owner = staff('owner', 'own1');
+  const ok = (o) => assertSucceeds(saveProduct(owner, 'own1', 'p9', product('p9', o)));
+  const no = (o) => assertFails(saveProduct(owner, 'own1', 'p9', product('p9', o)));
+  await ok({ basePrice: 100000 }); // exactly 1000 EGP
+  await no({ basePrice: 100001 }); // 1000.01 EGP
+  await no({ basePrice: 0 });
+  await ok({ basePrice: 1 });
+  await ok({ basePrice: 90000, sizeDeltas: { s: 0, m: 5000, l: 10000 } });
+  await no({ basePrice: 90000, sizeDeltas: { s: 0, m: 5000, l: 10001 } });
+  await no({ sizeDeltas: { s: -1 } });
+  await no({ sizeDeltas: { s: 50.5 } }); // whole piasters only
+  await ok({ optionDeltas: { a: 0, b: 20000 } }); // exactly 200 EGP
+  await no({ optionDeltas: { b: 20001 } });
+  await no({ optionDeltas: { b: -1 } });
+  // Up to 6 sizes and 8 options, every one checked.
+  const six = { a: 0, b: 0, c: 0, d: 0, e: 0, f: 0 };
+  await ok({ sizeDeltas: six });
+  await no({ sizeDeltas: { ...six, f: 87001 } }); // 13000 + 87001 > cap
+  await no({ sizeDeltas: { ...six, g: 0 } });
+  const eight = { ...six, g: 0, h: 0 };
+  await ok({ optionDeltas: eight });
+  await no({ optionDeltas: { ...eight, h: 20001 } });
+  await no({ optionDeltas: { ...eight, i: 0 } });
+});
+
 test('the audit log is append-only and only the owner reads it', async () => {
   const owner = staff('owner', 'own1');
   await saveProduct(owner, 'own1', 'p9', product('p9'));
@@ -321,6 +349,11 @@ test('admins edit existing ingredients, audited; no create or delete', async () 
   const manager = staff('menu_manager', 'mgr1');
   await assertSucceeds(saveIngredient(manager, 'mgr1', 'i1', ing));
   await assertFails(saveIngredient(manager, 'mgr1', 'i1', { ...ing, extraPrice: -5 }));
+  // Extra price cap: above zero and at most 200 EGP.
+  await assertSucceeds(saveIngredient(manager, 'mgr1', 'i1', { ...ing, extraPrice: 20000 }));
+  await assertSucceeds(saveIngredient(manager, 'mgr1', 'i1', { ...ing, extraPrice: 1 }));
+  await assertFails(saveIngredient(manager, 'mgr1', 'i1', { ...ing, extraPrice: 20001 }));
+  await assertFails(saveIngredient(manager, 'mgr1', 'i1', { ...ing, extraPrice: 0 }));
   await assertFails(saveIngredient(manager, 'mgr1', 'i9', { ...ing, id: 'i9' }));
   await assertFails(manager.doc('ingredients/i1').set({ ...ing, lastAuditId: 'nope' }));
   await assertFails(saveIngredient(staff('reception', 'rec1'), 'rec1', 'i1', ing));

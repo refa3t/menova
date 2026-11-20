@@ -110,7 +110,14 @@ class _CatalogCheckScreenState extends ConsumerState<CatalogCheckScreen> {
                   title: Text(title(f)),
                   subtitle: Text(
                     {
-                      for (final i in f.issues) AppStrings.issue(i.path),
+                      for (final i in f.issues)
+                        f.kind == 'product'
+                            ? AppStrings.productIssue(
+                                i.path,
+                                byId[f.id],
+                                defs[byId[f.id]?.categoryId],
+                              )
+                            : AppStrings.issue(i.path),
                     }.join('\n'),
                   ),
                   trailing: const Icon(Icons.chevron_left),
