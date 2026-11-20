@@ -95,19 +95,32 @@ TOPPING_LAYOUT = {'radius': 0.86, 'coverage': 0.55}
 # The grated cheese and the herbs spread out to the wall.
 CHEESE_RADIUS = 0.8
 
-# How the pan goes into the oven (SlideIntoOven, then Swap, FlyToCart).
+# How the pan goes into the oven (owner feedback): it slides into an oven
+# placed fully on screen and bakes while its cheese melts and the toppings
+# sink into it (`melt`, with the pieces captured apart: `pieces`), comes
+# out melted, is covered with cellophane (`Cover`), and stays melted and
+# covered through Swap and FlyToCart. Reduced motion: Swap and FlyToCart.
+MELT = {'area': round(PAN_SURFACE * 0.97, 2), 'color': '#F0B648',
+        'blur': 1.6, 'tint': 0.42, 'sink': 0.45}
+COVER = {'area': 0.9, 'color': '#E8F2FA', 'opacity': 0.16, 'gloss': 0.75,
+         'from': 'left'}
+BAKED = {'pieces': True, 'melt': MELT}
 ANIMATION = [
-    {'step': 'SlideIntoOven', 'weight': 1800, 'params': {
-        'durationMs': 1800, 'saturation': 1.35, 'insideScale': 0.62,
+    {'step': 'SlideIntoOven', 'weight': 2000, 'params': {
+        'durationMs': 2000, 'saturation': 1.35, 'insideScale': 0.62,
         'tilt': 0.6, 'archWidth': 0.95, 'shrinkTo': 0.9,
         # Melted cheese bubbling while it bakes.
         'bubbles': 22, 'bubbleArea': round(PAN_SURFACE * 0.95, 2),
-        'scrimMaxPct': 35,
+        'scrimMaxPct': 35, **BAKED,
         'images': {'steam': 'oven_steam', 'embers': 'oven_embers'}}},
-    {'step': 'Swap', 'weight': 300, 'params': {'durationMs': 300}},
+    {'step': 'Cover', 'weight': 600, 'params': {
+        'durationMs': 600, 'scale': 0.9, 'scrimMaxPct': 35, **BAKED,
+        'cover': COVER}},
+    {'step': 'Swap', 'weight': 300, 'params': {
+        'durationMs': 300, **BAKED, 'cover': COVER}},
     {'step': 'FlyToCart', 'weight': 900, 'params': {
         'durationMs': 900, 'shrinkTo': 0.18, 'arcControlPct': 20,
-        'rotateDeg': -12}},
+        'rotateDeg': -12, **BAKED, 'cover': COVER}},
 ]
 
 
@@ -287,7 +300,7 @@ def main() -> None:
         lines.append(f'| {ar} | {min(p[4] for p in ps)} ج | {max(p[4] for p in ps)} ج | '
                      f'{min(p[5] for p in ps)} ج | {max(p[5] for p in ps)} ج | {len(ps)} |')
     lines += ['', '## 6) الحركة', '',
-              'الطاسة تنزلق داخل فتحة فرن (قوس) وتُخبز بين اللهب والجبن يفور، ثم تخرج مسوّاة ويتصاعد منها البخار (`SlideIntoOven`)، ثم `Swap` ثم `FlyToCart`. مع «تقليل الحركة»: `Swap` ثم `FlyToCart` فقط.',
+              'الطاسة تنزلق داخل فتحة فرن (قوس) ظاهر كله على الشاشة، وتُخبز بين اللهب والجبن يسيح ويفور والمكونات تغوص فيه وتمتزج معه، ثم تخرج مسوّاة ويتصاعد منها البخار (`SlideIntoOven`)، ثم تُغطى بالسلوفان (`Cover`) وتبقى مغطاة في `Swap` و`FlyToCart`. مع «تقليل الحركة»: `Swap` ثم `FlyToCart` فقط (والطاسة سايحة ومغطاة).',
               '', '## 7) الصور', '',
               '| الملف | الوصف |', '| --- | --- |',
               '| `assets_src/cheese_pan/bases/base_cheese_pan_raw.webp` | طاسة حديد بجبن مبشور (قبل الفرن) |',

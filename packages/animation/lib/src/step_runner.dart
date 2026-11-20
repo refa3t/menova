@@ -166,6 +166,7 @@ class _StepRunnerState extends State<StepRunner>
             '$role': ?widget.input.images['$role'],
       },
       reduceMotion: widget.input.reduceMotion,
+      baseScale: widget.input.baseScale,
     );
     return GestureDetector(
       behavior: HitTestBehavior.opaque,

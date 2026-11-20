@@ -2,6 +2,7 @@
 library;
 
 import 'src/anim_step.dart';
+import 'src/steps/cover_step.dart';
 import 'src/steps/fly_to_cart_step.dart';
 import 'src/steps/fold_step.dart';
 import 'src/steps/griddle_step.dart';
@@ -13,6 +14,7 @@ import 'src/steps/swap_step.dart';
 
 export 'src/anim_step.dart';
 export 'src/step_runner.dart';
+export 'src/steps/cover_step.dart';
 export 'src/steps/fly_to_cart_step.dart';
 export 'src/steps/fold_step.dart';
 export 'src/steps/griddle_step.dart';
@@ -29,6 +31,7 @@ const animSteps = <String, AnimStep>{
   'Griddle': GriddleStep(),
   'Fold': FoldStep(),
   'Roll': RollStep(),
+  'Cover': CoverStep(),
   'Swap': SwapStep(),
   'Shrink': ShrinkStep(),
   'FlyToCart': FlyToCartStep(),

@@ -6,30 +6,41 @@ import 'package:flutter/material.dart';
 import '../anim_step.dart';
 
 /// Slide into oven (CLAUDE.md 5.5, OVEN.md 0 option b): an oven's front
-/// wall with an arched opening comes down above the product, which slides
-/// up into the glowing opening (smaller and tilted away, as seen through
-/// it), bakes there among the flames (Cooked), and slides back out baked
-/// and steaming, ready for Swap.
+/// wall with an arched opening appears, placed so all of it is on screen;
+/// the product moves in front of it, slides up into the glowing opening
+/// (smaller and tilted away, as seen through it), bakes there among the
+/// flames (Cooked) while its top melts (param `melt`, see [Melted]: the
+/// surface softens and turns golden, the pieces sink into it), and slides
+/// back out baked and steaming to its place, ready for the next step.
 ///
 /// Drawn in code like the Oven's minimum (OVEN.md 7), in the same colours.
 /// Optional image roles, shared with the Oven: `steam` over the product once
 /// out, `embers` inside the opening. Params (all optional, clamped):
 /// `scrimMaxPct` (35), `saturation` (1.45), `insideScale` (0.62) and `tilt`
 /// (0.6: the product's height inside, of its width), `archWidth` (0.95, of
-/// the product's width), `shrinkTo` (0.9: its scale once out, where Swap
-/// takes over), `bubbles` (0: how many bubbles rise on it while it bakes,
-/// within `bubbleArea` (0.7) of its radius).
+/// the product's width in front of the oven), `shrinkTo` (0.9: its scale
+/// once back, where the next step takes over), `bubbles` (0: how many
+/// bubbles rise on it while it bakes, within `bubbleArea` (0.7) of its
+/// radius), `melt` (none).
 class SlideIntoOvenStep implements AnimStep {
   const SlideIntoOvenStep();
 
   static const _scrimColor = Color(0xFF0B0705);
 
+  /// Space kept between the oven and the screen's edges.
+  static const _margin = 12.0;
+
   // Phases, in fractions of the step.
-  static const _inStart = 0.08, _inEnd = 0.3;
-  static const _outStart = 0.72, _outEnd = 0.95;
+  static const _toFront = (0.03, 0.18), _in = (0.18, 0.32);
+  static const _out = (0.7, 0.82), _back = (0.82, 0.97);
 
   @override
-  Widget build(BuildContext context, AnimFrame frame, AnimStepInput input) {
+  Widget build(BuildContext context, AnimFrame frame, AnimStepInput input) =>
+      LayoutBuilder(
+        builder: (context, box) => _build(frame, input, box.biggest),
+      );
+
+  Widget _build(AnimFrame frame, AnimStepInput input, Size screen) {
     final t = frame.t.isFinite ? frame.t.clamp(0.0, 1.0) : 1.0;
     final p = input.params;
     double param(String k, double d, double lo, double hi) {
@@ -45,61 +56,105 @@ class SlideIntoOvenStep implements AnimStep {
     final shrinkTo = param('shrinkTo', 0.9, 0.2, 1);
     final bubbles = param('bubbles', 0, 0, 60).round();
     final bubbleArea = param('bubbleArea', 0.7, 0, 1);
+    final melt = MeltSpec.from(p['melt']);
     final still = input.reduceMotion;
     final ms = frame.elapsed.inMilliseconds;
+    final baseScale = input.baseScale.isFinite
+        ? input.baseScale.clamp(0.0, 1.0)
+        : 1.0;
 
     final rect = input.productRect;
     final r = rect.shortestSide / 2;
-    final geo = _OvenFront(
-      center: rect.center,
-      radius: r,
-      archWidth: archWidth,
-    );
+    final place = _place(rect, screen, archWidth);
+    final geo = place.oven;
+    // The product's scale in front of the oven (inside: insideScale of it).
+    final front = r > 0 ? place.radius / r : 1.0;
 
     // Curves.
-    final scrim = interval(t, 0, 0.2) * scrimMax;
-    final ovenIn = interval(t, 0, 0.18, Curves.easeOut);
-    final oven = ovenIn * (1 - interval(t, 0.9, 1));
-    final slideIn = interval(t, _inStart, _inEnd, Curves.easeInOut);
-    final slideOut = interval(t, _outStart, _outEnd, Curves.easeInOut);
-    final inside = slideIn - slideOut;
-    final cook = interval(t, _inEnd, _outStart, Curves.easeInOut);
+    double phase((double, double) span) =>
+        interval(t, span.$1, span.$2, Curves.easeInOut);
+    final toFront = phase(_toFront), slideIn = phase(_in);
+    final slideOut = phase(_out), back = phase(_back);
+    final scrim = interval(t, 0, 0.15) * scrimMax;
+    final ovenIn = interval(t, 0, 0.15, Curves.easeOut);
+    final oven = ovenIn * (1 - interval(t, 0.85, 1));
+    final cook = interval(t, _in.$2, _out.$1, Curves.easeInOut);
     final glow =
         interval(t, 0.05, 0.3) *
         (0.75 + (still ? 0 : 0.25 * sin(ms / 1000 * 2 * pi * 1.5)));
-    final steam =
-        interval(t, _outStart + 0.05, 0.85) * (1 - interval(t, 0.93, 1));
-    final bubbling = t > _inEnd && !still ? (ms % 1400) / 1400 : 0.0;
+    final steam = interval(t, _out.$2, _back.$2) * (1 - interval(t, 0.95, 1));
+    final bubbling = t > _in.$2 && !still ? (ms % 1400) / 1400 : 0.0;
 
-    final outScale = lerpDouble(1, shrinkTo, slideOut)!;
-    final scale = lerpDouble(outScale, insideScale, inside)!;
-    final squash = lerpDouble(1, tilt, inside)!;
-    final at = Offset.lerp(rect.center, geo.insideCenter, inside)!;
+    final stage = geo.frontCenter;
+    final inside = geo.insideCenter;
+    final (Offset at, double scale) = back > 0
+        ? (
+            Offset.lerp(stage, rect.center, back)!,
+            lerpDouble(front, shrinkTo, back)!,
+          )
+        : slideOut > 0
+        ? (
+            Offset.lerp(inside, stage, slideOut)!,
+            lerpDouble(front * insideScale, front, slideOut)!,
+          )
+        : slideIn > 0
+        ? (
+            Offset.lerp(stage, inside, slideIn)!,
+            lerpDouble(front, front * insideScale, slideIn)!,
+          )
+        : (
+            Offset.lerp(rect.center, stage, toFront)!,
+            lerpDouble(1, front, toFront)!,
+          );
+    final squash = lerpDouble(1, tilt, slideIn - slideOut)!;
+    // Behind the oven's front wall only while it goes in and comes out.
+    final behindWall = slideIn > 0 && slideOut < 1;
     // The front wall comes down from above as it appears.
-    final drop = -r * 0.6 * (1 - ovenIn);
+    final drop = -place.radius * 0.6 * (1 - ovenIn);
 
     String? first(String role) => input.images[role]?.firstOrNull;
     final steamUrl = first('steam');
     final embersUrl = first('embers');
 
-    final product = Cooked(
+    Widget product = Cooked(
       amount: cook,
       saturation: saturation,
       bubble: bubbling,
-      child: Stack(
+      child: input.product,
+    );
+    if (melt != null) {
+      product = Melted(
+        amount: cook,
+        spec: melt,
+        baseScale: baseScale,
+        gloss: still ? 0 : (ms % 3000) / 3000,
+        contents: bakedContents(input),
+        child: product,
+      );
+    }
+    if (bubbles > 0 && cook > 0) {
+      product = Stack(
         fit: StackFit.expand,
         children: [
-          input.product,
-          if (bubbles > 0 && cook > 0)
-            CustomPaint(
-              painter: _BubblesPainter(
-                count: bubbles,
-                area: bubbleArea,
-                phase: still ? 0 : ms / 1000,
-                amount: cook * (1 - slideOut),
-              ),
+          product,
+          CustomPaint(
+            painter: _BubblesPainter(
+              count: bubbles,
+              area: bubbleArea * baseScale,
+              phase: still ? 0 : ms / 1000,
+              amount: cook * (1 - slideOut),
             ),
+          ),
         ],
+      );
+    }
+
+    final moving = Positioned.fromRect(
+      rect: Rect.fromCenter(center: at, width: rect.width, height: rect.height),
+      child: Transform(
+        alignment: Alignment.center,
+        transform: Matrix4.diagonal3Values(scale, scale * squash, 1),
+        child: product,
       ),
     );
 
@@ -123,7 +178,7 @@ class SlideIntoOvenStep implements AnimStep {
               ),
             ),
           ),
-        if (embersUrl != null && oven > 0)
+        if (embersUrl != null && oven > 0 && !geo.arch.isEmpty)
           Positioned.fromRect(
             rect: geo.arch.shift(Offset(0, drop)),
             child: ClipPath(
@@ -137,20 +192,8 @@ class SlideIntoOvenStep implements AnimStep {
               ),
             ),
           ),
-        // The customer's product, sliding in and out.
-        Positioned.fromRect(
-          rect: Rect.fromCenter(
-            center: at,
-            width: rect.width,
-            height: rect.height,
-          ),
-          child: Transform(
-            alignment: Alignment.center,
-            transform: Matrix4.diagonal3Values(scale, scale * squash, 1),
-            child: product,
-          ),
-        ),
-        // The front wall over it: the product goes in behind it.
+        if (behindWall) moving,
+        // The front wall: over the product while it is in the oven.
         if (oven > 0)
           Positioned.fill(
             child: IgnorePointer(
@@ -166,9 +209,14 @@ class SlideIntoOvenStep implements AnimStep {
               ),
             ),
           ),
+        if (!behindWall) moving,
         if (steamUrl != null && steam > 0)
           Positioned.fromRect(
-            rect: rect.translate(0, -rect.height * 0.1 * steam),
+            rect: Rect.fromCenter(
+              center: at,
+              width: rect.width * scale,
+              height: rect.height * scale,
+            ).translate(0, -rect.height * 0.1 * steam),
             child: IgnorePointer(
               child: Image.network(
                 steamUrl,
@@ -182,18 +230,68 @@ class SlideIntoOvenStep implements AnimStep {
       ],
     );
   }
+
+  /// The oven's front wall for a product at [productRect] on [screen].
+  @visibleForTesting
+  static Rect ovenBounds(
+    Rect productRect,
+    Size screen, {
+    double archWidth = 0.95,
+  }) => _place(productRect, screen, archWidth).oven.wall;
+
+  /// Where the oven goes so that all of it, and the product in front of it,
+  /// is on [screen]: as near the product as it fits, its size (the radius
+  /// of the product in front of it) at most the product's.
+  static ({_OvenFront oven, double radius}) _place(
+    Rect rect,
+    Size screen,
+    double archWidth,
+  ) {
+    final r = rect.shortestSide / 2;
+    // Height of the wall above its mouth, in product radii.
+    final above = archWidth * 1.6 + 0.55;
+    if (!screen.isFinite || screen.isEmpty) {
+      return (
+        oven: _OvenFront(center: rect.center, radius: r, archWidth: archWidth),
+        radius: r,
+      );
+    }
+    final w = screen.width - 2 * _margin, h = screen.height - 2 * _margin;
+    final radius = max(0.0, min(r, min(w / 3.4, h / (above + 2))));
+    double fit(double v, double lo, double hi) =>
+        lo > hi ? (lo + hi) / 2 : v.clamp(lo, hi);
+    final mouthY = fit(
+      rect.top,
+      _margin + above * radius,
+      screen.height - _margin - 2 * radius,
+    );
+    final x = fit(
+      rect.center.dx,
+      _margin + 1.7 * radius,
+      screen.width - _margin - 1.7 * radius,
+    );
+    return (
+      oven: _OvenFront(
+        center: Offset(x, mouthY + radius),
+        radius: radius,
+        archWidth: archWidth,
+      ),
+      radius: radius,
+    );
+  }
 }
 
 /// Where the oven's front wall and its arched opening sit, from the product
-/// (centre and radius): the wall's bottom edge (the mouth) is the product's
-/// top edge, the opening is centred above it.
+/// in front of it (centre and radius): the wall's bottom edge (the mouth)
+/// is that product's top edge, the opening is centred above it.
 @immutable
 class _OvenFront {
   _OvenFront({
     required Offset center,
     required double radius,
     required double archWidth,
-  }) : mouthY = center.dy - radius,
+  }) : frontCenter = center,
+       mouthY = center.dy - radius,
        arch = Rect.fromLTRB(
          center.dx - radius * archWidth,
          center.dy - radius - radius * archWidth * 1.6,
@@ -206,6 +304,9 @@ class _OvenFront {
          center.dx + radius * 1.7,
          center.dy - radius,
        );
+
+  /// Where the product's centre stands in front of the oven.
+  final Offset frontCenter;
 
   final double mouthY;
 
