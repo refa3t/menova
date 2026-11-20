@@ -2,10 +2,41 @@ import 'package:core/core.dart';
 
 import 'validator.dart';
 
+/// Price caps the admin may set (owner decision), in piasters (1 EGP = 100).
+/// The Firestore rules enforce the same values (`maxProductPrice()`,
+/// `maxOptionDelta()`, `maxExtraPrice()` and the per-product counts in
+/// firestore.rules, which cannot share this code): change both together.
+abstract final class PriceCaps {
+  /// A product's price for any size (its base price plus that size's
+  /// delta, deltas never negative): above zero and at most 1000 EGP.
+  static const Piasters maxProductPrice = 100000;
+
+  /// An option's price delta (e.g. stuffed crust): 0 to 200 EGP.
+  static const Piasters maxOptionDelta = 20000;
+
+  /// An ingredient's extra price: above zero and at most 200 EGP.
+  static const Piasters maxExtraPrice = 20000;
+
+  /// The most size and option prices one product may hold: the rules have
+  /// no loops, so they check each entry one by one up to these counts. Every
+  /// definition must stay within them (tested on the bundled definitions).
+  static const int maxSizePrices = 6;
+  static const int maxOptionPrices = 8;
+}
+
+String _egp(Piasters p) => '${p ~/ 100} EGP';
+
+/// Whether every product of [def] must name a product group: some add-on
+/// group is offered only to some product groups, so a product without one
+/// would get none of those add-ons.
+bool productGroupRequired(CategoryDefinition def) =>
+    def.addOnGroups.any((g) => g.productGroupIds.isNotEmpty);
+
 /// Validates a product against its category definition (P3-02, and the
 /// catalog check of P3-06): the admin may edit content only within what the
-/// developer's definition allows. [ingredientIds] are the ingredient
-/// records that exist; null skips that check.
+/// developer's definition allows, and prices only within [PriceCaps].
+/// [ingredientIds] are the ingredient records that exist; null skips that
+/// check.
 List<DefinitionIssue> validateProduct(
   Product p,
   CategoryDefinition def, {
@@ -23,23 +54,39 @@ List<DefinitionIssue> validateProduct(
   for (final e in p.names.entries) {
     if (e.value.trim().isEmpty) issue('names.${e.key}', 'must not be empty');
   }
-  if (p.basePrice <= 0) issue('basePrice', 'must be above zero');
+  // Every size's price is the base price plus that size's delta (a size
+  // without one costs the base price).
+  const maxPrice = PriceCaps.maxProductPrice;
+  final base = p.basePrice;
+  final baseOk = base > 0 && base <= maxPrice;
+  if (!baseOk) {
+    issue('basePrice', 'must be above zero and at most ${_egp(maxPrice)}');
+  }
 
-  // Size and option prices: only what the definition offers.
+  // Size and option prices: only what the definition offers, within caps.
   final sizes = {for (final s in def.sizes) s.id};
   for (final e in p.sizeDeltas.entries) {
-    if (!sizes.contains(e.key)) issue('sizeDeltas.${e.key}', 'unknown size');
-    if (e.value < 0) issue('sizeDeltas.${e.key}', 'must be >= 0');
+    final path = 'sizeDeltas.${e.key}';
+    if (!sizes.contains(e.key)) issue(path, 'unknown size');
+    if (e.value < 0) issue(path, 'must be >= 0');
+    // A base price over the cap is reported once, on the base price.
+    if (baseOk && base + e.value > maxPrice) {
+      issue(
+        path,
+        'the size costs ${_egp(base + e.value)}, over ${_egp(maxPrice)}',
+      );
+    }
   }
   final choices = {
     for (final g in def.optionGroups)
       for (final c in g.choices) c.id,
   };
   for (final e in p.optionDeltas.entries) {
-    if (!choices.contains(e.key)) {
-      issue('optionDeltas.${e.key}', 'unknown option');
+    final path = 'optionDeltas.${e.key}';
+    if (!choices.contains(e.key)) issue(path, 'unknown option');
+    if (e.value < 0 || e.value > PriceCaps.maxOptionDelta) {
+      issue(path, 'must be 0 to ${_egp(PriceCaps.maxOptionDelta)}');
     }
-    if (e.value < 0) issue('optionDeltas.${e.key}', 'must be >= 0');
   }
 
   // Default ingredients: allowed by the category, defined, once each.
@@ -60,8 +107,11 @@ List<DefinitionIssue> validateProduct(
   }
 
   final group = p.groupId;
-  if (group != null &&
-      def.productGroups.isNotEmpty &&
+  if (group == null) {
+    if (productGroupRequired(def)) {
+      issue('groupId', 'required: some add-ons are offered by product group');
+    }
+  } else if (def.productGroups.isNotEmpty &&
       !def.productGroups.any((g) => g.id == group)) {
     issue('groupId', 'unknown group "$group"');
   }
@@ -69,8 +119,9 @@ List<DefinitionIssue> validateProduct(
   return issues;
 }
 
-/// Validates an ingredient record the admin edits (P3-03). [ingredientAssets]
-/// are the asset ids of kind `ingredient`; null skips that check.
+/// Validates an ingredient record the admin edits (P3-03); its extra price
+/// stays within [PriceCaps]. [ingredientAssets] are the asset ids of kind
+/// `ingredient`; null skips that check.
 List<DefinitionIssue> validateIngredient(
   Ingredient i, {
   Set<String>? ingredientAssets,
@@ -83,7 +134,12 @@ List<DefinitionIssue> validateIngredient(
   for (final e in i.names.entries) {
     if (e.value.trim().isEmpty) issue('names.${e.key}', 'must not be empty');
   }
-  if (i.extraPrice < 0) issue('extraPrice', 'must be >= 0');
+  if (i.extraPrice <= 0 || i.extraPrice > PriceCaps.maxExtraPrice) {
+    issue(
+      'extraPrice',
+      'must be above zero and at most ${_egp(PriceCaps.maxExtraPrice)}',
+    );
+  }
   for (final e in i.sizeMultipliers.entries) {
     if (e.value <= 0) issue('sizeMultipliers.${e.key}', 'must be above zero');
   }

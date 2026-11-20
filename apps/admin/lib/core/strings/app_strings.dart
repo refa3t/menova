@@ -1,3 +1,4 @@
+import 'package:category_definitions/category_definitions.dart';
 import 'package:core/core.dart';
 
 import '../../features/auth/domain/admin_access.dart';
@@ -394,14 +395,18 @@ abstract final class AppStrings {
     final key = path.split(RegExp(r'[.\[]')).first;
     return switch (key) {
       'name' || 'names' => 'الاسم مطلوب',
-      'basePrice' => 'السعر الأساسي يجب أن يكون أكبر من صفر',
-      'sizeDeltas' => 'فرق سعر الحجم غير صحيح',
-      'optionDeltas' => 'سعر الخيار غير صحيح',
+      'basePrice' =>
+        'السعر الأساسي يجب أن يكون أكبر من صفر وحتى ${price(PriceCaps.maxProductPrice)}',
+      'sizeDeltas' =>
+        'فرق سعر الحجم لا يقل عن صفر، وسعر الحجم (الأساسي + الفرق) حتى ${price(PriceCaps.maxProductPrice)}',
+      'optionDeltas' =>
+        'سعر الخيار من صفر حتى ${price(PriceCaps.maxOptionDelta)}',
       'defaults' => 'المكونات الافتراضية: مكوّن مكرر أو غير مسموح أو كمية صفر',
       'groupId' => 'القسم الفرعي غير موجود',
       'categoryId' => 'القسم لا يطابق المنتج',
       'displayOrder' => 'ترتيب العرض غير صحيح',
-      'extraPrice' => 'سعر الإضافة لا يكون سالباً',
+      'extraPrice' =>
+        'سعر الإضافة يجب أن يكون أكبر من صفر وحتى ${price(PriceCaps.maxExtraPrice)}',
       'assetId' => 'اختر صورة من صور المكونات',
       'sizeMultipliers' => 'معامل الحجم غير صحيح',
       'value' => 'القيمة: النسبة من 1 إلى 100، والمبلغ 1 ج.م على الأقل',
@@ -413,6 +418,25 @@ abstract final class AppStrings {
       _ => path,
     };
   }
+
+  /// The add-ons of [def] offered by product group (e.g. sauces).
+  static String _groupedAddOns(CategoryDefinition def) => {
+    for (final g in def.addOnGroups)
+      if (g.productGroupIds.isNotEmpty) g.names['ar'] ?? g.name,
+  }.join('، ');
+
+  /// Helper on the group field when the category requires one.
+  static String groupNeeded(CategoryDefinition def) =>
+      'مطلوب: ${_groupedAddOns(def)} تُعرض حسب القسم الفرعي';
+
+  /// [issue] for a product: a missing required group says why it is needed.
+  static String productIssue(
+    String path,
+    Product? p,
+    CategoryDefinition? def,
+  ) => path == 'groupId' && p != null && p.groupId == null && def != null
+      ? 'اختر القسم الفرعي: ${_groupedAddOns(def)} تُعرض حسبه'
+      : issue(path);
 
   static const credit =
       'تطوير ${DeveloperInfo.nameAr} · ${DeveloperInfo.email} · ${DeveloperInfo.phone}';

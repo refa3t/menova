@@ -71,6 +71,92 @@ void main() {
     expect(check(product(categoryId: 'other')), ['categoryId']);
   });
 
+  group('price caps', () {
+    test('every size costs above zero and at most 1000 EGP', () {
+      expect(PriceCaps.maxProductPrice, 100000);
+      // Exactly 1000 EGP: the base price, and the base plus a size's delta.
+      expect(check(product(basePrice: 100000)), isEmpty);
+      expect(
+        check(product(basePrice: 90000, sizeDeltas: {'s': 10000})),
+        isEmpty,
+      );
+      // 1000.01 EGP.
+      expect(check(product(basePrice: 100001)), ['basePrice']);
+      expect(check(product(basePrice: 90000, sizeDeltas: {'s': 10001})), [
+        'sizeDeltas.s',
+      ]);
+      // A base price over the cap is reported once, not on each size too.
+      expect(check(product(basePrice: 100001, sizeDeltas: {'s': 500})), [
+        'basePrice',
+      ]);
+      expect(check(product(basePrice: -100)), ['basePrice']);
+    });
+
+    test('an option delta is 0 to 200 EGP', () {
+      expect(PriceCaps.maxOptionDelta, 20000);
+      expect(check(product(optionDeltas: {'a': 20000})), isEmpty);
+      expect(check(product(optionDeltas: {'a': 20001})), ['optionDeltas.a']);
+      expect(check(product(optionDeltas: {'a': -1})), ['optionDeltas.a']);
+    });
+
+    test('every bundled definition fits the rules\' price counts', () {
+      final defs = loadBundledDefinitions().definitions.values;
+      expect(defs, isNotEmpty);
+      for (final d in defs) {
+        expect(
+          d.sizes.length,
+          lessThanOrEqualTo(PriceCaps.maxSizePrices),
+          reason: d.id,
+        );
+        expect(
+          [for (final g in d.optionGroups) ...g.choices].length,
+          lessThanOrEqualTo(PriceCaps.maxOptionPrices),
+          reason: d.id,
+        );
+      }
+    });
+  });
+
+  group('a group where add-ons depend on it', () {
+    CategoryDefinition offering(List<String> productGroupIds) =>
+        CategoryDefinition.fromJson({
+          ...def.toJson(),
+          'addOnGroups': [
+            AddOnGroup(
+              id: 'sauces',
+              name: 'TEMP',
+              ingredientIds: const ['i2'],
+              productGroupIds: productGroupIds,
+            ).toJson(),
+          ],
+        });
+    List<String> paths(Product p, CategoryDefinition d) => [
+      for (final i in validateProduct(p, d)) i.path,
+    ];
+
+    test('is required when an add-on group is limited to groups', () {
+      final limited = offering(['grp']);
+      expect(productGroupRequired(limited), isTrue);
+      expect(paths(product(groupId: null), limited), ['groupId']);
+      expect(paths(product(), limited), isEmpty);
+    });
+
+    test('is optional when every add-on group is open to all', () {
+      final open = offering(const []);
+      expect(productGroupRequired(open), isFalse);
+      expect(productGroupRequired(def), isFalse);
+      expect(paths(product(groupId: null), open), isEmpty);
+      expect(paths(product(groupId: null), def), isEmpty);
+    });
+
+    test('follows the bundled definitions', () {
+      final defs = loadBundledDefinitions().definitions;
+      // Crepe sauces are offered by group (savory/sweet); pizza's to all.
+      expect(productGroupRequired(defs['crepe']!), isTrue);
+      expect(productGroupRequired(defs['pizza']!), isFalse);
+    });
+  });
+
   test('defaults: allowed, defined, once, at least one unit', () {
     expect(
       check(
@@ -110,10 +196,16 @@ void main() {
 
     test('a priced ingredient with a known image is valid', () {
       expect(ing(ok), isEmpty);
-      expect(
-        ing(Ingredient.fromJson({...ok.toJson(), 'extraPrice': 0})),
-        isEmpty,
-      );
+    });
+
+    test('the extra price is above zero and at most 200 EGP', () {
+      List<String> priced(int p) =>
+          ing(Ingredient.fromJson({...ok.toJson(), 'extraPrice': p}));
+      expect(priced(1), isEmpty);
+      expect(priced(PriceCaps.maxExtraPrice), isEmpty);
+      expect(PriceCaps.maxExtraPrice, 20000);
+      expect(priced(20001), ['extraPrice']); // 200.01 EGP
+      expect(priced(0), ['extraPrice']);
     });
 
     test('negative price, empty name, unknown image are refused', () {

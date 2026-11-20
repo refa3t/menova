@@ -35,6 +35,14 @@ service cloud.firestore {
           && getAfter(/databases/$(database)/documents/auditLog/$(auditId)).data.by == request.auth.uid;
     }
 
+    // Price caps (owner decision), in piasters (1 EGP = 100). The admin panel
+    // checks the same caps before saving: PriceCaps in
+    // packages/category_definitions/lib/src/catalog_validator.dart (rules
+    // cannot share code), so change both together.
+    function maxProductPrice() { return 100000; } // any size: base + delta
+    function maxOptionDelta() { return 20000; }   // 200 EGP
+    function maxExtraPrice() { return 20000; }    // 200 EGP
+
     // Audit log (P3-07): written once by an admin, read by the owner, never
     // changed or deleted.
     match /auditLog/{entryId} {
@@ -89,12 +97,45 @@ service cloud.firestore {
             && d.names is map
             && d.description is string && d.description.size() <= 500
             && d.basePrice is int && d.basePrice > 0
+            && d.basePrice <= maxProductPrice()
             && d.imageAssetId is string
             && d.defaults is list && d.defaults.size() <= 20
             && d.isAvailable is bool
             && d.sizeDeltas is map
+            && sizePricesOk(d.basePrice, d.sizeDeltas.values())
             && d.optionDeltas is map
+            && optionPricesOk(d.optionDeltas.values())
             && d.displayOrder is int && d.displayOrder >= 0;
+      }
+
+      // Each size costs base + its delta (never negative), within the cap;
+      // each option delta is 0..maxOptionDelta(). Rules have no loops, so a
+      // product holds at most 6 size and 8 option prices, checked one by one
+      // (PriceCaps.maxSizePrices / maxOptionPrices; every bundled definition
+      // stays within, tested in category_definitions).
+      function sizePricesOk(base, v) {
+        return v.size() <= 6
+            && sizePriceOk(base, v, 0) && sizePriceOk(base, v, 1)
+            && sizePriceOk(base, v, 2) && sizePriceOk(base, v, 3)
+            && sizePriceOk(base, v, 4) && sizePriceOk(base, v, 5);
+      }
+
+      function sizePriceOk(base, v, i) {
+        return i >= v.size()
+            || (v[i] is int && v[i] >= 0 && base + v[i] <= maxProductPrice());
+      }
+
+      function optionPricesOk(v) {
+        return v.size() <= 8
+            && optionPriceOk(v, 0) && optionPriceOk(v, 1)
+            && optionPriceOk(v, 2) && optionPriceOk(v, 3)
+            && optionPriceOk(v, 4) && optionPriceOk(v, 5)
+            && optionPriceOk(v, 6) && optionPriceOk(v, 7);
+      }
+
+      function optionPriceOk(v, i) {
+        return i >= v.size()
+            || (v[i] is int && v[i] >= 0 && v[i] <= maxOptionDelta());
       }
     }
     match /ingredients/{ingredientId} {
@@ -113,7 +154,8 @@ service cloud.firestore {
           && request.resource.data.names is map
           && request.resource.data.assetId is string
           && request.resource.data.extraPrice is int
-          && request.resource.data.extraPrice >= 0
+          && request.resource.data.extraPrice > 0
+          && request.resource.data.extraPrice <= maxExtraPrice()
           && request.resource.data.isAvailable is bool
           && request.resource.data.sizeMultipliers is map
           && audited('ingredients/' + ingredientId,
