@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 /// One frame of a running step.
@@ -99,16 +100,9 @@ class Cooked extends StatelessWidget {
     // in the empty space around it.
     Widget tinted = ShaderMask(
       blendMode: BlendMode.srcATop,
-      // Crust browning: a warm brown ring that creeps inward.
-      shaderCallback: (bounds) => RadialGradient(
-        colors: [
-          const Color(0x00000000),
-          const Color(0x00000000),
-          const Color(0xFF6B3410).withValues(alpha: 0.45 * a),
-          const Color(0x00000000),
-        ],
-        stops: [0, 0.80 - 0.06 * a, 0.92, 1],
-      ).createShader(bounds),
+      // Fully baked (the usual case) shares one callback, so a rebuild does
+      // not repaint it.
+      shaderCallback: a == 1 ? _fullyBaked : (bounds) => _crust(a, bounds),
       child: ColorFiltered(
         colorFilter: cookedFilter(a, saturation),
         child: child,
@@ -131,6 +125,19 @@ class Cooked extends StatelessWidget {
     }
     return tinted;
   }
+
+  static Shader _fullyBaked(Rect bounds) => _crust(1, bounds);
+
+  /// Crust browning: a warm brown ring that creeps inward.
+  static Shader _crust(double a, Rect bounds) => RadialGradient(
+    colors: [
+      const Color(0x00000000),
+      const Color(0x00000000),
+      const Color(0xFF6B3410).withValues(alpha: 0.45 * a),
+      const Color(0x00000000),
+    ],
+    stops: [0, 0.80 - 0.06 * a, 0.92, 1],
+  ).createShader(bounds);
 
   static double _wave(double x) => (x * 2 % 2 - 1).abs() * 2 - 1;
 }
@@ -170,6 +177,13 @@ class FoldLine {
             Offset((l[2] as num).toDouble(), (l[3] as num).toDouble()),
           ),
   ];
+
+  @override
+  bool operator ==(Object other) =>
+      other is FoldLine && other.a == a && other.b == b;
+
+  @override
+  int get hashCode => Object.hash(a, b);
 
   Offset _at(Size s, Offset f) => Offset(f.dx * s.width, f.dy * s.height);
 
@@ -219,16 +233,21 @@ class FoldLine {
   }
 }
 
+/// A clip computed by [build], again only when [inputs] (all [build] reads
+/// besides the size) change: a rebuild with the same inputs keeps the clip
+/// and its painting.
 class _PathClip extends CustomClipper<Path> {
-  const _PathClip(this.build);
+  const _PathClip(this.build, this.inputs);
 
   final Path Function(Size size) build;
+  final List<Object?> inputs;
 
   @override
   Path getClip(Size size) => build(size);
 
   @override
-  bool shouldReclip(_PathClip oldClipper) => true;
+  bool shouldReclip(_PathClip oldClipper) =>
+      !listEquals(oldClipper.inputs, inputs);
 }
 
 /// The area of the box no earlier fold took away.
@@ -296,7 +315,10 @@ class Folded extends StatelessWidget {
         final layers = Stack(
           fit: StackFit.expand,
           children: [
-            ClipPath(clipper: _PathClip(keep), child: product),
+            ClipPath(
+              clipper: _PathClip(keep, [...done, without]),
+              child: product,
+            ),
             for (var i = 0; i < done.length; i++)
               Transform(
                 transform: done[i].reflection(size),
@@ -307,6 +329,7 @@ class Folded extends StatelessWidget {
                       _unfolded(s, done.take(i).toList()),
                       done[i].foldingSide(s),
                     ),
+                    done.take(i + 1).toList(),
                   ),
                   child: back ?? product,
                 ),
@@ -328,7 +351,7 @@ class Folded extends StatelessWidget {
         // Fully folded: the wrap keeps the outline of what was not folded
         // (folded parts tuck in, no corners stick out) and gets volume.
         final core = ClipPath(
-          clipper: _PathClip((s) => _unfolded(s, done)),
+          clipper: _PathClip((s) => _unfolded(s, done), done),
           child: layers,
         );
         return Stack(
@@ -351,16 +374,7 @@ class Folded extends StatelessWidget {
             // A rounded surface: darker at both sides, light in the middle.
             ShaderMask(
               blendMode: BlendMode.srcATop,
-              shaderCallback: (b) => const LinearGradient(
-                colors: [
-                  Color(0x99000000),
-                  Color(0x22000000),
-                  Color(0x33FFFFFF),
-                  Color(0x22000000),
-                  Color(0xA0000000),
-                ],
-                stops: [0.25, 0.38, 0.5, 0.62, 0.75],
-              ).createShader(b),
+              shaderCallback: _rounding,
               child: core,
             ),
             // The folded edges: a lit crease with a soft shadow beside it.
@@ -371,6 +385,18 @@ class Folded extends StatelessWidget {
     );
   }
 }
+
+/// A rounded surface: darker at both sides, light in the middle.
+Shader _rounding(Rect bounds) => const LinearGradient(
+  colors: [
+    Color(0x99000000),
+    Color(0x22000000),
+    Color(0x33FFFFFF),
+    Color(0x22000000),
+    Color(0xA0000000),
+  ],
+  stops: [0.25, 0.38, 0.5, 0.62, 0.75],
+).createShader(bounds);
 
 /// The open end of a wrap (step param `opening`, fractions of the box):
 /// `ellipse` `[cx, cy, rx, ry]` is the rim at the top, `contents`
@@ -390,6 +416,17 @@ class WrapOpening {
   final Rect contents;
   final Rect? frame;
   final Color? sleeve;
+
+  @override
+  bool operator ==(Object other) =>
+      other is WrapOpening &&
+      other.ellipse == ellipse &&
+      other.contents == contents &&
+      other.frame == frame &&
+      other.sleeve == sleeve;
+
+  @override
+  int get hashCode => Object.hash(ellipse, contents, frame, sleeve);
 
   /// The same wrap before it goes into its paper (still on the griddle).
   WrapOpening get unwrapped =>
@@ -425,7 +462,7 @@ class WrapOpening {
 /// from the left, in shade on the right), the rim is the crepe's thin edge,
 /// and inside it the filling sits heaped below a strip of the inner wall.
 /// An optional paper cone shows beside it.
-class _WrapView extends StatelessWidget {
+class _WrapView extends StatefulWidget {
   const _WrapView({
     required this.lines,
     required this.opening,
@@ -488,10 +525,48 @@ class _WrapView extends StatelessWidget {
   }
 
   @override
+  State<_WrapView> createState() => _WrapViewState();
+}
+
+class _WrapViewState extends State<_WrapView> {
+  /// The heap's light for [_lightFor], kept while that stays the same so a
+  /// rebuild with the same geometry does not mark it for repaint.
+  ShaderCallback? _light;
+  Rect? _lightFor;
+
+  ShaderCallback _pileLight(Rect bounds) {
+    if (_light == null || _lightFor != bounds) {
+      _lightFor = bounds;
+      _light = (_) => _pileGradient.createShader(bounds);
+    }
+    return _light!;
+  }
+
+  static const _pileGradient = RadialGradient(
+    center: Alignment(0, -0.3),
+    radius: 0.78,
+    colors: [
+      Color(0x29FFFFFF),
+      Color(0x00FFFFFF),
+      Color(0x00000000),
+      Color(0x61000000),
+    ],
+    stops: [0, 0.4, 0.68, 1],
+    transform: _StretchToBounds(),
+  );
+
+  /// What a silhouette is drawn from: [Cooked] only recolours (alpha is
+  /// untouched), so a shadow skips its layers.
+  static Widget _silhouette(Widget w) => w is Cooked ? w.child : w;
+
+  @override
   Widget build(BuildContext context) {
+    final _WrapView(:opening, :product, :back, :zoom, :contents) = widget;
     return LayoutBuilder(
       builder: (context, box) {
         final size = box.biggest;
+        // Everything the clips below read besides their size.
+        final geometry = [size, opening, ...widget.lines];
         Rect px(Rect r) => Rect.fromLTRB(
           r.left * size.width,
           r.top * size.height,
@@ -510,9 +585,9 @@ class _WrapView extends StatelessWidget {
         final lip = size.width * 0.008; // the crepe's own thickness
         // Silhouette: the rim, and the walls running straight from the
         // rim's sides (tangent) down to the point where the folds meet.
-        final tip = _tip(size);
+        final tip = widget._tip(size);
         final edge = rim.inflate(lip);
-        final (left, right) = _tangents(edge, tip);
+        final (left, right) = _WrapView._tangents(edge, tip);
         Path cone(Size s) => Path.combine(
           PathOperation.union,
           Path()..addOval(edge),
@@ -544,12 +619,12 @@ class _WrapView extends StatelessWidget {
         // The outside, round: shaded by its angle around the point (so the
         // shade follows the walls down to it), lit from the left.
         final body = ClipPath(
-          clipper: _PathClip(cone),
+          clipper: _PathClip(cone, geometry),
           child: Stack(
             fit: StackFit.expand,
             children: [
               ColorFiltered(
-                colorFilter: _toasted,
+                colorFilter: _WrapView._toasted,
                 child: Transform.scale(scale: 1.45, child: back),
               ),
               DecoratedBox(
@@ -643,7 +718,7 @@ class _WrapView extends StatelessWidget {
         // The inner wall: the crepe's cooked side, lit at the rim and in
         // shade where it goes down behind the filling.
         final wall = ClipPath(
-          clipper: _PathClip((_) => Path()..addOval(rim)),
+          clipper: _PathClip((_) => Path()..addOval(rim), geometry),
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -697,114 +772,107 @@ class _WrapView extends StatelessWidget {
             ),
           ),
         );
-        final filling = Stack(
-          fit: StackFit.expand,
-          children: [
-            // The bed of the filling, level with the opening.
-            ClipPath(
-              clipper: _PathClip(lensShape),
-              child: Stack(
+        // A flat rim or an empty filling region has nothing to show (and
+        // would map the filling with a division by zero).
+        final filling = rim.isEmpty || region.isEmpty
+            ? null
+            : Stack(
                 fit: StackFit.expand,
                 children: [
-                  fitted(product),
-                  // Lit on top, falling away into shade at the sides, under
-                  // the back wall and towards the front edge.
-                  Positioned.fromRect(
-                    rect: heap,
-                    child: const DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Color(0x4D000000),
-                            Color(0x00000000),
-                            Color(0x14FFFFFF),
-                            Color(0x00000000),
-                            Color(0x5C000000),
-                          ],
-                          stops: [0, 0.16, 0.4, 0.76, 1],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned.fromRect(
-                    rect: heap,
-                    child: const DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Color(0x73000000),
-                            Color(0x00000000),
-                            Color(0x00000000),
-                            Color(0x2E000000),
-                          ],
-                          stops: [0, 0.24, 0.8, 1],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (pieces != null)
-              // The pile: a second, mirrored layer behind and higher in its
-              // shade, each front piece's soft shadow, the front layer, and
-              // light falling on the pieces themselves (a mound).
-              ClipPath(
-                clipper: _PathClip(pileShape),
-                child: ShaderMask(
-                  blendMode: BlendMode.srcATop,
-                  shaderCallback: (_) => const RadialGradient(
-                    center: Alignment(0, -0.3),
-                    radius: 0.78,
-                    colors: [
-                      Color(0x29FFFFFF),
-                      Color(0x00FFFFFF),
-                      Color(0x00000000),
-                      Color(0x61000000),
-                    ],
-                    stops: [0, 0.4, 0.68, 1],
-                    transform: _StretchToBounds(),
-                  ).createShader(heapBounds),
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      ColorFiltered(
-                        colorFilter: const ColorFilter.mode(
-                          Color(0x47000000),
-                          BlendMode.srcATop,
-                        ),
-                        child: fitted(
-                          pieces,
-                          grow: 0.92,
-                          lift: rim.height * 0.14,
-                          flip: true,
-                        ),
-                      ),
-                      Transform.translate(
-                        offset: Offset(lip * 0.6, lip * 1.3),
-                        child: ImageFiltered(
-                          imageFilter: ui.ImageFilter.blur(
-                            sigmaX: 2,
-                            sigmaY: 2,
-                          ),
-                          child: ColorFiltered(
-                            colorFilter: const ColorFilter.mode(
-                              Color(0x8C000000),
-                              BlendMode.srcIn,
+                  // The bed of the filling, level with the opening.
+                  ClipPath(
+                    clipper: _PathClip(lensShape, geometry),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        fitted(product),
+                        // Lit on top, falling away into shade at the sides, under
+                        // the back wall and towards the front edge.
+                        Positioned.fromRect(
+                          rect: heap,
+                          child: const DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Color(0x4D000000),
+                                  Color(0x00000000),
+                                  Color(0x14FFFFFF),
+                                  Color(0x00000000),
+                                  Color(0x5C000000),
+                                ],
+                                stops: [0, 0.16, 0.4, 0.76, 1],
+                              ),
                             ),
-                            child: fitted(pieces),
                           ),
                         ),
-                      ),
-                      fitted(pieces),
-                    ],
+                        Positioned.fromRect(
+                          rect: heap,
+                          child: const DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Color(0x73000000),
+                                  Color(0x00000000),
+                                  Color(0x00000000),
+                                  Color(0x2E000000),
+                                ],
+                                stops: [0, 0.24, 0.8, 1],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ),
-          ],
-        );
+                  if (pieces != null)
+                    // The pile: a second, mirrored layer behind and higher in its
+                    // shade, each front piece's soft shadow, the front layer, and
+                    // light falling on the pieces themselves (a mound).
+                    ClipPath(
+                      clipper: _PathClip(pileShape, geometry),
+                      child: ShaderMask(
+                        blendMode: BlendMode.srcATop,
+                        shaderCallback: _pileLight(heapBounds),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            ColorFiltered(
+                              colorFilter: const ColorFilter.mode(
+                                Color(0x47000000),
+                                BlendMode.srcATop,
+                              ),
+                              child: fitted(
+                                pieces,
+                                grow: 0.92,
+                                lift: rim.height * 0.14,
+                                flip: true,
+                              ),
+                            ),
+                            Transform.translate(
+                              offset: Offset(lip * 0.6, lip * 1.3),
+                              child: ImageFiltered(
+                                imageFilter: ui.ImageFilter.blur(
+                                  sigmaX: 2,
+                                  sigmaY: 2,
+                                ),
+                                child: ColorFiltered(
+                                  colorFilter: const ColorFilter.mode(
+                                    Color(0x8C000000),
+                                    BlendMode.srcIn,
+                                  ),
+                                  child: fitted(_silhouette(pieces)),
+                                ),
+                              ),
+                            ),
+                            fitted(pieces),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              );
 
         final wrap = Stack(
           fit: StackFit.expand,
@@ -815,14 +883,17 @@ class _WrapView extends StatelessWidget {
               child: ImageFiltered(
                 imageFilter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                 child: ClipPath(
-                  clipper: _PathClip(outline),
+                  clipper: _PathClip(outline, geometry),
                   child: const ColoredBox(color: Color(0x66000000)),
                 ),
               ),
             ),
             if (paper != null) ...[
               ClipPath(
-                clipper: _PathClip((_) => Path()..addPolygon(sleeve, true)),
+                clipper: _PathClip(
+                  (_) => Path()..addPolygon(sleeve, true),
+                  geometry,
+                ),
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -840,7 +911,10 @@ class _WrapView extends StatelessWidget {
               ImageFiltered(
                 imageFilter: ui.ImageFilter.blur(sigmaX: 3, sigmaY: 3),
                 child: ClipPath(
-                  clipper: _PathClip((s) => cone(s).shift(Offset(lip, lip))),
+                  clipper: _PathClip(
+                    (s) => cone(s).shift(Offset(lip, lip)),
+                    geometry,
+                  ),
                   child: const ColoredBox(color: Color(0x80000000)),
                 ),
               ),
@@ -854,7 +928,7 @@ class _WrapView extends StatelessWidget {
                 painter: _RimPainter(rim, lip, half: _RimHalf.back),
               ),
             ),
-            filling,
+            ?filling,
             IgnorePointer(
               child: CustomPaint(
                 painter: _RimPainter(rim, lip, half: _RimHalf.front),
@@ -867,6 +941,7 @@ class _WrapView extends StatelessWidget {
         if (frame == null || zoom <= 0) return wrap;
         // Grow into the frame: fit it to ~94% of the box, centred.
         final f = px(frame);
+        if (f.isEmpty) return wrap;
         final fit = min(size.width / f.width, size.height / f.height) * 0.94;
         final k = 1 + (fit - 1) * zoom;
         final centre = Offset.lerp(f.center, size.center(Offset.zero), zoom)!;
@@ -944,6 +1019,7 @@ class _StretchToBounds extends GradientTransform {
 
   @override
   Matrix4 transform(Rect bounds, {TextDirection? textDirection}) {
+    if (bounds.isEmpty) return Matrix4.identity();
     final c = bounds.center;
     return Matrix4.identity()
       ..translateByDouble(c.dx, c.dy, 0, 1)
@@ -984,7 +1060,8 @@ class _CreasePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_CreasePainter oldDelegate) => oldDelegate.lines != lines;
+  bool shouldRepaint(_CreasePainter oldDelegate) =>
+      !listEquals(oldDelegate.lines, lines);
 }
 
 /// The back image a step was given (role `back`), if any.
