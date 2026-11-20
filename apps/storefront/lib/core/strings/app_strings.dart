@@ -270,6 +270,63 @@ abstract final class AppStrings {
     'تطوير ${DeveloperInfo.nameAr} · ${DeveloperInfo.phone}',
   );
 
+  // Hidden frame-timing overlay (`?perf`), for measuring on a real phone.
+  static String get perfTitle => _t('Frame timing', 'قياس سلاسة الحركة');
+  static String perfLive(double? fps) => fps == null
+      ? _t('Now: idle', 'الآن: لا حركة')
+      : _t(
+          'Now: ${fps.toStringAsFixed(0)} fps',
+          'الآن: ${fps.toStringAsFixed(0)} إطار/ث',
+        );
+  static String get perfEmpty => _t(
+    'Tap "Add to Cart" and wait for the animation to finish.',
+    'اضغط «أضف للسلة» وانتظر حتى تنتهي الحركة.',
+  );
+  static String perfBurstHead(int n, double seconds, int frames, double fps) =>
+      _t(
+        '#$n  ${seconds.toStringAsFixed(2)} s · $frames frames · '
+            '${fps.toStringAsFixed(1)} fps',
+        '#$n  ${seconds.toStringAsFixed(2)} ث · $frames إطار · '
+            '${fps.toStringAsFixed(1)} إطار/ث',
+      );
+  static String perfBurstGaps(
+    double p50,
+    double p95,
+    double max,
+    int over17,
+    int over34,
+  ) => _t(
+    'gap ms p50 ${p50.toStringAsFixed(1)} · p95 ${p95.toStringAsFixed(1)} · '
+        'max ${max.toStringAsFixed(1)} · >17: $over17 · >34: $over34',
+    'الفاصل مللي ث p50 ${p50.toStringAsFixed(1)} · '
+        'p95 ${p95.toStringAsFixed(1)} · الأقصى ${max.toStringAsFixed(1)} · '
+        '>17: $over17 · >34: $over34',
+  );
+  static String perfBurstEngine(
+    double buildP95,
+    double buildMax,
+    double rasterP95,
+    double rasterMax,
+  ) => _t(
+    'build p95/max ${buildP95.toStringAsFixed(1)}/'
+        '${buildMax.toStringAsFixed(1)} · raster '
+        '${rasterP95.toStringAsFixed(1)}/${rasterMax.toStringAsFixed(1)} ms',
+    'البناء p95/الأقصى ${buildP95.toStringAsFixed(1)}/'
+        '${buildMax.toStringAsFixed(1)} · الرسم '
+        '${rasterP95.toStringAsFixed(1)}/${rasterMax.toStringAsFixed(1)} مللي ث',
+  );
+  static String perfDevice(double dpr, double width, double height) => _t(
+    'Screen ${width.toStringAsFixed(0)}×${height.toStringAsFixed(0)} @'
+        '${dpr.toStringAsFixed(2)}x',
+    'الشاشة ${width.toStringAsFixed(0)}×${height.toStringAsFixed(0)} @'
+        '${dpr.toStringAsFixed(2)}x',
+  );
+  static String perfTimings(bool seen) => seen
+      ? _t('Engine timings: yes', 'توقيتات المحرك: متاحة')
+      : _t('Engine timings: none yet', 'توقيتات المحرك: لم تصل بعد');
+  static String get perfCopy => _t('Copy', 'نسخ');
+  static String get perfCopied => _t('Results copied', 'تم نسخ النتائج');
+
   /// Display-only formatting of an amount in piasters as EGP.
   static String price(int piasters) {
     final pounds = piasters / 100;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/perf/perf_overlay.dart';
 import '../core/strings/app_strings.dart';
 import '../core/strings/language_provider.dart';
 import '../core/theme/app_theme.dart';
@@ -24,8 +25,10 @@ class App extends ConsumerWidget {
       theme: buildAppTheme(),
       // Rebuild every screen when the language changes, since strings are
       // read statically. Cart and choices live in providers and survive.
-      builder: (context, child) =>
-          KeyedSubtree(key: ValueKey(language), child: child!),
+      // `?perf` adds the frame-timing overlay above every page.
+      builder: (context, child) => PerfGate(
+        child: KeyedSubtree(key: ValueKey(language), child: child!),
+      ),
       routerConfig: ref.watch(routerProvider),
     );
   }
