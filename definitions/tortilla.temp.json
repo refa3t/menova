@@ -1,0 +1,11 @@
+{
+  "_note": "Calibration values, not owner data.",
+  "tempFields": [
+    "placement.params",
+    "ingredientMotion",
+    "animation"
+  ],
+  "pendingNotes": [
+    "The tortilla, its outside and the new ingredient images are drawn in code (tools/process_tortilla_assets.py) until photos exist."
+  ]
+}

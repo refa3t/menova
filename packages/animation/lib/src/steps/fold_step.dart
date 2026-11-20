@@ -44,8 +44,10 @@ class FoldStep implements AnimStep {
     final angle = pi * t;
     final lift = sin(angle);
     // How far the whole wrap has come (0 flat .. 1 every fold done): its
-    // volume (rounding, shadow) builds up fold by fold.
-    final progress = ((stage - 1) + t) / lines.length;
+    // volume (rounding, shadow) builds up fold by fold, up to `volume`
+    // (default 1; 0 keeps a folded sheet flat, e.g. one rolled up next).
+    final volume = ((p['volume'] as num?)?.toDouble() ?? 1).clamp(0.0, 1.0);
+    final progress = ((stage - 1) + t) / lines.length * volume;
     // The moving part shows its front until edge-on, then the back.
     final face = angle > pi / 2 && back != null ? back : baked;
     // The finished wrap fades in over the last fold; not built while unseen.

@@ -1,0 +1,506 @@
+{
+  "temp": true,
+  "_note": "Market-estimate prices set by the developer at the owner's request. temp marks the code-drawn images and missing final product images.",
+  "categoryOrder": 2,
+  "tempFields": [
+    "defaults[].removable"
+  ],
+  "products": [
+    {
+      "id": "tortilla_chicken",
+      "categoryId": "tortilla",
+      "name": "تورتيلا فراخ",
+      "names": {
+        "en": "Grilled chicken wrap",
+        "ar": "تورتيلا فراخ"
+      },
+      "description": "",
+      "basePrice": 11000,
+      "imageAssetId": "final_tortilla_chicken",
+      "defaults": [
+        {
+          "ingredientId": "chicken",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "lettuce",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "tomato",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "mayonnaise",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 0,
+      "groupId": "savory"
+    },
+    {
+      "id": "tortilla_chicken_shawarma",
+      "categoryId": "tortilla",
+      "name": "تورتيلا شاورما فراخ",
+      "names": {
+        "en": "Chicken shawarma wrap",
+        "ar": "تورتيلا شاورما فراخ"
+      },
+      "description": "",
+      "basePrice": 10500,
+      "imageAssetId": "final_tortilla_chicken_shawarma",
+      "defaults": [
+        {
+          "ingredientId": "chicken_shawarma",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "fries",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "pickles",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "garlic_sauce",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 1,
+      "groupId": "savory"
+    },
+    {
+      "id": "tortilla_beef_shawarma",
+      "categoryId": "tortilla",
+      "name": "تورتيلا شاورما لحمة",
+      "names": {
+        "en": "Beef shawarma wrap",
+        "ar": "تورتيلا شاورما لحمة"
+      },
+      "description": "",
+      "basePrice": 13500,
+      "imageAssetId": "final_tortilla_beef_shawarma",
+      "defaults": [
+        {
+          "ingredientId": "beef_shawarma",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "onion",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "tomato",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "pickles",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 2,
+      "groupId": "savory"
+    },
+    {
+      "id": "tortilla_crispy",
+      "categoryId": "tortilla",
+      "name": "تورتيلا كرسبي",
+      "names": {
+        "en": "Crispy chicken wrap",
+        "ar": "تورتيلا كرسبي"
+      },
+      "description": "",
+      "basePrice": 12000,
+      "imageAssetId": "final_tortilla_crispy",
+      "defaults": [
+        {
+          "ingredientId": "crispy_chicken",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "lettuce",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "tomato",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "ranch_sauce",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 3,
+      "groupId": "savory"
+    },
+    {
+      "id": "tortilla_fajita",
+      "categoryId": "tortilla",
+      "name": "تورتيلا فاهيتا",
+      "names": {
+        "en": "Chicken fajita wrap",
+        "ar": "تورتيلا فاهيتا"
+      },
+      "description": "",
+      "basePrice": 12500,
+      "imageAssetId": "final_tortilla_fajita",
+      "defaults": [
+        {
+          "ingredientId": "chicken",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "bell_pepper_green",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "bell_pepper_red",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "onion",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 4,
+      "groupId": "savory"
+    },
+    {
+      "id": "tortilla_minced_beef",
+      "categoryId": "tortilla",
+      "name": "تورتيلا لحمة مفرومة",
+      "names": {
+        "en": "Minced beef wrap",
+        "ar": "تورتيلا لحمة مفرومة"
+      },
+      "description": "",
+      "basePrice": 12000,
+      "imageAssetId": "final_tortilla_minced_beef",
+      "defaults": [
+        {
+          "ingredientId": "ground_beef",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "onion",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "bell_pepper_green",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "cheddar",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 5,
+      "groupId": "savory"
+    },
+    {
+      "id": "tortilla_sausage",
+      "categoryId": "tortilla",
+      "name": "تورتيلا سجق",
+      "names": {
+        "en": "Sausage wrap",
+        "ar": "تورتيلا سجق"
+      },
+      "description": "",
+      "basePrice": 10000,
+      "imageAssetId": "final_tortilla_sausage",
+      "defaults": [
+        {
+          "ingredientId": "sausage",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "onion",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "bell_pepper_green",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "tomato",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 6,
+      "groupId": "savory"
+    },
+    {
+      "id": "tortilla_tuna",
+      "categoryId": "tortilla",
+      "name": "تورتيلا تونة",
+      "names": {
+        "en": "Tuna wrap",
+        "ar": "تورتيلا تونة"
+      },
+      "description": "",
+      "basePrice": 11000,
+      "imageAssetId": "final_tortilla_tuna",
+      "defaults": [
+        {
+          "ingredientId": "tuna",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "corn",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "lettuce",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "mayonnaise",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 7,
+      "groupId": "savory"
+    },
+    {
+      "id": "tortilla_mixed_cheese",
+      "categoryId": "tortilla",
+      "name": "تورتيلا مشكل جبن",
+      "names": {
+        "en": "Mixed cheese wrap",
+        "ar": "تورتيلا مشكل جبن"
+      },
+      "description": "",
+      "basePrice": 9500,
+      "imageAssetId": "final_tortilla_mixed_cheese",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "cheddar",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "roumi",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "tomato",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 8,
+      "groupId": "savory"
+    },
+    {
+      "id": "tortilla_nutella_banana",
+      "categoryId": "tortilla",
+      "name": "تورتيلا نوتيلا وموز",
+      "names": {
+        "en": "Nutella & banana wrap",
+        "ar": "تورتيلا نوتيلا وموز"
+      },
+      "description": "",
+      "basePrice": 9000,
+      "imageAssetId": "final_tortilla_nutella_banana",
+      "defaults": [
+        {
+          "ingredientId": "nutella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "banana",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 9,
+      "groupId": "sweet"
+    },
+    {
+      "id": "tortilla_lotus",
+      "categoryId": "tortilla",
+      "name": "تورتيلا لوتس",
+      "names": {
+        "en": "Lotus wrap",
+        "ar": "تورتيلا لوتس"
+      },
+      "description": "",
+      "basePrice": 9500,
+      "imageAssetId": "final_tortilla_lotus",
+      "defaults": [
+        {
+          "ingredientId": "lotus",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "lotus_sauce",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {},
+      "optionDeltas": {},
+      "displayOrder": 10,
+      "groupId": "sweet"
+    }
+  ]
+}

@@ -6,6 +6,7 @@ import 'src/steps/fly_to_cart_step.dart';
 import 'src/steps/fold_step.dart';
 import 'src/steps/griddle_step.dart';
 import 'src/steps/oven_step.dart';
+import 'src/steps/roll_step.dart';
 import 'src/steps/shrink_step.dart';
 import 'src/steps/swap_step.dart';
 
@@ -15,6 +16,7 @@ export 'src/steps/fly_to_cart_step.dart';
 export 'src/steps/fold_step.dart';
 export 'src/steps/griddle_step.dart';
 export 'src/steps/oven_step.dart';
+export 'src/steps/roll_step.dart';
 export 'src/steps/shrink_step.dart';
 export 'src/steps/swap_step.dart';
 
@@ -23,6 +25,7 @@ const animSteps = <String, AnimStep>{
   'Oven': OvenStep(),
   'Griddle': GriddleStep(),
   'Fold': FoldStep(),
+  'Roll': RollStep(),
   'Swap': SwapStep(),
   'Shrink': ShrinkStep(),
   'FlyToCart': FlyToCartStep(),
