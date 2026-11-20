@@ -85,7 +85,7 @@ PRODUCTS = [
 ]
 
 # Shown on the home page after the pizza and the crepe.
-CATEGORY_ORDER = 2
+CATEGORY_ORDER = 3
 
 # The toppings' layout: spread evenly over the cheese (`even`) up to near
 # the pan's inner wall, as full on every pan whatever its toppings. The

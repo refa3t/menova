@@ -178,5 +178,11 @@
     "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1793246307/menova/assets/sw5zxwdszmqhprjouduh.webp",
     "version": 1793246307,
     "bytes": 34002
+  },
+  "tortilla_back.webp": {
+    "publicId": "menova/assets/jqnhimwzzvo1b9iwvmk1",
+    "secureUrl": "https://res.cloudinary.com/etdgj6d8/image/upload/v1795160981/menova/assets/jqnhimwzzvo1b9iwvmk1.webp",
+    "version": 1795160981,
+    "bytes": 87272
   }
 }

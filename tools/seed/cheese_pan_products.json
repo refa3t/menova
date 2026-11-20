@@ -1,7 +1,7 @@
 {
   "temp": true,
   "_note": "Market-estimate prices set by the developer at the owner's request. temp marks the code-drawn images and missing final product images.",
-  "categoryOrder": 2,
+  "categoryOrder": 3,
   "tempFields": [
     "defaults[].removable"
   ],
