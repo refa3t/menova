@@ -42,6 +42,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
   Set<String>? _seen;
   final _highlight = <String>{};
   bool _soundOn = false;
+  final _sound = NewOrderSound.browser();
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +53,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
       _seen = {for (final o in orders) o.id};
       if (fresh.isEmpty) return;
       setState(() => _highlight.addAll(fresh));
-      if (_soundOn) playNewOrderSound();
+      if (_soundOn) _sound.play();
     });
     final orders = ref.watch(activeOrdersProvider);
     final pricing = ref.watch(pricingDataProvider);
@@ -65,7 +66,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
           TextButton.icon(
             onPressed: () {
               setState(() => _soundOn = !_soundOn);
-              if (_soundOn) playNewOrderSound();
+              if (_soundOn) _sound.enable();
             },
             icon: Icon(_soundOn ? Icons.volume_up : Icons.volume_off),
             label: Text(_soundOn ? AppStrings.soundOn : AppStrings.enableSound),
