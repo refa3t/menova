@@ -26,6 +26,7 @@ void main() {
     'sleeve': '#9C7650',
   };
   const backUrl = 'https://test.invalid/back.webp';
+  const magentaUrl = 'https://test.invalid/back_magenta.webp';
   const surfaceUrl = 'https://test.invalid/surface.webp';
   const rect = Rect.fromLTWH(40, 40, 280, 280);
   final capture = GlobalKey();
@@ -123,6 +124,15 @@ void main() {
     ),
   );
 
+  // A back (the folded sides' outside) in a colour nothing else has.
+  final magenta = draw(
+    (c) => c.drawCircle(
+      const Offset(128, 128),
+      122,
+      Paint()..color = const Color(0xFFE020D0),
+    ),
+  );
+
   final productWidget = RawImage(image: product, fit: BoxFit.contain);
   final contentsWidget = Transform.scale(
     scale: 0.9,
@@ -130,7 +140,11 @@ void main() {
   );
 
   void cacheNetworkImages() {
-    for (final (url, image) in [(backUrl, back), (surfaceUrl, surface)]) {
+    for (final (url, image) in [
+      (backUrl, back),
+      (surfaceUrl, surface),
+      (magentaUrl, magenta),
+    ]) {
       PaintingBinding.instance.imageCache.putIfAbsent(
         NetworkImage(url),
         () => OneFrameImageStreamCompleter(
@@ -161,6 +175,7 @@ void main() {
     bool reduceMotion = false,
     Widget? product,
     Widget? contents,
+    String backOf = backUrl,
   }) {
     final key = step.startsWith('Fold') ? 'Fold' : step;
     return Builder(
@@ -178,7 +193,7 @@ void main() {
           params: p,
           images: {
             if (key == 'Fold') 'surface': [surfaceUrl],
-            'back': [backUrl],
+            'back': [backOf],
           },
           reduceMotion: reduceMotion,
         ),
@@ -480,19 +495,6 @@ void main() {
     tester,
   ) async {
     cacheNetworkImages();
-    final start = filling(
-      await render(
-        tester,
-        stepAt(
-          'Fold1',
-          params('Fold1'),
-          0,
-          product: blueScene.product,
-          contents: blueScene.contents,
-        ),
-      ),
-    );
-    expect(start, greaterThan(0.02));
     var least = 1.0;
     for (final step in ['Fold1', 'Fold2']) {
       for (var ms = 0; ms <= 650; ms += 25) {
@@ -508,15 +510,60 @@ void main() {
             ),
           ),
         );
-        // Never hidden under the folding sides: most of it stays in sight
-        // (it packs tighter as it gathers and heaps up).
-        expect(shown, greaterThan(start * 0.4), reason: '$step at $ms ms');
-        least = min(least, shown / start);
+        // Gathered into the uncovered middle, then heaped up in the open
+        // end: never all gone under the sides.
+        expect(shown, greaterThan(0.002), reason: '$step at $ms ms');
+        least = min(least, shown);
       }
     }
     debugPrint(
-      'filling in sight: at least ${(least * 100).round()}% of the start',
+      'filling in sight: at least ${(least * 100).toStringAsFixed(2)}% '
+      'of the scene',
     );
+  });
+
+  testWidgets('the folded sides cover the filling', (tester) async {
+    cacheNetworkImages();
+    bool isBack(Uint8List px, int i) =>
+        px[i] > px[i + 1] + 60 && px[i + 2] > px[i + 1] + 60;
+    // Below the open end, where the pile comes up over the sides as the
+    // wrap closes (rows above the rim's middle).
+    final rimRow = (rect.top + 0.37 * rect.height).ceil();
+    for (final step in ['Fold1', 'Fold2']) {
+      // Until the finished wrap takes over.
+      for (var ms = 0; ms <= 420; ms += 30) {
+        Future<Uint8List> at(Widget contents) => render(
+          tester,
+          stepAt(
+            step,
+            params(step),
+            ms / 650,
+            product: blueScene.product,
+            contents: contents,
+            backOf: magentaUrl,
+          ),
+        );
+        final bare = await at(const SizedBox());
+        final full = await at(blueScene.contents);
+        var over = 0, sides = 0;
+        for (var i = rimRow * 360 * 4; i < bare.length; i += 4) {
+          if (!isBack(bare, i)) continue;
+          sides++;
+          var d = 0;
+          for (var c = 0; c < 3; c++) {
+            d = max(d, (bare[i + c] - full[i + c]).abs());
+          }
+          if (d > 3) over++;
+        }
+        // Nothing of the filling is drawn on a folded side.
+        expect(
+          over,
+          // (its anti-aliased edges aside)
+          lessThanOrEqualTo(max(4, sides ~/ 200)),
+          reason: '$step $ms ms: $over of $sides',
+        );
+      }
+    }
   });
 
   testWidgets('the fold flows into the finished wrap and into Swap', (

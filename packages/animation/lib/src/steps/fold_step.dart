@@ -31,16 +31,19 @@ class FoldStep implements AnimStep {
   static const _settleFrom = 0.66;
   static const _settleTo = 0.74;
 
-  /// How tight the pieces of a folded side gather beside the crease
-  /// (fraction of the width they had on that side).
-  static const _gather = 0.5;
+  /// How tight the pieces a side pushes along bunch up ahead of its edge
+  /// (fraction of the width they were spread over).
+  static const _bunch = 0.75;
 
-  /// The product's pieces ([pieces], the product's box) as the folds carry
-  /// them: the middle stays in place; the pieces of a folding side ride on
-  /// it (drawn with the product) until it stands on edge, then come out of
-  /// the crease and spread, packed tight, into the middle beside it; over
-  /// the last fold all of it rises and flattens into the finished wrap's
-  /// heap ([WrapOpening.filling]), the heap's back layer showing as it goes.
+  /// The product's pieces ([pieces], the product's box) under the folding
+  /// sides, which are drawn over them: the pieces on a side go with it
+  /// (drawn with the product) and end inside, under it; as a side comes
+  /// down past upright it covers a band beside its crease, and the pieces
+  /// there are pushed ahead of its edge into the middle, bunched up and
+  /// rising a little, so the uncovered middle gathers into a pile. Over the
+  /// last fold all of it rises into the finished wrap's heap
+  /// ([WrapOpening.filling]), coming out from under the sides, its back
+  /// layer showing as it goes.
   static Widget? _filling(
     Widget pieces,
     List<FoldLine> lines,
@@ -51,59 +54,54 @@ class FoldStep implements AnimStep {
     Size size,
   ) {
     if (size.isEmpty) return null;
-    final region = opening?.contents ?? const Rect.fromLTWH(0, 0, 1, 1);
+    final region = opening?.contents;
     final heaped =
         stage == lines.length &&
         opening != null &&
-        !region.isEmpty &&
+        !region!.isEmpty &&
         !opening.ellipse.isEmpty;
     final h = heaped
         ? interval(time, _heapFrom, _heapTo, Curves.easeInOut)
         : 0.0;
-    final corners = [
-      region.topLeft,
-      region.topRight,
-      region.bottomLeft,
-      region.bottomRight,
-    ].map((c) => Offset(c.dx * size.width, c.dy * size.height));
-
-    final layers = <Widget>[ClipPath(clipper: _RestClip(lines), child: pieces)];
-    for (var i = 0; i < lines.length && i < stage; i++) {
-      final line = lines[i];
-      final current = i == stage - 1;
-      // Out of the crease once the side stands on edge; with the heap,
-      // spread before it is done.
-      final s = !current
-          ? 1.0
-          : heaped
-          ? interval(time, 0.5, _heapTo)
-          : interval(t, 0.5, 1);
-      if (s <= 0) continue;
+    final active = lines.take(stage).toList();
+    // The pieces on a side that is folding or folded go with it.
+    Widget layer = ClipPath(clipper: _RestClip(active), child: pieces);
+    final radius = size.shortestSide / 2;
+    for (var i = 0; i < active.length; i++) {
+      final line = active[i];
+      final angle = i < stage - 1 ? pi : pi * t;
+      if (angle <= pi / 2) continue;
       final pa = Offset(line.a.dx * size.width, line.a.dy * size.height);
       final d = Offset(line.b.dx * size.width, line.b.dy * size.height) - pa;
       if (d.distance < 1e-9) continue;
       final n = Offset(d.dy, -d.dx) / d.distance; // towards the folding side
-      // How far the filling reaches onto this side.
-      final reach = corners
-          .map((c) => (c - pa).dx * n.dx + (c - pa).dy * n.dy)
-          .fold(0.0, max);
-      // A piece at distance x on the folding side lands at
-      // gather * (x - reach) beside the crease (in order, packed); with the
-      // heap it goes back to x, where the heap's fit expects it.
-      final alpha = s * (_gather + h * (1 - _gather));
-      final beta = -s * (1 - h) * _gather * reach;
-      layers.add(
-        Transform(
-          transform: _alongNormal(pa, n, alpha, beta),
-          child: ClipPath(
-            clipper: _MovingClip(line, lines.take(i).toList()),
-            child: pieces,
+      final c0 = size.center(Offset.zero) - pa;
+      // How far the side reaches from its crease (the product is round).
+      final width = radius + c0.dx * n.dx + c0.dy * n.dy;
+      if (width <= 0) continue;
+      // The band the side covers now (seen from above), a little short of
+      // its edge; given back as the heap takes the pieces.
+      final band = width * 0.9 * -cos(angle) * (1 - h);
+      if (band <= 0.5) continue;
+      // A piece at depth x (0..band) under the side slides out ahead of
+      // the edge, to band + bunch * x: over the pieces there, packed.
+      final push = Matrix4.translationValues(
+        0,
+        -size.height * 0.02 * band / width,
+        0,
+      )..multiply(_alongNormal(pa, n, _bunch, -band));
+      layer = Stack(
+        fit: StackFit.expand,
+        children: [
+          ClipPath(clipper: _BandClip(line, band, outside: true), child: layer),
+          Transform(
+            transform: push,
+            child: ClipPath(clipper: _BandClip(line, band), child: layer),
           ),
-        ),
+        ],
       );
     }
-    final spread = Stack(fit: StackFit.expand, children: layers);
-    if (h <= 0) return spread;
+    if (h <= 0) return layer;
     final o = opening!;
     final heap = o.filling(size);
     final lifted = Matrix4.identity();
@@ -133,7 +131,23 @@ class FoldStep implements AnimStep {
             ),
           ),
         ),
-        Transform(transform: lifted, child: spread),
+        Transform(
+          transform: lifted,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              layer,
+              // What went inside the sides comes up into the heap too.
+              Opacity(
+                opacity: h,
+                child: ClipPath(
+                  clipper: _RestClip(active, invert: true),
+                  child: pieces,
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -186,6 +200,7 @@ class FoldStep implements AnimStep {
     }
     final line = lines[stage - 1];
     final done = lines.take(stage - 1).toList();
+    final active = [...done, line];
     final t = input.reduceMotion
         ? 1.0
         : Curves.easeInOutCubic.transform(frame.t);
@@ -305,6 +320,9 @@ class FoldStep implements AnimStep {
                 clipper: _MovingClip(line, done),
                 child: face,
               );
+              final filling = pieces == null
+                  ? null
+                  : _filling(pieces, lines, stage, t, time, opening, size);
               final flat = Stack(
                 fit: StackFit.expand,
                 children: [
@@ -313,7 +331,39 @@ class FoldStep implements AnimStep {
                     offset: Offset(0, size.height * 0.025 * progress),
                     child: shadowOf(resting, 0.4 * progress, 6),
                   ),
-                  rounded(resting),
+                  if (pieces == null)
+                    rounded(resting)
+                  else ...[
+                    // The unfolded part, the filling on it, then the sides
+                    // folded over it.
+                    rounded(
+                      ClipPath(
+                        clipper: _RestClip([...done, line]),
+                        child: baked,
+                      ),
+                    ),
+                    if (filling != null)
+                      ClipPath(clipper: _RestClip(active), child: filling),
+                    if (done.isNotEmpty)
+                      rounded(
+                        Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            for (var i = 0; i < done.length; i++)
+                              Transform(
+                                transform: done[i].reflection(size),
+                                child: ClipPath(
+                                  clipper: _MovingClip(
+                                    done[i],
+                                    done.take(i).toList(),
+                                  ),
+                                  child: back ?? baked,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                  ],
                   // The lifted part casts a shadow on what is under it:
                   // its outline seen straight down, offset and soft.
                   if (lift > 0.02)
@@ -340,11 +390,18 @@ class FoldStep implements AnimStep {
                       ),
                     ),
                   ),
-                  // The filling stays in sight: what lies on a folding side
-                  // goes over with it and gathers into the middle, and the
-                  // last fold heaps it all up into the wrap's opening.
-                  if (pieces != null)
-                    ?_filling(pieces, lines, stage, t, time, opening, size),
+                  // As the heap rises, the pile comes up out of the open
+                  // end, over the sides there.
+                  if (filling != null &&
+                      opening != null &&
+                      stage == lines.length)
+                    ClipPath(
+                      clipper: _RestClip(
+                        active,
+                        above: opening.ellipse.center.dy * size.height,
+                      ),
+                      child: filling,
+                    ),
                 ],
               );
               return Stack(
@@ -408,9 +465,15 @@ class _MovingClip extends CustomClipper<Path> {
 
 /// The part of the product no fold line's folding side covers (the middle).
 class _RestClip extends CustomClipper<Path> {
-  const _RestClip(this.lines);
+  const _RestClip(this.lines, {this.invert = false, this.above});
 
   final List<FoldLine> lines;
+
+  /// Only above this height (box pixels), when given.
+  final double? above;
+
+  /// The folding sides instead (within the box).
+  final bool invert;
 
   @override
   Path getClip(Size size) {
@@ -418,10 +481,63 @@ class _RestClip extends CustomClipper<Path> {
     for (final l in lines) {
       keep = Path.combine(PathOperation.difference, keep, l.foldingSide(size));
     }
-    return keep;
+    if (above case final y?) {
+      keep = Path.combine(
+        PathOperation.intersect,
+        keep,
+        Path()..addRect(Rect.fromLTRB(0, 0, size.width, y)),
+      );
+    }
+    if (!invert) return keep;
+    return Path.combine(
+      PathOperation.difference,
+      Path()..addRect(Offset.zero & size),
+      keep,
+    );
   }
 
   @override
   bool shouldReclip(_RestClip oldClipper) =>
+      oldClipper.invert != invert ||
+      oldClipper.above != above ||
       !listEquals(oldClipper.lines, lines);
+}
+
+/// The band [depth] pixels wide on the near (not folding) side of [line],
+/// beside it; or, [outside], everything but that band.
+class _BandClip extends CustomClipper<Path> {
+  const _BandClip(this.line, this.depth, {this.outside = false});
+
+  final FoldLine line;
+  final double depth;
+  final bool outside;
+
+  @override
+  Path getClip(Size size) {
+    final pa = Offset(line.a.dx * size.width, line.a.dy * size.height);
+    final d = Offset(line.b.dx * size.width, line.b.dy * size.height) - pa;
+    final box = Path()..addRect(Offset.zero & size);
+    if (d.distance < 1e-9) return outside ? box : Path();
+    final u = d / d.distance;
+    final n = Offset(u.dy, -u.dx); // towards the folding side
+    final far = size.longestSide * 4;
+    final band = Path()
+      ..addPolygon([
+        pa - u * far,
+        pa + u * far,
+        pa + u * far - n * depth,
+        pa - u * far - n * depth,
+      ], true);
+    return Path.combine(
+      outside ? PathOperation.difference : PathOperation.intersect,
+      box,
+      band,
+    );
+  }
+
+  @override
+  bool shouldReclip(_BandClip oldClipper) =>
+      oldClipper.line != line ||
+      oldClipper.depth != depth ||
+      oldClipper.outside != outside;
 }
