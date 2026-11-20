@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/app.dart';
 import 'core/analytics/analytics.dart';
+import 'core/perf/perf_monitor.dart';
 import 'features/cart/presentation/cart_providers.dart';
 import 'firebase_options.dart';
 
@@ -59,6 +60,11 @@ Future<void> main() async {
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
         analyticsProvider.overrideWithValue(analytics),
+        // `?perf` shows frame timings for measuring on a real phone. Read
+        // once, so it lasts the session across in-app navigation.
+        perfModeProvider.overrideWithValue(
+          Uri.base.queryParameters.containsKey('perf'),
+        ),
       ],
       child: const App(),
     ),
