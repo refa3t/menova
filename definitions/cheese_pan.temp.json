@@ -1,0 +1,12 @@
+{
+  "_note": "Calibration values, not owner data.",
+  "tempFields": [
+    "placement.params",
+    "ingredientMotion",
+    "animation"
+  ],
+  "pendingNotes": [
+    "The pan and the new ingredient images are drawn in code (tools/process_cheese_pan_assets.py) until photos exist.",
+    "The baked pan (base.cookedAssetId) is not shown yet: the oven bakes the snapshot with the Cooked filter, like the pizza."
+  ]
+}

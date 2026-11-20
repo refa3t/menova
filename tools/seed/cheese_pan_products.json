@@ -1,0 +1,503 @@
+{
+  "temp": true,
+  "_note": "Market-estimate prices set by the developer at the owner's request. temp marks the code-drawn images and missing final product images.",
+  "categoryOrder": 2,
+  "tempFields": [
+    "defaults[].removable"
+  ],
+  "products": [
+    {
+      "id": "cheese_pan_mixed_cheese",
+      "categoryId": "cheese_pan",
+      "name": "طاسة مشكل جبن",
+      "names": {
+        "en": "Mixed cheese pan",
+        "ar": "طاسة مشكل جبن"
+      },
+      "description": "",
+      "basePrice": 11000,
+      "imageAssetId": "final_cheese_pan_mixed_cheese",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "cheddar",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "roumi",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "feta",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "single": 0,
+        "sharing": 7500
+      },
+      "optionDeltas": {},
+      "displayOrder": 0,
+      "groupId": "cheese"
+    },
+    {
+      "id": "cheese_pan_four_cheese",
+      "categoryId": "cheese_pan",
+      "name": "طاسة أربعة أجبان",
+      "names": {
+        "en": "Four cheese pan",
+        "ar": "طاسة أربعة أجبان"
+      },
+      "description": "",
+      "basePrice": 13000,
+      "imageAssetId": "final_cheese_pan_four_cheese",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "cheddar",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "parmesan",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "blue_cheese",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "single": 0,
+        "sharing": 8500
+      },
+      "optionDeltas": {},
+      "displayOrder": 1,
+      "groupId": "cheese"
+    },
+    {
+      "id": "cheese_pan_veggie",
+      "categoryId": "cheese_pan",
+      "name": "طاسة جبنة بالخضار",
+      "names": {
+        "en": "Cheese & veggie pan",
+        "ar": "طاسة جبنة بالخضار"
+      },
+      "description": "",
+      "basePrice": 11500,
+      "imageAssetId": "final_cheese_pan_veggie",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "mushroom",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "bell_pepper_green",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "onion",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "tomato",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "olive_black",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "single": 0,
+        "sharing": 7500
+      },
+      "optionDeltas": {},
+      "displayOrder": 2,
+      "groupId": "cheese"
+    },
+    {
+      "id": "cheese_pan_sausage",
+      "categoryId": "cheese_pan",
+      "name": "طاسة جبنة بالسوسيس",
+      "names": {
+        "en": "Cheese & sausage pan",
+        "ar": "طاسة جبنة بالسوسيس"
+      },
+      "description": "",
+      "basePrice": 12500,
+      "imageAssetId": "final_cheese_pan_sausage",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "sausage",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "bell_pepper_green",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "tomato",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "single": 0,
+        "sharing": 8000
+      },
+      "optionDeltas": {},
+      "displayOrder": 3,
+      "groupId": "meat"
+    },
+    {
+      "id": "cheese_pan_hot_dog",
+      "categoryId": "cheese_pan",
+      "name": "طاسة جبنة بالهوت دوج",
+      "names": {
+        "en": "Cheese & hot dog pan",
+        "ar": "طاسة جبنة بالهوت دوج"
+      },
+      "description": "",
+      "basePrice": 12000,
+      "imageAssetId": "final_cheese_pan_hot_dog",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "cheddar",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "hot_dog",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "single": 0,
+        "sharing": 8000
+      },
+      "optionDeltas": {},
+      "displayOrder": 4,
+      "groupId": "meat"
+    },
+    {
+      "id": "cheese_pan_smoked_turkey",
+      "categoryId": "cheese_pan",
+      "name": "طاسة جبنة بالتركي المدخن",
+      "names": {
+        "en": "Cheese & smoked turkey pan",
+        "ar": "طاسة جبنة بالتركي المدخن"
+      },
+      "description": "",
+      "basePrice": 13500,
+      "imageAssetId": "final_cheese_pan_smoked_turkey",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "roumi",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "smoked_turkey",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "single": 0,
+        "sharing": 9000
+      },
+      "optionDeltas": {},
+      "displayOrder": 5,
+      "groupId": "meat"
+    },
+    {
+      "id": "cheese_pan_chicken",
+      "categoryId": "cheese_pan",
+      "name": "طاسة جبنة بالفراخ",
+      "names": {
+        "en": "Cheese & chicken pan",
+        "ar": "طاسة جبنة بالفراخ"
+      },
+      "description": "",
+      "basePrice": 13500,
+      "imageAssetId": "final_cheese_pan_chicken",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "chicken",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "mushroom",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "bell_pepper_red",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "single": 0,
+        "sharing": 9000
+      },
+      "optionDeltas": {},
+      "displayOrder": 6,
+      "groupId": "meat"
+    },
+    {
+      "id": "cheese_pan_ground_beef",
+      "categoryId": "cheese_pan",
+      "name": "طاسة جبنة باللحمة المفرومة",
+      "names": {
+        "en": "Cheese & minced beef pan",
+        "ar": "طاسة جبنة باللحمة المفرومة"
+      },
+      "description": "",
+      "basePrice": 14000,
+      "imageAssetId": "final_cheese_pan_ground_beef",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "ground_beef",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "onion",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "bell_pepper_green",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "single": 0,
+        "sharing": 9000
+      },
+      "optionDeltas": {},
+      "displayOrder": 7,
+      "groupId": "meat"
+    },
+    {
+      "id": "cheese_pan_basterma",
+      "categoryId": "cheese_pan",
+      "name": "طاسة جبنة بالبسطرمة",
+      "names": {
+        "en": "Cheese & basterma pan",
+        "ar": "طاسة جبنة بالبسطرمة"
+      },
+      "description": "",
+      "basePrice": 14500,
+      "imageAssetId": "final_cheese_pan_basterma",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "roumi",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "basterma",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "single": 0,
+        "sharing": 9500
+      },
+      "optionDeltas": {},
+      "displayOrder": 8,
+      "groupId": "meat"
+    },
+    {
+      "id": "cheese_pan_tuna",
+      "categoryId": "cheese_pan",
+      "name": "طاسة جبنة بالتونة",
+      "names": {
+        "en": "Cheese & tuna pan",
+        "ar": "طاسة جبنة بالتونة"
+      },
+      "description": "",
+      "basePrice": 13500,
+      "imageAssetId": "final_cheese_pan_tuna",
+      "defaults": [
+        {
+          "ingredientId": "mozzarella",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "tuna",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "corn",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        },
+        {
+          "ingredientId": "olive_black",
+          "qty": 1,
+          "removable": true,
+          "refundOnRemove": false,
+          "refundAmount": 0
+        }
+      ],
+      "isAvailable": true,
+      "sizeDeltas": {
+        "single": 0,
+        "sharing": 9000
+      },
+      "optionDeltas": {},
+      "displayOrder": 9,
+      "groupId": "sea"
+    }
+  ]
+}

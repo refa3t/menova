@@ -7,6 +7,7 @@ import 'src/steps/fold_step.dart';
 import 'src/steps/griddle_step.dart';
 import 'src/steps/oven_step.dart';
 import 'src/steps/shrink_step.dart';
+import 'src/steps/slide_into_oven_step.dart';
 import 'src/steps/swap_step.dart';
 
 export 'src/anim_step.dart';
@@ -16,11 +17,13 @@ export 'src/steps/fold_step.dart';
 export 'src/steps/griddle_step.dart';
 export 'src/steps/oven_step.dart';
 export 'src/steps/shrink_step.dart';
+export 'src/steps/slide_into_oven_step.dart';
 export 'src/steps/swap_step.dart';
 
 /// Registered step implementations by key (CLAUDE.md 5.5, phase 1).
 const animSteps = <String, AnimStep>{
   'Oven': OvenStep(),
+  'SlideIntoOven': SlideIntoOvenStep(),
   'Griddle': GriddleStep(),
   'Fold': FoldStep(),
   'Swap': SwapStep(),

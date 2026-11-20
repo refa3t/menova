@@ -1,0 +1,481 @@
+{
+  "id": "cheese_pan",
+  "definitionVersion": 1,
+  "name": "طاسة جبنة",
+  "names": {
+    "en": "Cheese pan",
+    "ar": "طاسة جبنة"
+  },
+  "base": {
+    "shape": "circle",
+    "rawAssetId": "base_cheese_pan_raw",
+    "cookedAssetId": "base_cheese_pan_cooked",
+    "surface": 0.74
+  },
+  "allowedIngredientIds": [
+    "mozzarella",
+    "cheddar",
+    "roumi",
+    "feta",
+    "parmesan",
+    "blue_cheese",
+    "sausage",
+    "basterma",
+    "ground_beef",
+    "chicken",
+    "pepperoni",
+    "mortadella",
+    "tuna",
+    "shrimp",
+    "mushroom",
+    "bell_pepper_green",
+    "bell_pepper_red",
+    "onion",
+    "tomato",
+    "olive_black",
+    "corn",
+    "jalapeno",
+    "oregano",
+    "parsley",
+    "hot_dog",
+    "smoked_turkey",
+    "ketchup",
+    "mayonnaise",
+    "garlic_sauce",
+    "bbq_sauce",
+    "ranch_sauce",
+    "hot_sauce",
+    "honey_mustard",
+    "cheddar_sauce",
+    "pesto_sauce"
+  ],
+  "placement": {
+    "strategy": "even",
+    "params": {
+      "radius": 0.86,
+      "coverage": 0.55,
+      "pieceSize": 0.13,
+      "piecesPerUnit": 9,
+      "minGap": 0.16,
+      "piecesPerUnit:mozzarella": 30,
+      "pieceSize:mozzarella": 0.2,
+      "minGap:mozzarella": 0.2,
+      "radius:mozzarella": 0.8,
+      "piecesPerUnit:cheddar": 24,
+      "pieceSize:cheddar": 0.19,
+      "minGap:cheddar": 0.22,
+      "radius:cheddar": 0.8,
+      "piecesPerUnit:roumi": 22,
+      "pieceSize:roumi": 0.18,
+      "minGap:roumi": 0.23,
+      "radius:roumi": 0.8,
+      "piecesPerUnit:feta": 16,
+      "pieceSize:feta": 0.17,
+      "minGap:feta": 0.27,
+      "radius:feta": 0.8,
+      "piecesPerUnit:parmesan": 18,
+      "pieceSize:parmesan": 0.18,
+      "minGap:parmesan": 0.25,
+      "radius:parmesan": 0.8,
+      "piecesPerUnit:blue_cheese": 14,
+      "pieceSize:blue_cheese": 0.17,
+      "minGap:blue_cheese": 0.29,
+      "radius:blue_cheese": 0.8,
+      "piecesPerUnit:sausage": 12,
+      "pieceSize:sausage": 0.095,
+      "fill:sausage": 0.92,
+      "piecesPerUnit:basterma": 7,
+      "pieceSize:basterma": 0.15,
+      "fill:basterma": 0.84,
+      "piecesPerUnit:ground_beef": 11,
+      "pieceSize:ground_beef": 0.15,
+      "fill:ground_beef": 0.61,
+      "piecesPerUnit:chicken": 14,
+      "pieceSize:chicken": 0.1,
+      "fill:chicken": 0.84,
+      "piecesPerUnit:pepperoni": 8,
+      "pieceSize:pepperoni": 0.15,
+      "fill:pepperoni": 0.96,
+      "piecesPerUnit:mortadella": 7,
+      "pieceSize:mortadella": 0.15,
+      "fill:mortadella": 0.96,
+      "piecesPerUnit:tuna": 9,
+      "pieceSize:tuna": 0.15,
+      "fill:tuna": 0.65,
+      "piecesPerUnit:shrimp": 7,
+      "pieceSize:shrimp": 0.14,
+      "fill:shrimp": 0.9,
+      "piecesPerUnit:mushroom": 10,
+      "pieceSize:mushroom": 0.11,
+      "fill:mushroom": 0.87,
+      "piecesPerUnit:bell_pepper_green": 7,
+      "pieceSize:bell_pepper_green": 0.17,
+      "fill:bell_pepper_green": 0.82,
+      "piecesPerUnit:bell_pepper_red": 7,
+      "pieceSize:bell_pepper_red": 0.17,
+      "fill:bell_pepper_red": 0.79,
+      "piecesPerUnit:onion": 8,
+      "pieceSize:onion": 0.14,
+      "fill:onion": 0.79,
+      "piecesPerUnit:tomato": 6,
+      "pieceSize:tomato": 0.15,
+      "fill:tomato": 0.94,
+      "piecesPerUnit:olive_black": 14,
+      "pieceSize:olive_black": 0.07,
+      "fill:olive_black": 0.88,
+      "piecesPerUnit:corn": 12,
+      "pieceSize:corn": 0.1,
+      "fill:corn": 0.6,
+      "piecesPerUnit:jalapeno": 12,
+      "pieceSize:jalapeno": 0.09,
+      "fill:jalapeno": 0.88,
+      "piecesPerUnit:oregano": 12,
+      "pieceSize:oregano": 0.16,
+      "minGap:oregano": 0.3,
+      "radius:oregano": 0.8,
+      "piecesPerUnit:parsley": 12,
+      "pieceSize:parsley": 0.16,
+      "minGap:parsley": 0.3,
+      "radius:parsley": 0.8,
+      "piecesPerUnit:hot_dog": 12,
+      "pieceSize:hot_dog": 0.085,
+      "fill:hot_dog": 0.58,
+      "piecesPerUnit:smoked_turkey": 6,
+      "pieceSize:smoked_turkey": 0.15,
+      "fill:smoked_turkey": 0.65,
+      "color:ketchup": 4289732122,
+      "angle:ketchup": 35,
+      "lines:ketchup": 7,
+      "lineWidth:ketchup": 0.04,
+      "wave:ketchup": 0.006,
+      "radius:ketchup": 0.8,
+      "color:mayonnaise": 4294175428,
+      "angle:mayonnaise": 145,
+      "lines:mayonnaise": 7,
+      "lineWidth:mayonnaise": 0.04,
+      "wave:mayonnaise": 0.006,
+      "radius:mayonnaise": 0.8,
+      "color:garlic_sauce": 4294637288,
+      "angle:garlic_sauce": 70,
+      "lines:garlic_sauce": 7,
+      "lineWidth:garlic_sauce": 0.04,
+      "wave:garlic_sauce": 0.006,
+      "radius:garlic_sauce": 0.8,
+      "color:bbq_sauce": 4285410327,
+      "angle:bbq_sauce": 110,
+      "lines:bbq_sauce": 7,
+      "lineWidth:bbq_sauce": 0.04,
+      "wave:bbq_sauce": 0.006,
+      "radius:bbq_sauce": 0.8,
+      "color:ranch_sauce": 4293914080,
+      "angle:ranch_sauce": 0,
+      "lines:ranch_sauce": 7,
+      "lineWidth:ranch_sauce": 0.04,
+      "wave:ranch_sauce": 0.006,
+      "radius:ranch_sauce": 0.8,
+      "color:hot_sauce": 4292362268,
+      "angle:hot_sauce": 90,
+      "lines:hot_sauce": 7,
+      "lineWidth:hot_sauce": 0.04,
+      "wave:hot_sauce": 0.006,
+      "radius:hot_sauce": 0.8,
+      "color:honey_mustard": 4292452400,
+      "angle:honey_mustard": 20,
+      "lines:honey_mustard": 7,
+      "lineWidth:honey_mustard": 0.04,
+      "wave:honey_mustard": 0.006,
+      "radius:honey_mustard": 0.8,
+      "color:cheddar_sauce": 4293960220,
+      "angle:cheddar_sauce": 125,
+      "lines:cheddar_sauce": 7,
+      "lineWidth:cheddar_sauce": 0.04,
+      "wave:cheddar_sauce": 0.006,
+      "radius:cheddar_sauce": 0.8,
+      "color:pesto_sauce": 4283398700,
+      "angle:pesto_sauce": 55,
+      "lines:pesto_sauce": 7,
+      "lineWidth:pesto_sauce": 0.04,
+      "wave:pesto_sauce": 0.006,
+      "radius:pesto_sauce": 0.8
+    },
+    "byIngredient": {
+      "mozzarella": "scatter",
+      "cheddar": "scatter",
+      "roumi": "scatter",
+      "feta": "scatter",
+      "parmesan": "scatter",
+      "blue_cheese": "scatter",
+      "oregano": "scatter",
+      "parsley": "scatter",
+      "ketchup": "sauce",
+      "mayonnaise": "sauce",
+      "garlic_sauce": "sauce",
+      "bbq_sauce": "sauce",
+      "ranch_sauce": "sauce",
+      "hot_sauce": "sauce",
+      "honey_mustard": "sauce",
+      "cheddar_sauce": "sauce",
+      "pesto_sauce": "sauce"
+    }
+  },
+  "layerOverrides": {
+    "mozzarella": 10,
+    "cheddar": 10,
+    "roumi": 10,
+    "feta": 10,
+    "parmesan": 10,
+    "blue_cheese": 10,
+    "oregano": 30,
+    "parsley": 30,
+    "ketchup": 40,
+    "mayonnaise": 40,
+    "garlic_sauce": 40,
+    "bbq_sauce": 40,
+    "ranch_sauce": 40,
+    "hot_sauce": 40,
+    "honey_mustard": 40,
+    "cheddar_sauce": 40,
+    "pesto_sauce": 40
+  },
+  "constraints": {
+    "maxQty": 2
+  },
+  "sizes": [
+    {
+      "id": "single",
+      "name": "فردي",
+      "names": {
+        "en": "Single",
+        "ar": "فردي"
+      },
+      "scale": 0.84
+    },
+    {
+      "id": "sharing",
+      "name": "مشاركة",
+      "names": {
+        "en": "Sharing",
+        "ar": "مشاركة"
+      },
+      "scale": 1.0
+    }
+  ],
+  "optionGroups": [],
+  "animation": [
+    {
+      "step": "SlideIntoOven",
+      "weight": 1800,
+      "params": {
+        "durationMs": 1800,
+        "saturation": 1.35,
+        "insideScale": 0.62,
+        "tilt": 0.6,
+        "archWidth": 0.95,
+        "shrinkTo": 0.9,
+        "bubbles": 22,
+        "bubbleArea": 0.7,
+        "scrimMaxPct": 35,
+        "images": {
+          "steam": "oven_steam",
+          "embers": "oven_embers"
+        }
+      }
+    },
+    {
+      "step": "Swap",
+      "weight": 300,
+      "params": {
+        "durationMs": 300
+      }
+    },
+    {
+      "step": "FlyToCart",
+      "weight": 900,
+      "params": {
+        "durationMs": 900,
+        "shrinkTo": 0.18,
+        "arcControlPct": 20,
+        "rotateDeg": -12
+      }
+    }
+  ],
+  "productGroups": [
+    {
+      "id": "cheese",
+      "name": "جبن وخضار",
+      "names": {
+        "en": "Cheese & veggies",
+        "ar": "جبن وخضار"
+      }
+    },
+    {
+      "id": "meat",
+      "name": "لحوم وفراخ",
+      "names": {
+        "en": "Meat & chicken",
+        "ar": "لحوم وفراخ"
+      }
+    },
+    {
+      "id": "sea",
+      "name": "بحري",
+      "names": {
+        "en": "Seafood",
+        "ar": "بحري"
+      }
+    }
+  ],
+  "addOnGroups": [
+    {
+      "id": "sauces",
+      "name": "الصوصات",
+      "names": {
+        "en": "Sauces",
+        "ar": "الصوصات"
+      },
+      "ingredientIds": [
+        "ketchup",
+        "mayonnaise",
+        "garlic_sauce",
+        "bbq_sauce",
+        "ranch_sauce",
+        "hot_sauce",
+        "honey_mustard",
+        "cheddar_sauce",
+        "pesto_sauce"
+      ]
+    }
+  ],
+  "ingredientMotion": {
+    "mozzarella": {
+      "enter": "shower",
+      "exit": "dissolve"
+    },
+    "cheddar": {
+      "enter": "shower",
+      "exit": "dissolve"
+    },
+    "roumi": {
+      "enter": "shower",
+      "exit": "dissolve"
+    },
+    "feta": {
+      "enter": "sprinkle",
+      "exit": "dissolve"
+    },
+    "parmesan": {
+      "enter": "sprinkle",
+      "exit": "dissolve"
+    },
+    "blue_cheese": {
+      "enter": "sprinkle",
+      "exit": "dissolve"
+    },
+    "sausage": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "basterma": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "ground_beef": {
+      "enter": "shower",
+      "exit": "dissolve"
+    },
+    "chicken": {
+      "enter": "toss",
+      "exit": "liftFade"
+    },
+    "pepperoni": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "mortadella": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "tuna": {
+      "enter": "shower",
+      "exit": "dissolve"
+    },
+    "shrimp": {
+      "enter": "toss",
+      "exit": "liftFade"
+    },
+    "mushroom": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "bell_pepper_green": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "bell_pepper_red": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "onion": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "tomato": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "olive_black": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "corn": {
+      "enter": "sprinkle",
+      "exit": "dissolve"
+    },
+    "jalapeno": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "oregano": {
+      "enter": "sprinkle",
+      "exit": "dissolve"
+    },
+    "parsley": {
+      "enter": "sprinkle",
+      "exit": "dissolve"
+    },
+    "hot_dog": {
+      "enter": "drop",
+      "exit": "liftFade"
+    },
+    "smoked_turkey": {
+      "enter": "drop",
+      "exit": "liftFade"
+    }
+  },
+  "assetSpecs": {
+    "base": {
+      "formats": [
+        "png",
+        "webp"
+      ],
+      "maxBytes": 512000,
+      "transparent": true
+    },
+    "ingredient": {
+      "formats": [
+        "png",
+        "webp"
+      ],
+      "maxBytes": 153600,
+      "transparent": true
+    },
+    "final": {
+      "formats": [
+        "png",
+        "webp"
+      ],
+      "maxBytes": 512000,
+      "transparent": true
+    }
+  }
+}
