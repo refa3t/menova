@@ -457,6 +457,12 @@ class WrapOpening {
   }
 }
 
+/// Whether a finished wrap paints into its own layer, reused between
+/// frames while only the transforms around it change. Tests turn it off to
+/// compare against the wrap painted afresh each frame.
+@visibleForTesting
+bool debugWrapOwnLayer = true;
+
 /// A finished wrap with an open end, drawn to look real (owner reference
 /// photo): the outside narrows from the rim to the point and is round (lit
 /// from the left, in shade on the right), the rim is the crepe's thin edge,
@@ -937,11 +943,17 @@ class _WrapViewState extends State<_WrapView> {
           ],
         );
 
+        // Its own layer, inside the zoom: nothing in it changes while the
+        // last fold grows it or the steps after move, scale or turn it, so
+        // it is painted once and its layer reused (owner: the rim's
+        // hairlines may anti-alias a little differently under a transform).
+        final content = debugWrapOwnLayer ? RepaintBoundary(child: wrap) : wrap;
+
         final frame = opening.frame;
-        if (frame == null || zoom <= 0) return wrap;
+        if (frame == null || zoom <= 0) return content;
         // Grow into the frame: fit it to ~94% of the box, centred.
         final f = px(frame);
-        if (f.isEmpty) return wrap;
+        if (f.isEmpty) return content;
         final fit = min(size.width / f.width, size.height / f.height) * 0.94;
         final k = 1 + (fit - 1) * zoom;
         final centre = Offset.lerp(f.center, size.center(Offset.zero), zoom)!;
@@ -954,7 +966,7 @@ class _WrapViewState extends State<_WrapView> {
               1,
             )
             ..scaleByDouble(k, k, 1, 1),
-          child: wrap,
+          child: content,
         );
       },
     );

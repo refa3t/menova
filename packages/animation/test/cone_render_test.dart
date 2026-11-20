@@ -8,9 +8,11 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// The finished wrap (P2-06/07) as the steps after the folds draw it:
-/// clips are kept between frames, the pieces' shadow skips their baking, the
-/// last fold does not build the wrap while it is unseen, a frame drawn after
-/// others equals a fresh render, and a degenerate opening draws without NaN.
+/// clips are kept between frames, the wrap is painted once into its own
+/// layer and only the transforms around it change, that layer looks like the
+/// wrap painted afresh (anti-aliasing aside), the pieces' shadow skips their
+/// baking, the last fold does not build the wrap while it is unseen, and a
+/// degenerate opening draws without NaN.
 void main() {
   const lines = [
     [0.5, 0.75, 0.13, 0.26],
@@ -227,6 +229,113 @@ void main() {
     }
   });
 
+  testWidgets('the wrap in its own layer looks like it painted afresh', (
+    tester,
+  ) async {
+    addTearDown(() => debugWrapOwnLayer = true);
+    var worst = 0, worstShare = 0.0;
+    for (final (step, t) in [
+      ('Fold2', 0.9),
+      ('Fold2', 1.0),
+      ('Swap', 0.0),
+      ('Swap', 0.5),
+      ('Swap', 1.0),
+      ('Shrink', 0.5),
+      ('Shrink', 1.0),
+      ('FlyToCart', 0.3),
+      ('FlyToCart', 0.6),
+      ('FlyToCart', 0.9),
+    ]) {
+      cacheNetworkImages();
+      final p = params(step);
+      debugWrapOwnLayer = true;
+      await tester.pumpWidget(const SizedBox());
+      await render(tester, stepAt(step, p, 0));
+      final layered = await render(tester, stepAt(step, p, t));
+      debugWrapOwnLayer = false;
+      await tester.pumpWidget(const SizedBox());
+      final afresh = await render(tester, stepAt(step, p, t));
+      expect(layered, hasLength(afresh.length));
+      var most = 0, pixels = 0;
+      for (var i = 0; i < afresh.length; i += 4) {
+        var px = 0;
+        for (var c = 0; c < 4; c++) {
+          px = max(px, (layered[i + c] - afresh[i + c]).abs());
+        }
+        if (px > 0) pixels++;
+        most = max(most, px);
+      }
+      final share = pixels / (afresh.length / 4);
+      // Only the rim's thin lines anti-alias a little differently.
+      expect(most, lessThanOrEqualTo(24), reason: '$step at $t');
+      expect(share, lessThanOrEqualTo(0.01), reason: '$step at $t');
+      worst = max(worst, most);
+      worstShare = max(worstShare, share);
+    }
+    debugPrint(
+      'wrap layer vs afresh: max diff $worst/255, '
+      'at most ${(worstShare * 100).toStringAsFixed(3)}% of pixels',
+    );
+  });
+
+  testWidgets('the wrap is painted once while the steps move it', (
+    tester,
+  ) async {
+    addTearDown(() => debugWrapOwnLayer = true);
+    for (final layered in [true, false]) {
+      debugWrapOwnLayer = layered;
+      final counter = _PaintCounter();
+      final counted = Stack(
+        fit: StackFit.expand,
+        children: [
+          contentsWidget,
+          CustomPaint(painter: counter),
+        ],
+      );
+      for (final step in ['Swap', 'Shrink', 'FlyToCart']) {
+        cacheNetworkImages();
+        final p = params(step);
+        Widget at(double t) => Directionality(
+          textDirection: TextDirection.ltr,
+          child: Builder(
+            builder: (context) => animSteps[step]!.build(
+              context,
+              AnimFrame(
+                t: t,
+                elapsed: Duration(milliseconds: (t * 600).round()),
+              ),
+              AnimStepInput(
+                product: productWidget,
+                contents: counted,
+                productRect: rect,
+                cartTarget: const Offset(340, 20),
+                params: p,
+                images: const {
+                  'back': [backUrl],
+                },
+              ),
+            ),
+          ),
+        );
+        await tester.pumpWidget(const SizedBox());
+        await tester.pumpWidget(at(0));
+        expect(tester.takeException(), isNull);
+        final first = counter.paints;
+        expect(first, greaterThan(0), reason: step);
+        for (final t in [0.2, 0.4, 0.6, 0.8, 1.0]) {
+          await tester.pumpWidget(at(t));
+        }
+        if (layered) {
+          // Every later frame reuses the layer: nothing inside is painted.
+          expect(counter.paints, first, reason: step);
+        } else {
+          // Painted afresh, the pieces are painted again each frame.
+          expect(counter.paints, greaterThan(first), reason: step);
+        }
+      }
+    }
+  });
+
   testWidgets('the pieces shadow is drawn from them unbaked', (tester) async {
     cacheNetworkImages();
     await render(tester, stepAt('Swap', params('Swap'), 1));
@@ -296,4 +405,15 @@ void main() {
       }
     }
   });
+}
+
+/// Counts how often it is painted; never asks to repaint itself.
+class _PaintCounter extends CustomPainter {
+  int paints = 0;
+
+  @override
+  void paint(Canvas canvas, Size size) => paints++;
+
+  @override
+  bool shouldRepaint(_PaintCounter oldDelegate) => false;
 }
