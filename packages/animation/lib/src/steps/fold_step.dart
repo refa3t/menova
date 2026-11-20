@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../anim_step.dart';
@@ -47,6 +48,10 @@ class FoldStep implements AnimStep {
     final progress = ((stage - 1) + t) / lines.length;
     // The moving part shows its front until edge-on, then the back.
     final face = angle > pi / 2 && back != null ? back : baked;
+    // The finished wrap fades in over the last fold; not built while unseen.
+    final settle = stage == lines.length && opening != null
+        ? interval(t, 0.76, 0.86)
+        : 0.0;
 
     // Bend: lit along the crease, darker towards the free edge, so the
     // moving part reads as curved, not as a flat card.
@@ -158,9 +163,9 @@ class FoldStep implements AnimStep {
                   ),
                   // The last fold closes the wrap: it settles into its
                   // finished look (outside all round, contents inside).
-                  if (stage == lines.length && opening != null)
+                  if (settle > 0)
                     Opacity(
-                      opacity: interval(t, 0.76, 0.86),
+                      opacity: settle,
                       child: Folded(
                         lines: lines,
                         count: lines.length,
@@ -203,5 +208,6 @@ class _MovingClip extends CustomClipper<Path> {
   }
 
   @override
-  bool shouldReclip(_MovingClip oldClipper) => true;
+  bool shouldReclip(_MovingClip oldClipper) =>
+      oldClipper.line != line || !listEquals(oldClipper.done, done);
 }
