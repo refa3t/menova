@@ -149,6 +149,7 @@ try {
   // Fillings are laid out `even`, sauces poured (`sauce`), cheese in a band.
   await twice('crepe fruit (even fillings + poured Nutella)', '/product/crepe_fruit');
   await twice('crepe tuna (even fillings + band cheese)', '/product/crepe_tuna');
+  await twice('tortilla chicken', '/product/tortilla_chicken');
 
   console.log(JSON.stringify({ site, cpuThrottle: `${cpu}x`, results }, null, 2));
 } finally {
