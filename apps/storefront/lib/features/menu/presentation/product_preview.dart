@@ -32,8 +32,20 @@ class ProductPreview extends StatelessWidget {
           );
     final base = menu.assets[state.activeBase.rawAssetId];
     if (strategy == null || base == null) return const SizedBox.shrink();
+    // Every default, even one the customer removed (it keeps its spot, so
+    // the rest sit where the product page has them), and every choice.
+    final ids = {
+      for (final d in product.defaults) d.ingredientId,
+      for (final e in state.selection.ingredients.entries)
+        if (e.value > 0) e.key,
+    };
     return IgnorePointer(
       child: BuilderCanvas(
+        // The canvas keeps what it has drawn, so another product or
+        // selection in this place (a list item reused after a filter or a
+        // removed cart line) gets a fresh one. Both compare by value; the
+        // product brings its defaults.
+        key: ValueKey((product, state.selection)),
         baseImageUrl: base.secureUrl,
         strategy: strategy,
         strategyByIngredient: strategiesByIngredient(definition.placement),
@@ -41,22 +53,22 @@ class ProductPreview extends StatelessWidget {
         density: state.sizeDensity,
         surface: state.activeBase.surface,
         layers: [
-          for (final e in state.selection.ingredients.entries)
-            if (e.value > 0)
-              if (menu.ingredients[e.key] case final i?)
-                if (menu.assets[i.assetId] case final a?)
-                  CanvasLayer(
-                    ingredientId: i.id,
-                    imageUrls: [a.secureUrl, ...a.variants],
-                    enterProfile:
-                        definition.ingredientMotion[i.id]?.enter ??
-                        defaultEnterProfile,
-                    exitProfile:
-                        definition.ingredientMotion[i.id]?.exit ??
-                        defaultExitProfile,
-                    qty: e.value,
-                    layerOrder: definition.layerOverrides[i.id] ?? a.layerOrder,
-                  ),
+          for (final id in ids)
+            if (menu.ingredients[id] case final i?)
+              if (menu.assets[i.assetId] case final a?)
+                CanvasLayer(
+                  ingredientId: i.id,
+                  imageUrls: [a.secureUrl, ...a.variants],
+                  enterProfile:
+                      definition.ingredientMotion[i.id]?.enter ??
+                      defaultEnterProfile,
+                  exitProfile:
+                      definition.ingredientMotion[i.id]?.exit ??
+                      defaultExitProfile,
+                  qty: state.qtyOf(i.id),
+                  defaultQty: state.defaultQtyOf(i.id),
+                  layerOrder: definition.layerOverrides[i.id] ?? a.layerOrder,
+                ),
         ],
       ),
     );

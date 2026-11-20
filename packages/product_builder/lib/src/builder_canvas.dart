@@ -12,15 +12,20 @@ class CanvasLayer {
     required this.imageUrls,
     required this.qty,
     required this.layerOrder,
+    this.defaultQty = 0,
     this.enterProfile = defaultEnterProfile,
     this.exitProfile = defaultExitProfile,
   });
 
   final String ingredientId;
 
-  /// Shape variants of the same piece.
+  /// Shape variants of the same piece. With none, no piece is drawn.
   final List<String> imageUrls;
   final int qty;
+
+  /// Units the product comes with (its default quantity), shown or not:
+  /// the batch of a joint layout (see [BuilderCanvas]).
+  final int defaultQty;
   final int layerOrder;
 
   /// Registered motion profile keys (ANIMATIONS.md 2-4).
@@ -31,14 +36,26 @@ class CanvasLayer {
 /// Draws a product: the base image with ingredient layers ordered by
 /// `layerOrder`. Knows nothing about prices, carts or categories (ARC-06).
 ///
-/// Units present on the first frame appear without animation (defaults).
-/// Each unit added later enters as a new group with its ingredient's enter
-/// profile; a removed unit leaves with the exit profile, last piece first.
-/// An ingredient whose strategy is a [LinePlacement] (a sauce) is drawn as
+/// Units present on the first frame appear without animation. Each unit
+/// added later enters as a new group with its ingredient's enter profile; a
+/// removed unit leaves with the exit profile, last piece first. An
+/// ingredient whose strategy is a [LinePlacement] (a sauce) is drawn as
 /// liquid lines instead: poured in when added, faded out when removed.
-/// Ingredients whose strategy is a [JointPlacement] are laid out together:
-/// those on the first frame as one batch, each unit added later around the
-/// pieces already there, so no piece ever moves while the product is open.
+///
+/// Ingredients whose strategy is a [JointPlacement] are laid out together.
+/// Their batch is the product's own units (every layer's
+/// [CanvasLayer.defaultQty]), removed ones included: a removed default
+/// keeps its spot, undrawn. Units beyond the defaults on the first frame
+/// come after the batch, by ingredient then unit, whatever the order of the
+/// layers; units shown later come after those, as they arrive, around the
+/// pieces already there. So no piece moves while the product is open, and
+/// the defaults get the same spots and every unit the same piece count
+/// wherever the product is drawn (product page, cart line, edited line).
+///
+/// The canvas keeps what it has shown: a caller that shows another product
+/// in its place (e.g. a list item reused for another product) must give it
+/// a new key, so that it starts afresh. A new [placementParams] map (a
+/// reloaded definition) or [density] lays everything out again.
 class BuilderCanvas extends StatefulWidget {
   const BuilderCanvas({
     super.key,
@@ -55,7 +72,8 @@ class BuilderCanvas extends StatefulWidget {
 
   /// Key of the pieces' own repaint boundary (the base not included), so
   /// the orchestrator can capture them alone: a wrap shows its filling
-  /// heaped from them. Same box as the canvas, before [scale].
+  /// heaped from them. Same box as the canvas, before [scale] and
+  /// [surface] (a capture of the boundary leaves both out).
   final GlobalKey? piecesKey;
 
   final String baseImageUrl;
@@ -86,33 +104,77 @@ class _BuilderCanvasState extends State<BuilderCanvas> {
   /// Highest unit count ever shown per ingredient, so removed units stay
   /// mounted long enough to animate out.
   final _shownUnits = <String, int>{};
-  late final Map<String, int> _initialQty = {
-    for (final l in widget.layers) l.ingredientId: l.qty,
-  };
+
+  /// Units on the first frame: they appear without animation. Taken in
+  /// [initState], even when that frame draws nothing.
+  late final Map<String, int> _initialQty;
+
+  /// The inputs the layouts below were made with: the placement params (by
+  /// identity: a reloaded definition is a new map) and the density. When
+  /// either changes, they are all made again, so none is kept for inputs
+  /// that are gone.
+  Map<String, num>? _params;
+  double? _density;
 
   /// Sauce lines per unit, computed once (the canvas rebuilds on every
   /// change of the selection).
-  final _lines = <String, List<List<({double x, double y})>>>{};
+  final _lines =
+      <(String, int, LinePlacement), List<List<({double x, double y})>>>{};
 
   /// Pieces per unit of the ingredients placed on their own, computed once.
-  final _pieces = <String, List<PiecePlacement>>{};
+  final _pieces =
+      <(String, int, PlacementStrategy, int), List<PiecePlacement>>{};
 
-  /// Ingredients laid out together, per joint strategy.
-  final _joint = <JointPlacement, _JointLayout>{};
+  /// Ingredients laid out together, per joint strategy; null until the
+  /// first frame has set their batches.
+  Map<JointPlacement, _JointLayout>? _joint;
+
+  @override
+  void initState() {
+    super.initState();
+    _initialQty = {for (final l in widget.layers) l.ingredientId: l.qty};
+  }
 
   PlacementStrategy _strategyOf(String id) =>
       widget.strategyByIngredient[id] ?? widget.strategy;
 
-  /// Adds the units shown for the first time to their joint layouts (the
-  /// first ones as a batch, later ones after them) and lays out what is new.
+  /// Brings the layouts up to date: drops them all when their inputs
+  /// changed, then lays out the joint units (see [_updateJoint]).
+  void _updateLayouts() {
+    if (!identical(widget.placementParams, _params) ||
+        widget.density != _density) {
+      _params = widget.placementParams;
+      _density = widget.density;
+      _lines.clear();
+      _pieces.clear();
+      // The same units again, in the same order: equal inputs give the
+      // same spots, and a larger size more pieces.
+      for (final g in _joint?.values ?? const <_JointLayout>[]) {
+        g.pieces = const [];
+      }
+    }
+    _updateJoint();
+  }
+
+  /// Adds the joint units not laid out yet to their layouts and lays out
+  /// what is new. On the first frame: the batch (every default unit, shown
+  /// or not), then the units beyond it. Later: the units shown for the
+  /// first time, after everything else. Units added together are taken by
+  /// ingredient, then unit, so the result never depends on the layer order.
   void _updateJoint() {
+    final first = _joint == null;
+    final joint = _joint ??= {};
+    final batch = <JointPlacement, List<PlacementUnit>>{};
     final added = <JointPlacement, List<PlacementUnit>>{};
     for (final l in widget.layers) {
       if (_strategyOf(l.ingredientId) case final JointPlacement s) {
-        final g = _joint.putIfAbsent(s, _JointLayout.new);
-        for (var u = 0; u < (_shownUnits[l.ingredientId] ?? 0); u++) {
+        final g = joint.putIfAbsent(s, _JointLayout.new);
+        final shown = _shownUnits[l.ingredientId] ?? 0;
+        final upTo = first ? max(shown, l.defaultQty) : shown;
+        for (var u = 0; u < upTo; u++) {
           if (g.index.containsKey((l.ingredientId, u))) continue;
-          (added[s] ??= []).add(
+          final into = first && u < l.defaultQty ? batch : added;
+          (into[s] ??= []).add(
             PlacementUnit(
               ingredientId: l.ingredientId,
               unit: u,
@@ -122,28 +184,17 @@ class _BuilderCanvasState extends State<BuilderCanvas> {
         }
       }
     }
-    // Same layout inputs: keep what is laid out, else lay it all out again
-    // (e.g. a larger size carries more pieces).
-    final key = Object.hash(
-      widget.density,
-      identityHashCode(widget.placementParams),
-    );
-    for (final MapEntry(key: s, value: g) in _joint.entries) {
-      for (final u in added[s] ?? const <PlacementUnit>[]) {
-        g.index[(u.ingredientId, u.unit)] = g.units.length;
-        g.units.add(u);
-      }
-      if (g.together == 0) g.together = g.units.length;
-      final keep = g.key == key ? g.pieces : const <List<PiecePlacement>>[];
-      if (keep.length == g.units.length) continue;
+    for (final MapEntry(key: s, value: g) in joint.entries) {
+      if (first) g.together = g.addAll(batch[s]);
+      g.addAll(added[s]);
+      if (g.pieces.length == g.units.length) continue;
       g.pieces = s.placeAll(
         units: g.units,
         params: widget.placementParams,
         together: g.together,
         density: widget.density,
-        placed: keep,
+        placed: g.pieces,
       );
-      g.key = key;
     }
   }
 
@@ -153,17 +204,16 @@ class _BuilderCanvasState extends State<BuilderCanvas> {
     int unit,
   ) {
     if (strategy is JointPlacement) {
-      final g = _joint[strategy]!;
+      final g = _joint![strategy]!;
       return g.pieces[g.index[(layer.ingredientId, unit)]!];
     }
+    final variants = layer.imageUrls.length;
     return _pieces.putIfAbsent(
-      '${layer.ingredientId}#$unit@${widget.density}'
-      '@${identityHashCode(widget.placementParams)}'
-      '@${identityHashCode(strategy)}@${layer.imageUrls.length}',
+      (layer.ingredientId, unit, strategy, variants),
       () => strategy.place(
         ingredientId: layer.ingredientId,
         unit: unit,
-        variantCount: layer.imageUrls.length,
+        variantCount: variants,
         params: widget.placementParams,
         density: widget.density,
       ),
@@ -176,7 +226,7 @@ class _BuilderCanvasState extends State<BuilderCanvas> {
       final prev = _shownUnits[l.ingredientId] ?? 0;
       if (l.qty > prev) _shownUnits[l.ingredientId] = l.qty;
     }
-    _updateJoint();
+    _updateLayouts();
     // By layer order; layers of one order keep the order they are given.
     final layers = [
       for (final (_, l)
@@ -222,6 +272,8 @@ class _BuilderCanvasState extends State<BuilderCanvas> {
                   children.addAll(_sauceUnits(layer, units, strategy));
                   continue;
                 }
+                final urls = layer.imageUrls;
+                if (urls.isEmpty) continue;
                 for (var unit = 0; unit < units; unit++) {
                   final pieces = _piecesOf(strategy, layer, unit);
                   final seed = '${layer.ingredientId}#$unit';
@@ -250,7 +302,10 @@ class _BuilderCanvasState extends State<BuilderCanvas> {
                         width: size,
                         height: size,
                         child: _Piece(
-                          url: layer.imageUrls[p.variant],
+                          // A joint unit keeps the variant count it was
+                          // laid out with; the images may have changed
+                          // since (e.g. a reloaded menu with fewer).
+                          url: urls[p.variant % urls.length],
                           placement: p,
                           diameter: side,
                           enter: enter,
@@ -333,7 +388,7 @@ class _BuilderCanvasState extends State<BuilderCanvas> {
     for (var unit = 0; unit < units; unit++) {
       final seed = '$id#$unit';
       final lines = _lines.putIfAbsent(
-        '$seed@${widget.density}@${identityHashCode(params)}',
+        (id, unit, strategy),
         () => strategy.lines(
           ingredientId: id,
           unit: unit,
@@ -392,7 +447,10 @@ class _PieceState extends State<_Piece> with TickerProviderStateMixin {
   late final double _spread; // -1..1
   int _generation = 0;
 
-  bool get _reduceMotion => MediaQuery.of(context).disableAnimations;
+  /// Depends on this one setting only: a piece does not rebuild on other
+  /// changes (e.g. the keyboard's insets, every frame it moves).
+  bool get _reduceMotion =>
+      MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 
   @override
   void initState() {
@@ -515,21 +573,34 @@ class _PieceState extends State<_Piece> with TickerProviderStateMixin {
   }
 }
 
-/// The units a [JointPlacement] lays out on one canvas, in the order they
-/// were first shown, and their pieces.
+/// The units a [JointPlacement] lays out on one canvas, the batch first,
+/// and their pieces.
 class _JointLayout {
   final units = <PlacementUnit>[];
 
   /// Position of (ingredient, unit) in [units].
   final index = <(String, int), int>{};
 
-  /// How many of the first [units] were shown together (the batch).
+  /// How many of the first [units] are the batch (the product's defaults);
+  /// set once, on the first frame.
   int together = 0;
 
+  /// Pieces of a prefix of [units] (all of them once laid out).
   List<List<PiecePlacement>> pieces = const [];
 
-  /// Layout inputs [pieces] were made with.
-  Object? key;
+  /// Appends [added] by ingredient, then unit; returns how many.
+  int addAll(List<PlacementUnit>? added) {
+    if (added == null) return 0;
+    added.sort((a, b) {
+      final c = a.ingredientId.compareTo(b.ingredientId);
+      return c != 0 ? c : a.unit.compareTo(b.unit);
+    });
+    for (final u in added) {
+      index[(u.ingredientId, u.unit)] = units.length;
+      units.add(u);
+    }
+    return added.length;
+  }
 }
 
 /// Stand-in for the base while it loads or when it fails.
@@ -567,7 +638,9 @@ class _SauceState extends State<_Sauce> with TickerProviderStateMixin {
   late final AnimationController _pour;
   late final AnimationController _out;
 
-  bool get _reduceMotion => MediaQuery.of(context).disableAnimations;
+  /// This one setting only (see [_PieceState._reduceMotion]).
+  bool get _reduceMotion =>
+      MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 
   @override
   void initState() {

@@ -40,8 +40,10 @@ class BuilderScreen extends ConsumerStatefulWidget {
 }
 
 class _BuilderScreenState extends ConsumerState<BuilderScreen> {
-  final _canvasKey = GlobalKey();
-  final _piecesKey = GlobalKey();
+  /// The canvas and its pieces' layer. New ones when this page shows
+  /// another product or line: the canvas must then start afresh.
+  var _canvasKey = GlobalKey();
+  var _piecesKey = GlobalKey();
   final _cartKey = GlobalKey();
   OverlayEntry? _animation;
 
@@ -64,6 +66,16 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
       ref.read(analyticsProvider).event('view_item', {
         'item_id': widget.productId,
       });
+    }
+  }
+
+  @override
+  void didUpdateWidget(BuilderScreen old) {
+    super.didUpdateWidget(old);
+    // The router may reuse this page for another product's address.
+    if (old.productId != widget.productId || old.lineId != widget.lineId) {
+      _canvasKey = GlobalKey();
+      _piecesKey = GlobalKey();
     }
   }
 
@@ -129,6 +141,18 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
         box.localToGlobal(Offset.zero, ancestor: overlayBox) & box.size;
     final cartBox = _cartKey.currentContext?.findRenderObject() as RenderBox?;
     final def = state.definition;
+    // This one setting only: a MediaQuery.of here would rebuild the whole
+    // screen on every later change (e.g. the keyboard's insets).
+    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final sequence = StepSequence.fromDefinition(def);
+    final plan = planSequence(
+      sequence: sequence,
+      registry: animSteps,
+      total: sequenceDuration(sequence, const Duration(milliseconds: 2000)),
+      reduceMotion: reduceMotion,
+    );
+    // Nothing to play: nothing to capture.
+    if (plan.steps.isEmpty) return false;
 
     // The customer's product exactly as built, frozen at the press: one
     // raster of the canvas, so the per-frame cooking filter recolours a
@@ -137,7 +161,11 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
     final raster = _rasterize(canvasBox);
     _snapshot?.dispose();
     _snapshot = raster;
-    final piecesBox = _piecesKey.currentContext?.findRenderObject();
+    // Its pieces alone, only for a step that shows them apart from the
+    // product: a wrap's open end (its `opening`). A pizza needs none.
+    final piecesBox = plan.steps.any(_showsContents)
+        ? _piecesKey.currentContext?.findRenderObject()
+        : null;
     final pieces = piecesBox is RenderBox ? _rasterize(piecesBox) : null;
     _pieces?.dispose();
     _pieces = pieces;
@@ -156,14 +184,6 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
             if (menu.assets[e.value] case final a?)
               '${e.key}': [a.secureUrl, ...a.variants],
     };
-    final sequence = StepSequence.fromDefinition(def);
-    final plan = planSequence(
-      sequence: sequence,
-      registry: animSteps,
-      total: sequenceDuration(sequence, const Duration(milliseconds: 2000)),
-      reduceMotion: MediaQuery.of(context).disableAnimations,
-    );
-    if (plan.steps.isEmpty) return false;
     final entry = OverlayEntry(
       builder: (_) => StepRunner(
         steps: plan.steps,
@@ -173,12 +193,13 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
           productRect: rectOf(canvasBox),
           cartTarget: cartBox == null ? null : rectOf(cartBox).center,
           images: images,
-          reduceMotion: MediaQuery.of(context).disableAnimations,
-          // Captured inside the canvas's size scale: scaled the same way.
+          reduceMotion: reduceMotion,
+          // Captured inside the canvas's size and surface scales, which the
+          // capture leaves out (the full raster has them): scaled again.
           contents: pieces == null
               ? null
               : Transform.scale(
-                  scale: state.sizeScale,
+                  scale: state.sizeScale * state.activeBase.surface,
                   child: RawImage(image: pieces, fit: BoxFit.contain),
                 ),
         ),
@@ -199,6 +220,11 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
     overlay.insert(entry);
     return true;
   }
+
+  /// Whether [step] shows the product's pieces apart from it: the engine
+  /// reads them (`AnimStepInput.contents`) only for a wrap's open end.
+  static bool _showsContents(PlannedStep step) =>
+      WrapOpening.from(step.params['opening']) != null;
 
   /// The canvas as an image at screen resolution, or null when it cannot
   /// be captured (e.g. not painted yet).
@@ -363,6 +389,7 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
               def.ingredientMotion[i.id]?.enter ?? defaultEnterProfile,
           exitProfile: def.ingredientMotion[i.id]?.exit ?? defaultExitProfile,
           qty: state.qtyOf(i.id),
+          defaultQty: state.defaultQtyOf(i.id),
           layerOrder:
               def.layerOverrides[i.id] ?? menu.assets[i.assetId]!.layerOrder,
         ),
