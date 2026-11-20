@@ -1,0 +1,39 @@
+{
+  "_note": "Ingredients the cheese pan introduces. Every other ingredient and sauce reuses the pizza records (tools/seed/pizza_ingredients.json).",
+  "ingredients": [
+    {
+      "id": "hot_dog",
+      "name": "هوت دوج",
+      "names": {
+        "en": "Hot dog",
+        "ar": "هوت دوج"
+      },
+      "assetId": "ing_hot_dog",
+      "assetFiles": [
+        "ing_hot_dog_01.webp",
+        "ing_hot_dog_02.webp",
+        "ing_hot_dog_03.webp"
+      ],
+      "extraPrice": 3000,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "smoked_turkey",
+      "name": "تركي مدخن",
+      "names": {
+        "en": "Smoked turkey",
+        "ar": "تركي مدخن"
+      },
+      "assetId": "ing_smoked_turkey",
+      "assetFiles": [
+        "ing_smoked_turkey_01.webp",
+        "ing_smoked_turkey_02.webp",
+        "ing_smoked_turkey_03.webp"
+      ],
+      "extraPrice": 3500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    }
+  ]
+}
