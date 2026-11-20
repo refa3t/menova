@@ -212,11 +212,11 @@ void main() {
     tester,
   ) async {
     const melt = {'area': 0.72, 'blur': 1.6, 'tint': 0.4, 'sink': 0.45};
-    final withPieces = AnimStepInput(
-      product: const SizedBox.expand(key: productKey),
-      contents: const SizedBox.expand(key: Key('pieces')),
+    const withPieces = AnimStepInput(
+      product: SizedBox.expand(key: productKey),
+      contents: SizedBox.expand(key: Key('pieces')),
       productRect: rect,
-      params: const {'melt': melt},
+      params: {'melt': melt},
       baseScale: 0.84,
     );
     await render(tester, withPieces, 0.1);
