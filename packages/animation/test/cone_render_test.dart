@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 import 'dart:ui' as ui;
 
@@ -8,9 +9,11 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// The finished wrap (P2-06/07) as the steps after the folds draw it:
-/// clips are kept between frames, the pieces' shadow skips their baking, the
-/// last fold does not build the wrap while it is unseen, a frame drawn after
-/// others equals a fresh render, and a degenerate opening draws without NaN.
+/// clips are kept between frames, the wrap is painted once into its own
+/// layer and only the transforms around it change, that layer looks like the
+/// wrap painted afresh (anti-aliasing aside), the pieces' shadow skips their
+/// baking, the last fold does not build the wrap while it is unseen, and a
+/// degenerate opening draws without NaN.
 void main() {
   const lines = [
     [0.5, 0.75, 0.13, 0.26],
@@ -36,45 +39,8 @@ void main() {
     return image;
   }
 
-  final product = draw((c) {
-    c.drawCircle(
-      const Offset(128, 128),
-      120,
-      Paint()
-        ..shader = ui.Gradient.radial(const Offset(110, 100), 150, const [
-          Color(0xFFF3D9A4),
-          Color(0xFFC98F45),
-        ]),
-    );
-    for (var i = 0; i < 12; i++) {
-      final r = 80 * (i % 3 + 1) / 3;
-      c.drawCircle(
-        Offset(128 + r * cos(i * 0.9), 128 + r * sin(i * 0.9)),
-        6 + i % 4 * 2.0,
-        Paint()..color = const Color(0xAA8B5A2B),
-      );
-    }
-  });
-  final back = draw((c) {
-    c.drawCircle(
-      const Offset(128, 128),
-      122,
-      Paint()
-        ..shader = ui.Gradient.radial(const Offset(140, 150), 160, const [
-          Color(0xFFE2B878),
-          Color(0xFF9A6230),
-        ]),
-    );
-    for (var i = 0; i < 20; i++) {
-      final r = 100 * (i % 4 + 1) / 4;
-      c.drawCircle(
-        Offset(128 + r * cos(i * 1.3), 128 + r * sin(i * 1.3)),
-        3 + i % 3 * 2.0,
-        Paint()..color = const Color(0x996B3A12),
-      );
-    }
-  });
-  final pieces = draw((c) {
+  // The filling's pieces; the product (the whole canvas) shows them too.
+  void drawPieces(Canvas c) {
     const colors = [
       Color(0xFFB71C1C),
       Color(0xFF33691E),
@@ -96,7 +62,55 @@ void main() {
       );
       c.restore();
     }
+  }
+
+  final product = draw((c) {
+    c.drawCircle(
+      const Offset(128, 128),
+      120,
+      Paint()
+        ..shader = ui.Gradient.radial(const Offset(110, 100), 150, const [
+          Color(0xFFF3D9A4),
+          Color(0xFFC98F45),
+        ]),
+    );
+    for (var i = 0; i < 12; i++) {
+      final r = 80 * (i % 3 + 1) / 3;
+      c.drawCircle(
+        Offset(128 + r * cos(i * 0.9), 128 + r * sin(i * 0.9)),
+        6 + i % 4 * 2.0,
+        Paint()..color = const Color(0xAA8B5A2B),
+      );
+    }
+    // The pieces as the product shows them (scaled like [contentsWidget]).
+    c
+      ..save()
+      ..translate(128, 128)
+      ..scale(0.9)
+      ..translate(-128, -128);
+    drawPieces(c);
+    c.restore();
   });
+  final back = draw((c) {
+    c.drawCircle(
+      const Offset(128, 128),
+      122,
+      Paint()
+        ..shader = ui.Gradient.radial(const Offset(140, 150), 160, const [
+          Color(0xFFE2B878),
+          Color(0xFF9A6230),
+        ]),
+    );
+    for (var i = 0; i < 20; i++) {
+      final r = 100 * (i % 4 + 1) / 4;
+      c.drawCircle(
+        Offset(128 + r * cos(i * 1.3), 128 + r * sin(i * 1.3)),
+        3 + i % 3 * 2.0,
+        Paint()..color = const Color(0x996B3A12),
+      );
+    }
+  });
+  final pieces = draw(drawPieces);
   final surface = draw(
     (c) => c.drawRect(
       const Rect.fromLTWH(0, 0, 256, 256),
@@ -145,6 +159,8 @@ void main() {
     double t, {
     bool withContents = true,
     bool reduceMotion = false,
+    Widget? product,
+    Widget? contents,
   }) {
     final key = step.startsWith('Fold') ? 'Fold' : step;
     return Builder(
@@ -155,8 +171,8 @@ void main() {
           elapsed: Duration(milliseconds: (t * 600).round()),
         ),
         AnimStepInput(
-          product: productWidget,
-          contents: withContents ? contentsWidget : null,
+          product: product ?? productWidget,
+          contents: withContents ? contents ?? contentsWidget : null,
           productRect: rect,
           cartTarget: const Offset(340, 20),
           params: p,
@@ -170,7 +186,7 @@ void main() {
     );
   }
 
-  Future<Uint8List> render(WidgetTester tester, Widget scene) async {
+  Future<ui.Image> snapshot(WidgetTester tester, Widget scene) async {
     await tester.pumpWidget(
       Directionality(
         textDirection: TextDirection.ltr,
@@ -189,8 +205,12 @@ void main() {
     expect(tester.takeException(), isNull);
     final boundary =
         capture.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+    return (await tester.runAsync(boundary.toImage))!;
+  }
+
+  Future<Uint8List> render(WidgetTester tester, Widget scene) async {
+    final image = await snapshot(tester, scene);
     final bytes = await tester.runAsync(() async {
-      final image = await boundary.toImage();
       final data = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
       image.dispose();
       return data!.buffer.asUint8List();
@@ -224,6 +244,113 @@ void main() {
       await tester.pumpWidget(const SizedBox());
       final cold = await render(tester, stepAt(step, p, 0.6));
       expect(warm, cold, reason: step);
+    }
+  });
+
+  testWidgets('the wrap in its own layer looks like it painted afresh', (
+    tester,
+  ) async {
+    addTearDown(() => debugWrapOwnLayer = true);
+    var worst = 0, worstShare = 0.0;
+    for (final (step, t) in [
+      ('Fold2', 0.9),
+      ('Fold2', 1.0),
+      ('Swap', 0.0),
+      ('Swap', 0.5),
+      ('Swap', 1.0),
+      ('Shrink', 0.5),
+      ('Shrink', 1.0),
+      ('FlyToCart', 0.3),
+      ('FlyToCart', 0.6),
+      ('FlyToCart', 0.9),
+    ]) {
+      cacheNetworkImages();
+      final p = params(step);
+      debugWrapOwnLayer = true;
+      await tester.pumpWidget(const SizedBox());
+      await render(tester, stepAt(step, p, 0));
+      final layered = await render(tester, stepAt(step, p, t));
+      debugWrapOwnLayer = false;
+      await tester.pumpWidget(const SizedBox());
+      final afresh = await render(tester, stepAt(step, p, t));
+      expect(layered, hasLength(afresh.length));
+      var most = 0, pixels = 0;
+      for (var i = 0; i < afresh.length; i += 4) {
+        var px = 0;
+        for (var c = 0; c < 4; c++) {
+          px = max(px, (layered[i + c] - afresh[i + c]).abs());
+        }
+        if (px > 0) pixels++;
+        most = max(most, px);
+      }
+      final share = pixels / (afresh.length / 4);
+      // Only the rim's thin lines anti-alias a little differently.
+      expect(most, lessThanOrEqualTo(24), reason: '$step at $t');
+      expect(share, lessThanOrEqualTo(0.01), reason: '$step at $t');
+      worst = max(worst, most);
+      worstShare = max(worstShare, share);
+    }
+    debugPrint(
+      'wrap layer vs afresh: max diff $worst/255, '
+      'at most ${(worstShare * 100).toStringAsFixed(3)}% of pixels',
+    );
+  });
+
+  testWidgets('the wrap is painted once while the steps move it', (
+    tester,
+  ) async {
+    addTearDown(() => debugWrapOwnLayer = true);
+    for (final layered in [true, false]) {
+      debugWrapOwnLayer = layered;
+      final counter = _PaintCounter();
+      final counted = Stack(
+        fit: StackFit.expand,
+        children: [
+          contentsWidget,
+          CustomPaint(painter: counter),
+        ],
+      );
+      for (final step in ['Swap', 'Shrink', 'FlyToCart']) {
+        cacheNetworkImages();
+        final p = params(step);
+        Widget at(double t) => Directionality(
+          textDirection: TextDirection.ltr,
+          child: Builder(
+            builder: (context) => animSteps[step]!.build(
+              context,
+              AnimFrame(
+                t: t,
+                elapsed: Duration(milliseconds: (t * 600).round()),
+              ),
+              AnimStepInput(
+                product: productWidget,
+                contents: counted,
+                productRect: rect,
+                cartTarget: const Offset(340, 20),
+                params: p,
+                images: const {
+                  'back': [backUrl],
+                },
+              ),
+            ),
+          ),
+        );
+        await tester.pumpWidget(const SizedBox());
+        await tester.pumpWidget(at(0));
+        expect(tester.takeException(), isNull);
+        final first = counter.paints;
+        expect(first, greaterThan(0), reason: step);
+        for (final t in [0.2, 0.4, 0.6, 0.8, 1.0]) {
+          await tester.pumpWidget(at(t));
+        }
+        if (layered) {
+          // Every later frame reuses the layer: nothing inside is painted.
+          expect(counter.paints, first, reason: step);
+        } else {
+          // Painted afresh, the pieces are painted again each frame.
+          expect(counter.paints, greaterThan(first), reason: step);
+        }
+      }
     }
   });
 
@@ -296,4 +423,182 @@ void main() {
       }
     }
   });
+
+  // The filling in one colour no crepe has (blue), in the product too.
+  void drawBlue(Canvas c) {
+    for (var i = 0; i < 18; i++) {
+      c.drawOval(
+        Rect.fromCenter(
+          center: Offset(50 + (i * 37) % 160.0, 112 + (i * 23) % 58.0),
+          width: 22,
+          height: 14,
+        ),
+        Paint()..color = const Color(0xFF1E3CFF),
+      );
+    }
+  }
+
+  final blue = draw(drawBlue);
+  final blueProduct = draw((c) {
+    c.drawImage(product, Offset.zero, Paint());
+    c
+      ..save()
+      ..translate(128, 128)
+      ..scale(0.9)
+      ..translate(-128, -128);
+    drawBlue(c);
+    c.restore();
+  });
+  final blueScene = (
+    product: RawImage(image: blueProduct, fit: BoxFit.contain),
+    contents: Transform.scale(
+      scale: 0.9,
+      child: RawImage(image: blue, fit: BoxFit.contain),
+    ),
+  );
+
+  /// Share of the scene's pixels showing the (blue) filling.
+  double filling(Uint8List rgba) {
+    var n = 0;
+    for (var i = 0; i < rgba.length; i += 4) {
+      final r = rgba[i], g = rgba[i + 1], b = rgba[i + 2];
+      if (b > r + 60 && b > g + 40) n++;
+    }
+    return n / (rgba.length / 4);
+  }
+
+  /// Mean difference per channel (0..255) between two frames.
+  double change(Uint8List a, Uint8List b) {
+    var sum = 0;
+    for (var i = 0; i < a.length; i++) {
+      sum += (a[i] - b[i]).abs();
+    }
+    return sum / a.length;
+  }
+
+  testWidgets('the filling stays in sight while the sides fold', (
+    tester,
+  ) async {
+    cacheNetworkImages();
+    final start = filling(
+      await render(
+        tester,
+        stepAt(
+          'Fold1',
+          params('Fold1'),
+          0,
+          product: blueScene.product,
+          contents: blueScene.contents,
+        ),
+      ),
+    );
+    expect(start, greaterThan(0.02));
+    var least = 1.0;
+    for (final step in ['Fold1', 'Fold2']) {
+      for (var ms = 0; ms <= 650; ms += 25) {
+        final shown = filling(
+          await render(
+            tester,
+            stepAt(
+              step,
+              params(step),
+              ms / 650,
+              product: blueScene.product,
+              contents: blueScene.contents,
+            ),
+          ),
+        );
+        // Never hidden under the folding sides: most of it stays in sight
+        // (it packs tighter as it gathers and heaps up).
+        expect(shown, greaterThan(start * 0.4), reason: '$step at $ms ms');
+        least = min(least, shown / start);
+      }
+    }
+    debugPrint(
+      'filling in sight: at least ${(least * 100).round()}% of the start',
+    );
+  });
+
+  testWidgets('the fold flows into the finished wrap and into Swap', (
+    tester,
+  ) async {
+    cacheNetworkImages();
+    // Every frame at 60 fps over the last fold, then Swap's first frame.
+    final frames = [
+      for (var f = 0; f <= 39; f++)
+        await render(tester, stepAt('Fold2', params('Fold2'), f / 39)),
+      await render(tester, stepAt('Swap', params('Swap'), 0)),
+    ];
+    var most = 0.0;
+    for (var i = 1; i < frames.length; i++) {
+      most = max(most, change(frames[i - 1], frames[i]));
+    }
+    final handover = change(frames[frames.length - 2], frames.last);
+    debugPrint(
+      'largest frame-to-frame change ${most.toStringAsFixed(2)}/255, '
+      'last fold to Swap ${handover.toStringAsFixed(3)}/255',
+    );
+    // No frame jumps: each is a small step from the one before (the
+    // finished wrap used to appear at once, 36/255 between two frames).
+    expect(most, lessThan(6));
+    // The last fold ends on the frame Swap begins with.
+    expect(handover, lessThan(0.5));
+  });
+
+  // Frames across both folds (every 100 ms of 650 ms) and the first Swap
+  // frames, as a contact sheet: rows Fold 1, Fold 2, Swap.
+  // flutter test test/cone_render_test.dart --plain-name 'contact sheet'
+  //   --dart-define=CONTACT_SHEET=<file.png>
+  const sheet = String.fromEnvironment('CONTACT_SHEET');
+  testWidgets('contact sheet', skip: sheet.isEmpty, (tester) async {
+    cacheNetworkImages();
+    const ms = [0, 100, 200, 300, 400, 500, 600, 650];
+    final rows = [
+      for (final step in ['Fold1', 'Fold2'])
+        [
+          for (final m in ms)
+            await snapshot(tester, stepAt(step, params(step), m / 650)),
+        ],
+      [
+        for (final m in [0, 50, 100, 150, 200, 300])
+          await snapshot(tester, stepAt('Swap', params('Swap'), m / 300)),
+      ],
+    ];
+    const cell = 180.0;
+    final recorder = ui.PictureRecorder();
+    final c = Canvas(recorder);
+    c.drawPaint(Paint()..color = const Color(0xFFFFFFFF));
+    for (var r = 0; r < rows.length; r++) {
+      for (var i = 0; i < rows[r].length; i++) {
+        final im = rows[r][i];
+        c.drawImageRect(
+          im,
+          Offset.zero & Size(im.width.toDouble(), im.height.toDouble()),
+          Rect.fromLTWH(i * (cell + 4), r * (cell + 4), cell, cell),
+          Paint()..filterQuality = FilterQuality.medium,
+        );
+      }
+    }
+    final picture = recorder.endRecording();
+    final png = await tester.runAsync(() async {
+      final image = await picture.toImage(
+        (ms.length * (cell + 4)).round(),
+        (rows.length * (cell + 4)).round(),
+      );
+      final data = await image.toByteData(format: ui.ImageByteFormat.png);
+      return data!.buffer.asUint8List();
+    });
+    File(sheet).writeAsBytesSync(png!);
+  });
+}
+
+/// Counts how often it is painted; never asks to repaint itself.
+class _PaintCounter extends CustomPainter {
+  int paints = 0;
+
+  @override
+  void paint(Canvas canvas, Size size) => paints++;
+
+  @override
+  bool shouldRepaint(_PaintCounter oldDelegate) => false;
 }

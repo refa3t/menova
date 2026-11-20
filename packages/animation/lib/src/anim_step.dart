@@ -435,6 +435,49 @@ class WrapOpening {
   @override
   int get hashCode => Object.hash(ellipse, contents, frame, sleeve);
 
+  /// Where the filling (the product's [contents] region, box pixels of
+  /// [size]) is drawn in the finished wrap's opening, before its zoom: fitted
+  /// to the rim and, with the pieces [apart] from the product, flattened at
+  /// the rim's tilt into a low heap. [grow], [lift] and [flip] vary a layer.
+  Matrix4 filling(
+    Size size, {
+    bool apart = true,
+    double grow = 1,
+    double lift = 0,
+    bool flip = false,
+  }) {
+    Rect px(Rect r) => Rect.fromLTRB(
+      r.left * size.width,
+      r.top * size.height,
+      r.right * size.width,
+      r.bottom * size.height,
+    );
+    final rim = px(ellipse);
+    final region = px(contents);
+    final heapTop = rim.top + rim.height * 0.07;
+    final target = Rect.fromLTRB(
+      rim.left - rim.width * 0.03,
+      heapTop - rim.height * 0.08,
+      rim.right + rim.width * 0.03,
+      rim.bottom + rim.height * 0.25,
+    );
+    final scale = target.width / region.width;
+    // With the pieces apart, the filling is seen at the rim's tilt:
+    // flattened in depth like the opening itself, centred a little above
+    // the rim's middle, so only the pieces' ragged top edge rises above the
+    // rim (a low heap, owner reference).
+    final squash = apart ? 0.55 : 1.0;
+    final middle = apart
+        ? rim.center - Offset(0, rim.height * 0.1)
+        : target.center;
+    final k = scale * grow;
+    final c = middle - Offset(0, lift);
+    return Matrix4.identity()
+      ..translateByDouble(c.dx, c.dy, 0, 1)
+      ..scaleByDouble(flip ? -k : k, k * squash, 1, 1)
+      ..translateByDouble(-region.center.dx, -region.center.dy, 0, 1);
+  }
+
   /// The same wrap before it goes into its paper (still on the griddle).
   WrapOpening get unwrapped =>
       WrapOpening(ellipse: ellipse, contents: contents, frame: frame);
@@ -463,6 +506,12 @@ class WrapOpening {
     );
   }
 }
+
+/// Whether a finished wrap paints into its own layer, reused between
+/// frames while only the transforms around it change. Tests turn it off to
+/// compare against the wrap painted afresh each frame.
+@visibleForTesting
+bool debugWrapOwnLayer = true;
 
 /// A finished wrap with an open end, drawn to look real (owner reference
 /// photo): the outside narrows from the rim to the point and is round (lit
@@ -688,21 +737,6 @@ class _WrapViewState extends State<_WrapView> {
           rim.bottom + rim.height * 0.07,
         );
         final region = px(opening.contents);
-        final target = Rect.fromLTRB(
-          rim.left - rim.width * 0.03,
-          heap.top - rim.height * 0.08,
-          rim.right + rim.width * 0.03,
-          rim.bottom + rim.height * 0.25,
-        );
-        final scale = target.width / region.width;
-        // With the pieces apart, the filling is seen at the rim's tilt:
-        // flattened in depth like the opening itself, centred a little
-        // above the rim's middle, so only the pieces' ragged top edge rises
-        // above the rim (a low heap, owner reference).
-        final squash = pieces == null ? 1.0 : 0.55;
-        final middle = pieces == null
-            ? target.center
-            : rim.center - Offset(0, rim.height * 0.1);
         // [child] (a widget of the product's box) with the filling region
         // fitted into the opening; [grow], [lift] and [flip] vary a layer.
         Widget fitted(
@@ -710,17 +744,16 @@ class _WrapViewState extends State<_WrapView> {
           double grow = 1,
           double lift = 0,
           bool flip = false,
-        }) {
-          final k = scale * grow;
-          final c = middle - Offset(0, lift);
-          return Transform(
-            transform: Matrix4.identity()
-              ..translateByDouble(c.dx, c.dy, 0, 1)
-              ..scaleByDouble(flip ? -k : k, k * squash, 1, 1)
-              ..translateByDouble(-region.center.dx, -region.center.dy, 0, 1),
-            child: SizedBox.fromSize(size: size, child: child),
-          );
-        }
+        }) => Transform(
+          transform: opening.filling(
+            size,
+            apart: pieces != null,
+            grow: grow,
+            lift: lift,
+            flip: flip,
+          ),
+          child: SizedBox.fromSize(size: size, child: child),
+        );
 
         // The inner wall: the crepe's cooked side, lit at the rim and in
         // shade where it goes down behind the filling.
@@ -922,7 +955,12 @@ class _WrapViewState extends State<_WrapView> {
                     (s) => cone(s).shift(Offset(lip, lip)),
                     geometry,
                   ),
-                  child: const ColoredBox(color: Color(0x80000000)),
+                  // As faint as the paper while it shows.
+                  child: ColoredBox(
+                    color: const Color(
+                      0x80000000,
+                    ).withValues(alpha: 0x80 / 0xFF * paper.a),
+                  ),
                 ),
               ),
             ],
@@ -944,11 +982,17 @@ class _WrapViewState extends State<_WrapView> {
           ],
         );
 
+        // Its own layer, inside the zoom: nothing in it changes while the
+        // last fold grows it or the steps after move, scale or turn it, so
+        // it is painted once and its layer reused (owner: the rim's
+        // hairlines may anti-alias a little differently under a transform).
+        final content = debugWrapOwnLayer ? RepaintBoundary(child: wrap) : wrap;
+
         final frame = opening.frame;
-        if (frame == null || zoom <= 0) return wrap;
+        if (frame == null || zoom <= 0) return content;
         // Grow into the frame: fit it to ~94% of the box, centred.
         final f = px(frame);
-        if (f.isEmpty) return wrap;
+        if (f.isEmpty) return content;
         final fit = min(size.width / f.width, size.height / f.height) * 0.94;
         final k = 1 + (fit - 1) * zoom;
         final centre = Offset.lerp(f.center, size.center(Offset.zero), zoom)!;
@@ -961,7 +1005,7 @@ class _WrapViewState extends State<_WrapView> {
               1,
             )
             ..scaleByDouble(k, k, 1, 1),
-          child: wrap,
+          child: content,
         );
       },
     );
