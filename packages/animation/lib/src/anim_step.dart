@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+part 'melt_cover.dart';
 part 'rolled.dart';
 
 /// One frame of a running step.
@@ -28,6 +29,7 @@ class AnimStepInput {
     this.images = const {},
     this.reduceMotion = false,
     this.contents,
+    this.baseScale = 1,
   });
 
   /// The customer's product as drawn when "add" was pressed (snapshot).
@@ -52,6 +54,10 @@ class AnimStepInput {
   final Map<String, List<String>> images;
 
   final bool reduceMotion;
+
+  /// The product's size scale within its box (the chosen size; 1 at the
+  /// largest), so a step can size an effect to the drawn product.
+  final double baseScale;
 }
 
 /// Extension point (P1-B07): one reusable unit of motion. A step draws the
@@ -1130,8 +1136,33 @@ Widget? backImage(AnimStepInput input) {
 /// The product as the sequence has shaped it so far: baked and flat, or
 /// folded along the first `folds` of its fold `lines` (step params), the
 /// folded parts showing the back.
-Widget shapedProduct(AnimStepInput input) {
+Widget shapedProduct(AnimStepInput input, {double coverProgress = 1}) {
   final folds = (input.params['folds'] as num?)?.toInt() ?? 0;
+  final melt = MeltSpec.from(input.params['melt']);
+  final cover = CoverSpec.from(input.params['cover']);
+  // Melted (step param `melt`) and covered with film (param `cover`): a
+  // baked pan of cheese, see [Melted] and [Covered].
+  if (melt != null || cover != null) {
+    Widget out = Cooked(amount: 1, child: input.product);
+    if (melt != null) {
+      out = Melted(
+        amount: 1,
+        spec: melt,
+        baseScale: input.baseScale,
+        contents: bakedContents(input),
+        child: out,
+      );
+    }
+    if (cover != null) {
+      out = Covered(
+        progress: coverProgress,
+        spec: cover,
+        baseScale: input.baseScale,
+        child: out,
+      );
+    }
+    return out;
+  }
   final baked = Cooked(amount: 1, child: input.product);
   // Rolled into a log (step param `roll`, see [RollShape]).
   if (RollShape.from(input.params['roll']) case final roll?) {

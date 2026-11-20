@@ -162,7 +162,9 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
     _snapshot?.dispose();
     _snapshot = raster;
     // Its pieces alone, only for a step that shows them apart from the
-    // product: a wrap's open end (its `opening`). A pizza needs none.
+    // product: a wrap's open end (its `opening`), or any step that asks for
+    // them (`pieces`, e.g. to sink them into melting cheese). A pizza needs
+    // none.
     final piecesBox = plan.steps.any(_showsContents)
         ? _piecesKey.currentContext?.findRenderObject()
         : null;
@@ -194,6 +196,7 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
           cartTarget: cartBox == null ? null : rectOf(cartBox).center,
           images: images,
           reduceMotion: reduceMotion,
+          baseScale: state.sizeScale,
           // Captured inside the canvas's size and surface scales, which the
           // capture leaves out (the full raster has them): scaled again.
           contents: pieces == null
@@ -222,9 +225,11 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
   }
 
   /// Whether [step] shows the product's pieces apart from it: the engine
-  /// reads them (`AnimStepInput.contents`) only for a wrap's open end.
+  /// reads them (`AnimStepInput.contents`) for a wrap's open end, or when
+  /// the step asks for them (param `pieces`).
   static bool _showsContents(PlannedStep step) =>
-      WrapOpening.from(step.params['opening']) != null;
+      WrapOpening.from(step.params['opening']) != null ||
+      step.params['pieces'] == true;
 
   /// The canvas as an image at screen resolution, or null when it cannot
   /// be captured (e.g. not painted yet).

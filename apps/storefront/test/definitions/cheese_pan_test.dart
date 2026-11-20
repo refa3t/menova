@@ -75,9 +75,10 @@ void main() {
     }
   });
 
-  test('the pan bakes in SlideIntoOven, then Swap and FlyToCart', () {
+  test('the pan bakes, melts, is covered, then Swap and FlyToCart', () {
     expect(def.animation.map((s) => s.step), [
       'SlideIntoOven',
+      'Cover',
       'Swap',
       'FlyToCart',
     ]);
@@ -88,6 +89,20 @@ void main() {
       reduceMotion: true,
     );
     expect(reduced.steps.map((s) => s.key), ['Swap', 'FlyToCart']);
+    // Melted with its pieces from the oven on, covered from Cover on: the
+    // reduced sequence shows the same finished pan.
+    for (final s in def.animation) {
+      expect(s.params['melt'], isA<Map>(), reason: s.step);
+      expect(s.params['pieces'], isTrue, reason: s.step);
+      if (s.step != 'SlideIntoOven') {
+        expect(s.params['cover'], isA<Map>(), reason: s.step);
+      }
+    }
+    final ms = def.animation.fold<num>(
+      0,
+      (a, s) => a + (s.params['durationMs']! as num),
+    );
+    expect(ms, inInclusiveRange(3500, 4000));
   });
 
   test('the toppings stay inside the pan', () {

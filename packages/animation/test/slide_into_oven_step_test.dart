@@ -56,11 +56,7 @@ void main() {
     ) async {
       final params = {'bubbles': 18, 'bubbleArea': 0.7, 'tilt': 0.6};
       for (var i = 0; i <= 20; i++) {
-        await render(
-          tester,
-          input(params, reduceMotion: reduceMotion),
-          i / 20,
-        );
+        await render(tester, input(params, reduceMotion: reduceMotion), i / 20);
         expect(tester.takeException(), isNull, reason: 't ${i / 20}');
         expect(find.byKey(productKey), findsOneWidget);
       }
@@ -164,6 +160,77 @@ void main() {
     await tester.pump(const Duration(milliseconds: 700));
     await tester.pumpWidget(const MaterialApp(home: SizedBox()));
     expect(events, [AnimEvent.started, AnimEvent.cancelled]);
+    expect(tester.takeException(), isNull);
+  });
+
+  test('the whole oven is on screen, wherever the product is', () {
+    const screens = [Size(375, 812), Size(1280, 800), Size(320, 480)];
+    for (final screen in screens) {
+      for (final product in [
+        // Near the top of a phone page, centred, low, and a wide desktop
+        // canvas on the left.
+        const Rect.fromLTWH(20, 70, 335, 335),
+        Rect.fromCenter(
+          center: screen.center(Offset.zero),
+          width: 300,
+          height: 300,
+        ),
+        Rect.fromLTWH(30, screen.height - 260, 240, 240),
+        const Rect.fromLTWH(40, 90, 560, 560),
+      ]) {
+        final wall = SlideIntoOvenStep.ovenBounds(product, screen);
+        expect(
+          (Offset.zero & screen).inflate(0.01).contains(wall.topLeft) &&
+              (Offset.zero & screen).inflate(0.01).contains(wall.bottomRight),
+          isTrue,
+          reason: '$screen $product: $wall',
+        );
+        expect(wall.width, greaterThan(0));
+      }
+    }
+  });
+
+  testWidgets('the product stays on screen on its way in and out', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(375, 812);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    const top = Rect.fromLTWH(20, 70, 335, 335);
+    for (var i = 0; i <= 20; i++) {
+      await render(tester, input(const {}, at: top), i / 20);
+      final box = tester.getRect(find.byKey(productKey));
+      expect(
+        const Rect.fromLTWH(0, 0, 375, 812).inflate(1).contains(box.center),
+        isTrue,
+        reason: 't ${i / 20}: $box',
+      );
+    }
+  });
+
+  testWidgets('it melts the product with its pieces when asked', (
+    tester,
+  ) async {
+    const melt = {'area': 0.72, 'blur': 1.6, 'tint': 0.4, 'sink': 0.45};
+    final withPieces = AnimStepInput(
+      product: const SizedBox.expand(key: productKey),
+      contents: const SizedBox.expand(key: Key('pieces')),
+      productRect: rect,
+      params: const {'melt': melt},
+      baseScale: 0.84,
+    );
+    await render(tester, withPieces, 0.1);
+    expect(find.byType(Melted), findsOneWidget);
+    expect(find.byKey(const Key('pieces')), findsNothing, reason: 'raw');
+    await render(tester, withPieces, 0.5);
+    expect(find.byKey(const Key('pieces')), findsOneWidget);
+    final sinking = tester.widget<Opacity>(
+      find.ancestor(
+        of: find.byKey(const Key('pieces')),
+        matching: find.byType(Opacity),
+      ),
+    );
+    expect(sinking.opacity, lessThan(1));
     expect(tester.takeException(), isNull);
   });
 }

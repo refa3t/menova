@@ -264,9 +264,9 @@
   "animation": [
     {
       "step": "SlideIntoOven",
-      "weight": 1800,
+      "weight": 2000,
       "params": {
-        "durationMs": 1800,
+        "durationMs": 2000,
         "saturation": 1.35,
         "insideScale": 0.62,
         "tilt": 0.6,
@@ -275,6 +275,14 @@
         "bubbles": 22,
         "bubbleArea": 0.7,
         "scrimMaxPct": 35,
+        "pieces": true,
+        "melt": {
+          "area": 0.72,
+          "color": "#F0B648",
+          "blur": 1.6,
+          "tint": 0.42,
+          "sink": 0.45
+        },
         "images": {
           "steam": "oven_steam",
           "embers": "oven_embers"
@@ -282,10 +290,49 @@
       }
     },
     {
+      "step": "Cover",
+      "weight": 600,
+      "params": {
+        "durationMs": 600,
+        "scale": 0.9,
+        "scrimMaxPct": 35,
+        "pieces": true,
+        "melt": {
+          "area": 0.72,
+          "color": "#F0B648",
+          "blur": 1.6,
+          "tint": 0.42,
+          "sink": 0.45
+        },
+        "cover": {
+          "area": 0.9,
+          "color": "#E8F2FA",
+          "opacity": 0.16,
+          "gloss": 0.75,
+          "from": "left"
+        }
+      }
+    },
+    {
       "step": "Swap",
       "weight": 300,
       "params": {
-        "durationMs": 300
+        "durationMs": 300,
+        "pieces": true,
+        "melt": {
+          "area": 0.72,
+          "color": "#F0B648",
+          "blur": 1.6,
+          "tint": 0.42,
+          "sink": 0.45
+        },
+        "cover": {
+          "area": 0.9,
+          "color": "#E8F2FA",
+          "opacity": 0.16,
+          "gloss": 0.75,
+          "from": "left"
+        }
       }
     },
     {
@@ -295,7 +342,22 @@
         "durationMs": 900,
         "shrinkTo": 0.18,
         "arcControlPct": 20,
-        "rotateDeg": -12
+        "rotateDeg": -12,
+        "pieces": true,
+        "melt": {
+          "area": 0.72,
+          "color": "#F0B648",
+          "blur": 1.6,
+          "tint": 0.42,
+          "sink": 0.45
+        },
+        "cover": {
+          "area": 0.9,
+          "color": "#E8F2FA",
+          "opacity": 0.16,
+          "gloss": 0.75,
+          "from": "left"
+        }
       }
     }
   ],
