@@ -203,8 +203,8 @@ void main() {
       final stroke = pour(disc);
       expect(stroke, equals(pour(disc)), reason: 'deterministic');
       for (final p in stroke) {
-        // The rounded turns stay (nearly) on the surface too.
-        expect(sqrt(p.x * p.x + p.y * p.y), lessThan(0.7 + 0.05));
+        // The rounded turns stay on the surface too.
+        expect(sqrt(p.x * p.x + p.y * p.y), lessThanOrEqualTo(0.7 + 1e-9));
       }
       // Six passes, each at its own offset, one spacing (1.4 / 6) apart.
       final rows = <int>{for (final p in stroke) (across(p) / 0.02).round()};
@@ -273,6 +273,85 @@ void main() {
       final params = {'lines': 4, 'radius': 0.7};
       final a = pour(params, id: 'ketchup'), b = pour(params, id: 'mayonnaise');
       expect(a.first, isNot(b.first));
+    });
+
+    // The definitions' settings: the pizza's whole disc, the crepe's strip.
+    const pizza = {'lines': 7, 'lineWidth': 0.04, 'wave': 0.006, 'radius': 0.8};
+    const crepe = {
+      'lines': 11,
+      'lineWidth': 0.042,
+      'wave': 0.005,
+      'radius': 0.68,
+      'bandWidth': 0.27,
+      'offsetY': 0.1,
+    };
+    const ids = ['ketchup', 'mayonnaise', 'garlic_sauce', 'nutella'];
+    const pizzaAngles = [0, 20, 35, 55, 70, 90, 110, 125, 145];
+    const crepeAngles = [50, 62, 76, 90, 104, 118, 134];
+    const sizes = [1.0, 1.23, 1.49];
+
+    // How far [p] is past the area's edge (negative inside).
+    double past(({double x, double y}) p, Map<String, num> s) {
+      final oy = (s['offsetY'] ?? 0).toDouble();
+      var e = sqrt(p.x * p.x + pow(p.y - oy, 2)) - s['radius']!;
+      final band = s['bandWidth'];
+      if (band != null) e = max(e, (p.y - oy).abs() - band);
+      return e;
+    }
+
+    test('every point, turns included, stays on the area', () {
+      for (final (base, angles, densities) in [
+        (pizza, pizzaAngles, sizes),
+        (crepe, crepeAngles, const [1.0]),
+      ]) {
+        for (final id in ids) {
+          for (final angle in angles) {
+            final s = {...base, 'angle': angle};
+            for (final density in densities) {
+              for (var unit = 0; unit < 4; unit++) {
+                final stroke = pour(s, unit: unit, density: density, id: id);
+                for (final p in stroke) {
+                  expect(
+                    past(p, s),
+                    lessThanOrEqualTo(1e-9),
+                    reason: '$id angle $angle density $density unit $unit',
+                  );
+                }
+                // The stroke starts and ends at the edge (no turn there).
+                expect(past(stroke.first, s), greaterThan(-0.02));
+                expect(past(stroke.last, s), greaterThan(-0.02));
+              }
+            }
+          }
+        }
+      }
+    });
+
+    test('every unit pours a visible stroke, even with one pass', () {
+      double length(List<({double x, double y})> l) => [
+        for (var i = 1; i < l.length; i++)
+          sqrt(pow(l[i].x - l[i - 1].x, 2) + pow(l[i].y - l[i - 1].y, 2)),
+      ].fold(0.0, (a, b) => a + b);
+      for (final lines in [1, 2, 3]) {
+        for (final (base, angles, densities) in [
+          (pizza, pizzaAngles, sizes),
+          (crepe, crepeAngles, const [1.0]),
+        ]) {
+          for (final angle in angles) {
+            final s = {...base, 'lines': lines, 'angle': angle};
+            for (final density in densities) {
+              for (var unit = 0; unit < 4; unit++) {
+                final why = 'lines $lines angle $angle unit $unit';
+                final stroke = pour(s, unit: unit, density: density);
+                expect(length(stroke), greaterThan(0.3), reason: why);
+                for (final p in stroke) {
+                  expect(past(p, s), lessThanOrEqualTo(1e-9), reason: why);
+                }
+              }
+            }
+          }
+        }
+      }
     });
   });
 

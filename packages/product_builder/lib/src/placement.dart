@@ -600,14 +600,33 @@ abstract interface class LinePlacement implements PlacementStrategy {
 /// whole surface (the disc of `radius`, or only the strip `bandWidth` high,
 /// as in [BandPlacement]), joined by rounded turns and tilted by `angle`
 /// degrees (each sauce its own angle by default, so two sauces cross).
-/// Every extra unit pours its passes between the earlier ones. It places no
-/// pieces: the canvas draws the lines as a liquid in the sauce's `color`.
+/// Every extra unit pours its passes between the earlier ones. Every point
+/// of the stroke, turns included, stays on that area: the stroke starts and
+/// ends at the area's edge, and a pass stops short of the edge only by the
+/// room its turn takes there. It places no pieces: the canvas draws the
+/// lines as a liquid in the sauce's `color`.
 class SaucePlacement implements LinePlacement {
   const SaucePlacement();
 
   /// Where a unit's passes sit, as a fraction of the spacing: unit 0 in the
   /// middle of each slot, unit 1 between unit 0's passes, then quarters.
   static const _slots = [0.5, 0.0, 0.25, 0.75, 0.125, 0.625, 0.375, 0.875];
+
+  /// Where a unit pours whose slot falls on the area's edges only (one pass
+  /// a unit): this fraction of the spacing inside each edge, clear of the
+  /// passes of units 0, 2 and 3.
+  static const _edgeSlot = 0.125;
+
+  /// A turn's handles, as a share of the distance between the ends it joins
+  /// (about a half circle).
+  static const _round = 0.6;
+
+  /// The shortest pass poured, and how far a pass's wave fades out towards
+  /// a turn, so the turn leaves along the pass.
+  static const _minPass = 0.04, _fade = 0.08;
+
+  /// The step between a pass's points, and its wave's frequency.
+  static const _step = 0.02, _freq = 17.0;
 
   @override
   List<PiecePlacement> place({
@@ -629,23 +648,223 @@ class SaucePlacement implements LinePlacement {
     // The spacing is a length: a larger size (more area) keeps it with
     // sqrt(density) more passes.
     final count = max(1, ((param('lines') ?? 4) * sqrt(density)).round());
-    final radius = (param('radius') ?? 0.78).toDouble();
-    final band = param('bandWidth')?.toDouble();
-    final half = band == null ? radius : min(band, radius);
     final ox = (param('offsetX') ?? 0).toDouble();
     final oy = (param('offsetY') ?? 0).toDouble();
-    final wave = (param('wave') ?? 0.02).toDouble();
+    final wave = (param('wave') ?? 0.02).toDouble().abs();
     final degrees =
         param('angle')?.toDouble() ??
         (stableSeed('$ingredientId#angle') % 90 - 45).toDouble();
-    final a = degrees * pi / 180;
-    final dx = cos(a), dy = sin(a); // along a pass
-    final nx = -sin(a), ny = cos(a); // across the passes
+    final area = _SauceArea(
+      (param('radius') ?? 0.78).toDouble(),
+      param('bandWidth')?.toDouble(),
+      degrees * pi / 180,
+    );
+    final (lo, hi) = area.across;
+    final spacing = (hi - lo) / count;
+    if (spacing <= 0) return const [];
 
-    // The region's extent across the passes: its extreme points are the
-    // disc's own (when inside the strip) or the strip's corners on the rim.
+    // The unit's passes: at its slot of every spacing inside the area. A
+    // unit whose slot falls on the edges only (one pass a unit) pours just
+    // inside them instead.
+    final slot = _slots[unit % _slots.length];
+    final offsets = [
+      for (var l = 0; l <= count; l++) (l, lo + spacing * (l + slot)),
+    ]..removeWhere((o) => o.$2 <= lo + 1e-9 || o.$2 >= hi - 1e-9);
+    if (offsets.isEmpty) {
+      offsets.addAll([
+        (0, lo + spacing * _edgeSlot),
+        (count, hi - spacing * _edgeSlot),
+      ]);
+    }
+    // Each pass's part on the area, with room for its wave.
+    var passes = [
+      for (final (l, s) in offsets)
+        if (area.chord(s, margin: wave) case (
+          final t0,
+          final t1,
+        ) when t1 - t0 >= _minPass)
+          _Pass(l, s, t0, t1),
+    ];
+
+    // Back and forth: pass k runs up t when k is even, down when odd, so
+    // turn k joins passes k and k + 1 at their high ends when k is even,
+    // at their low ends when odd. An end pass too short to hold a round
+    // turn is left out.
+    int sideOf(int k) => k.isEven ? 1 : -1;
+    bool holds(int k, _Pass end) {
+      final side = sideOf(k);
+      final turn = _turn(passes[k], passes[k + 1], side, _round);
+      final cut = _cut(area, turn, side);
+      return cut != null && cut <= end.length - _minPass;
+    }
+
+    while (passes.length > 1) {
+      if (!holds(0, passes.first)) {
+        passes = passes.sublist(1);
+      } else if (!holds(passes.length - 2, passes.last)) {
+        passes = passes.sublist(0, passes.length - 1);
+      } else {
+        break;
+      }
+    }
+    if (passes.isEmpty) return const [];
+
+    // Each turn as round as fits; a middle pass shares what it can spare
+    // between its two turns.
+    final last = passes.length - 1;
+    double spare(int k) =>
+        (passes[k].length - _minPass) / (k == 0 || k == last ? 1 : 2);
+    final turns = [
+      for (var k = 0; k < last; k++)
+        _fit(
+          area,
+          passes[k],
+          passes[k + 1],
+          sideOf(k),
+          min(spare(k), spare(k + 1)),
+        ),
+    ];
+
+    // One stroke: each pass, cut back where a turn joins it, then its turn.
+    final phase = (stableSeed('$ingredientId#wave#$unit') % 628) / 100;
+    final points = <(double, double)>[];
+    for (var k = 0; k <= last; k++) {
+      final p = passes[k];
+      final into = k > 0 ? turns[k - 1].cut : 0.0;
+      final out = k < last ? turns[k].cut : 0.0;
+      final (from, to) = sideOf(k) > 0
+          ? (p.t0 + into, p.t1 - out)
+          : (p.t1 - into, p.t0 + out);
+      final n = max(2, ((to - from).abs() / _step).ceil());
+      for (var i = 0; i <= n; i++) {
+        final t = from + (to - from) * i / n;
+        final fade =
+            (k > 0 ? _ease((t - from).abs() / _fade) : 1.0) *
+            (k < last ? _ease((to - t).abs() / _fade) : 1.0);
+        points.add((t, p.s + wave * fade * sin(_freq * t + phase + p.l)));
+      }
+      if (k < last) points.addAll(turns[k].points);
+    }
+    return [
+      [
+        for (final (t, w) in points)
+          (
+            x: ox + area.dx * t + area.nx * w,
+            y: oy + area.dy * t + area.ny * w,
+          ),
+      ],
+    ];
+  }
+
+  /// Smoothstep: 0 at 0, 1 from 1 on, flat at both.
+  static double _ease(double x) => x >= 1 ? 1 : x * x * (3 - 2 * x);
+
+  /// The rounded turn joining [a]'s end to [b]'s start on [side] (1: their
+  /// high ends, -1: their low ends): a cubic leaving along [a] and coming
+  /// back along [b], its handles [round] of the distance between the ends.
+  /// Its points, ends left out, as (t, w) in the passes' frame.
+  static List<(double, double)> _turn(
+    _Pass a,
+    _Pass b,
+    int side,
+    double round,
+  ) {
+    final e0 = a.end(side), e1 = b.end(side);
+    final de = e1 - e0, ds = b.s - a.s;
+    final gap = sqrt(de * de + ds * ds);
+    final h = side * round * gap;
+    // About 0.03 apart, and at least ten steps.
+    final n = max(10, (gap / 0.03).ceil());
+    return [
+      for (var i = 1; i < n; i++)
+        () {
+          final t = i / n, u = 1 - t;
+          final b0 = u * u * u, b1 = 3 * u * u * t, b2 = 3 * u * t * t;
+          final b3 = t * t * t;
+          return (
+            b0 * e0 + b1 * (e0 + h) + b2 * (e1 + h) + b3 * e1,
+            (b0 + b1) * a.s + (b2 + b3) * b.s,
+          );
+        }(),
+    ];
+  }
+
+  /// How far both passes must stop short of their ends on [side] for
+  /// [turn] (as [_turn] gives it) to stay on [area]; null when no cut
+  /// does.
+  static double? _cut(_SauceArea area, List<(double, double)> turn, int side) {
+    final chords = <(double, double)>[];
+    var cut = 0.0;
+    for (final (t, w) in turn) {
+      final chord = area.chord(w);
+      if (chord == null) return null;
+      chords.add(chord);
+      cut = max(cut, side > 0 ? t - chord.$2 : chord.$1 - t);
+    }
+    // Cut back that far, no point may leave the area at the other end.
+    for (final (i, (t, _)) in turn.indexed) {
+      final (t0, t1) = chords[i];
+      if (side > 0 ? t - cut < t0 : t + cut > t1) return null;
+    }
+    return cut;
+  }
+
+  /// The roundest turn joining [a] to [b] on [side] that stays on [area]
+  /// with both passes cut back by at most [cap]: its points, moved in by
+  /// the cut, and the cut. A flatter turn needs less room; the flattest, a
+  /// straight join of two points on the area, needs none.
+  static ({List<(double, double)> points, double cut}) _fit(
+    _SauceArea area,
+    _Pass a,
+    _Pass b,
+    int side,
+    double cap,
+  ) {
+    bool fits(double round) =>
+        (_cut(area, _turn(a, b, side, round), side) ?? double.infinity) <= cap;
+    var round = _round;
+    if (!fits(round)) {
+      var flat = 0.0, high = _round;
+      for (var i = 0; i < 24; i++) {
+        final mid = (flat + high) / 2;
+        if (fits(mid)) {
+          flat = mid;
+        } else {
+          high = mid;
+        }
+      }
+      round = flat;
+    }
+    final turn = _turn(a, b, side, round);
+    final cut = _cut(area, turn, side) ?? 0;
+    return (points: [for (final (t, w) in turn) (t - side * cut, w)], cut: cut);
+  }
+}
+
+/// Where a [SaucePlacement] pours, in its passes' frame: t along the passes
+/// and w across them, from the area's centre. The disc of [radius], or its
+/// part in the strip [band] high (as in [BandPlacement]).
+class _SauceArea {
+  _SauceArea(this.radius, this.band, double angle)
+    : dx = cos(angle),
+      dy = sin(angle),
+      nx = -sin(angle),
+      ny = cos(angle);
+
+  final double radius;
+  final double? band;
+
+  /// Along a pass (dx, dy), and across the passes (nx, ny).
+  final double dx, dy, nx, ny;
+
+  double get _half => min(band ?? radius, radius);
+
+  /// The area's extent across the passes: its extreme points are the disc's
+  /// own (when inside the strip) or the strip's corners on the rim.
+  (double, double) get across {
+    final half = _half;
     final corner = sqrt(max(0.0, radius * radius - half * half));
-    final across = [
+    final ends = [
       for (final sign in const [-1.0, 1.0])
         if ((sign * radius * ny).abs() <= half + 1e-9) sign * radius,
       for (final (x, y) in [
@@ -656,80 +875,46 @@ class SaucePlacement implements LinePlacement {
       ])
         x * nx + y * ny,
     ];
-    final lo = across.reduce(min), hi = across.reduce(max);
-    final spacing = (hi - lo) / count;
-    if (spacing <= 0) return const [];
+    return (ends.reduce(min), ends.reduce(max));
+  }
 
-    // The part of the pass at offset [s] inside the region, as an interval
-    // of t along it (empty when it misses), short of the edge by the room
-    // its rounded turn takes, so the turns stay on the surface too.
-    final room = 0.45 * spacing;
-    (double, double)? span(double s) {
-      if (s.abs() >= radius) return null;
-      final r = sqrt(radius * radius - s * s);
-      var t0 = -r, t1 = r;
-      // The strip: |s * ny + t * dy| <= half.
+  /// The part of the line [w] across on the area, as an interval of t
+  /// (null when it misses), such that points up to [margin] off the line
+  /// are on the area too.
+  (double, double)? chord(double w, {double margin = 0}) {
+    final off = w.abs() + margin;
+    if (off >= radius) return null;
+    final r = sqrt(radius * radius - off * off);
+    var t0 = -r, t1 = r;
+    if (band != null) {
+      // The strip: |w * ny + t * dy| <= half.
+      final half = _half - margin * ny.abs();
       if (dy.abs() < 1e-9) {
-        if ((s * ny).abs() > half) return null;
+        if ((w * ny).abs() > half) return null;
       } else {
-        final p = (-half - s * ny) / dy, q = (half - s * ny) / dy;
+        final p = (-half - w * ny) / dy, q = (half - w * ny) / dy;
         t0 = max(t0, min(p, q));
         t1 = min(t1, max(p, q));
       }
-      t0 += room;
-      t1 -= room;
-      return t1 - t0 > 0.04 ? (t0, t1) : null;
     }
-
-    final slot = _slots[unit % _slots.length];
-    final phase = (stableSeed('$ingredientId#wave#$unit') % 628) / 100;
-    const step = 0.02, freq = 17.0;
-    final passes = <List<({double x, double y})>>[];
-    for (var l = 0; l <= count; l++) {
-      final s = lo + spacing * (l + slot);
-      if (s <= lo + 1e-9 || s >= hi - 1e-9) continue;
-      final interval = span(s);
-      if (interval == null) continue;
-      final (t0, t1) = interval;
-      final n = max(2, ((t1 - t0) / step).ceil());
-      final pass = [
-        for (var i = 0; i <= n; i++)
-          () {
-            final t = t0 + (t1 - t0) * i / n;
-            final w = s + wave * sin(freq * t + phase + l);
-            return (x: dx * t + nx * w + ox, y: dy * t + ny * w + oy);
-          }(),
-      ];
-      // Back and forth: every other pass runs the other way.
-      passes.add(passes.length.isOdd ? pass.reversed.toList() : pass);
-    }
-    if (passes.isEmpty) return const [];
-
-    // One stroke: each pass joined to the next by a rounded turn (a cubic
-    // leaving along the pass and coming back the other way).
-    final stroke = [...passes.first];
-    for (final pass in passes.skip(1)) {
-      final p0 = stroke.last, p3 = pass.first;
-      final prev = stroke[stroke.length - 2];
-      final ux = p0.x - prev.x, uy = p0.y - prev.y;
-      final ul = sqrt(ux * ux + uy * uy);
-      final gap = sqrt(pow(p3.x - p0.x, 2) + pow(p3.y - p0.y, 2));
-      final k = 0.6 * gap / (ul == 0 ? 1 : ul);
-      final p1 = (x: p0.x + ux * k, y: p0.y + uy * k);
-      final p2 = (x: p3.x + ux * k, y: p3.y + uy * k);
-      for (var i = 1; i < 10; i++) {
-        final t = i / 10, u = 1 - t;
-        final b0 = u * u * u, b1 = 3 * u * u * t, b2 = 3 * u * t * t;
-        final b3 = t * t * t;
-        stroke.add((
-          x: b0 * p0.x + b1 * p1.x + b2 * p2.x + b3 * p3.x,
-          y: b0 * p0.y + b1 * p1.y + b2 * p2.y + b3 * p3.y,
-        ));
-      }
-      stroke.addAll(pass);
-    }
-    return [stroke];
+    return t1 > t0 ? (t0, t1) : null;
   }
+}
+
+/// A pass of a [SaucePlacement] stroke, in its frame (see [_SauceArea]):
+/// slot [l] of the spacing, [s] across, on the area from [t0] to [t1].
+class _Pass {
+  const _Pass(this.l, this.s, this.t0, this.t1);
+
+  final int l;
+  final double s;
+  final double t0;
+  final double t1;
+
+  double get length => t1 - t0;
+
+  /// Its end on [side]: 1 the high end, -1 the low end.
+  double end(int side) => side > 0 ? t1 : t0;
 }
 
 /// Small deterministic PRNG (mulberry32). `dart:math` Random is not
