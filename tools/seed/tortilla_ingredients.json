@@ -1,0 +1,107 @@
+{
+  "_note": "Ingredients the tortilla wrap introduces. Shared fillings and sauces reuse the pizza and crepe records.",
+  "ingredients": [
+    {
+      "id": "lettuce",
+      "name": "خس",
+      "names": {
+        "en": "Lettuce",
+        "ar": "خس"
+      },
+      "assetId": "ing_lettuce",
+      "assetFiles": [
+        "ing_lettuce_01.webp",
+        "ing_lettuce_02.webp",
+        "ing_lettuce_03.webp"
+      ],
+      "extraPrice": 500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "pickles",
+      "name": "مخلل",
+      "names": {
+        "en": "Pickles",
+        "ar": "مخلل"
+      },
+      "assetId": "ing_pickles",
+      "assetFiles": [
+        "ing_pickles_01.webp",
+        "ing_pickles_02.webp",
+        "ing_pickles_03.webp"
+      ],
+      "extraPrice": 500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "fries",
+      "name": "بطاطس",
+      "names": {
+        "en": "Fries",
+        "ar": "بطاطس"
+      },
+      "assetId": "ing_fries",
+      "assetFiles": [
+        "ing_fries_01.webp",
+        "ing_fries_02.webp",
+        "ing_fries_03.webp"
+      ],
+      "extraPrice": 1500,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "chicken_shawarma",
+      "name": "شاورما فراخ",
+      "names": {
+        "en": "Chicken shawarma",
+        "ar": "شاورما فراخ"
+      },
+      "assetId": "ing_chicken_shawarma",
+      "assetFiles": [
+        "ing_chicken_shawarma_01.webp",
+        "ing_chicken_shawarma_02.webp",
+        "ing_chicken_shawarma_03.webp"
+      ],
+      "extraPrice": 4000,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "beef_shawarma",
+      "name": "شاورما لحمة",
+      "names": {
+        "en": "Beef shawarma",
+        "ar": "شاورما لحمة"
+      },
+      "assetId": "ing_beef_shawarma",
+      "assetFiles": [
+        "ing_beef_shawarma_01.webp",
+        "ing_beef_shawarma_02.webp",
+        "ing_beef_shawarma_03.webp"
+      ],
+      "extraPrice": 5000,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    },
+    {
+      "id": "crispy_chicken",
+      "name": "فراخ كرسبي",
+      "names": {
+        "en": "Crispy chicken",
+        "ar": "فراخ كرسبي"
+      },
+      "assetId": "ing_crispy_chicken",
+      "assetFiles": [
+        "ing_crispy_chicken_01.webp",
+        "ing_crispy_chicken_02.webp",
+        "ing_crispy_chicken_03.webp"
+      ],
+      "extraPrice": 4000,
+      "isAvailable": true,
+      "sizeMultipliers": {}
+    }
+  ]
+}

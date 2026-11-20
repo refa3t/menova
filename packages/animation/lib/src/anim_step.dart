@@ -4,6 +4,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+part 'rolled.dart';
+
 /// One frame of a running step.
 class AnimFrame {
   const AnimFrame({required this.t, required this.elapsed});
@@ -274,9 +276,14 @@ class Folded extends StatelessWidget {
     this.opening,
     this.zoom = 1,
     this.contents,
+    this.flat = false,
   });
 
   final List<FoldLine> lines;
+
+  /// Whether a fully folded product stays a flat sheet (no wrap volume),
+  /// e.g. one rolled up next.
+  final bool flat;
   final int count;
   final Widget product;
   final Widget? back;
@@ -336,7 +343,7 @@ class Folded extends StatelessWidget {
               ),
           ],
         );
-        if (n < lines.length || without != null) return layers;
+        if (n < lines.length || without != null || flat) return layers;
         if (opening case final o? when back != null) {
           return _WrapView(
             lines: done,
@@ -1082,6 +1089,10 @@ Widget? backImage(AnimStepInput input) {
 Widget shapedProduct(AnimStepInput input) {
   final folds = (input.params['folds'] as num?)?.toInt() ?? 0;
   final baked = Cooked(amount: 1, child: input.product);
+  // Rolled into a log (step param `roll`, see [RollShape]).
+  if (RollShape.from(input.params['roll']) case final roll?) {
+    return rolledProduct(input, roll, baked);
+  }
   if (folds <= 0) return baked;
   return Folded(
     lines: FoldLine.listFrom(input.params['lines']),
