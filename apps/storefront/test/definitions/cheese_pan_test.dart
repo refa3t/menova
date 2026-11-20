@@ -102,7 +102,7 @@ void main() {
       0,
       (a, s) => a + (s.params['durationMs']! as num),
     );
-    expect(ms, inInclusiveRange(3500, 4000));
+    expect(ms, inInclusiveRange(4500, 5000));
   });
 
   test('the toppings stay inside the pan', () {

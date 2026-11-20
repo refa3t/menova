@@ -264,9 +264,9 @@
   "animation": [
     {
       "step": "SlideIntoOven",
-      "weight": 2000,
+      "weight": 2700,
       "params": {
-        "durationMs": 2000,
+        "durationMs": 2700,
         "saturation": 1.35,
         "insideScale": 0.62,
         "tilt": 0.6,
@@ -291,9 +291,9 @@
     },
     {
       "step": "Cover",
-      "weight": 600,
+      "weight": 800,
       "params": {
-        "durationMs": 600,
+        "durationMs": 800,
         "scale": 0.9,
         "scrimMaxPct": 35,
         "pieces": true,
@@ -337,9 +337,9 @@
     },
     {
       "step": "FlyToCart",
-      "weight": 900,
+      "weight": 1000,
       "params": {
-        "durationMs": 900,
+        "durationMs": 1000,
         "shrinkTo": 0.18,
         "arcControlPct": 20,
         "rotateDeg": -12,

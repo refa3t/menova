@@ -106,20 +106,20 @@ COVER = {'area': 0.9, 'color': '#E8F2FA', 'opacity': 0.16, 'gloss': 0.75,
          'from': 'left'}
 BAKED = {'pieces': True, 'melt': MELT}
 ANIMATION = [
-    {'step': 'SlideIntoOven', 'weight': 2000, 'params': {
-        'durationMs': 2000, 'saturation': 1.35, 'insideScale': 0.62,
+    {'step': 'SlideIntoOven', 'weight': 2700, 'params': {
+        'durationMs': 2700, 'saturation': 1.35, 'insideScale': 0.62,
         'tilt': 0.6, 'archWidth': 0.95, 'shrinkTo': 0.9,
         # Melted cheese bubbling while it bakes.
         'bubbles': 22, 'bubbleArea': round(PAN_SURFACE * 0.95, 2),
         'scrimMaxPct': 35, **BAKED,
         'images': {'steam': 'oven_steam', 'embers': 'oven_embers'}}},
-    {'step': 'Cover', 'weight': 600, 'params': {
-        'durationMs': 600, 'scale': 0.9, 'scrimMaxPct': 35, **BAKED,
+    {'step': 'Cover', 'weight': 800, 'params': {
+        'durationMs': 800, 'scale': 0.9, 'scrimMaxPct': 35, **BAKED,
         'cover': COVER}},
     {'step': 'Swap', 'weight': 300, 'params': {
         'durationMs': 300, **BAKED, 'cover': COVER}},
-    {'step': 'FlyToCart', 'weight': 900, 'params': {
-        'durationMs': 900, 'shrinkTo': 0.18, 'arcControlPct': 20,
+    {'step': 'FlyToCart', 'weight': 1000, 'params': {
+        'durationMs': 1000, 'shrinkTo': 0.18, 'arcControlPct': 20,
         'rotateDeg': -12, **BAKED, 'cover': COVER}},
 ]
 
