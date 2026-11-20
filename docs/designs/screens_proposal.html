@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Menova screen proposals (P0-08)</title>
+<style>
+/* Tokens copied from apps/storefront/lib/core/theme/app_theme.dart */
+:root{
+  --primary:#A8322A; --primary-dark:#8E2A23; --page:#FBF6F2; --surface:#F6EDE7; --card:#FFFFFF;
+  --border:#EFE3DC; --text:#2E1B16; --muted:#7A6660; --accent:#C8553D; --done:#2E7D32;
+  --r-card:18px; --r-panel:14px; --r-pill:999px; --shadow:0 8px 30px rgba(120,40,20,.08);
+  --error:#B3261E; --error-bg:#FDE7E4;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#EDE6E1;color:var(--text);font:15px/1.45 Roboto,"Segoe UI",Arial,sans-serif}
+[dir=rtl],.ar{font-family:"Noto Sans Arabic","Segoe UI",Tahoma,sans-serif}
+.doc{max-width:1240px;margin:0 auto;padding:24px 16px 64px}
+.doc>header h1{margin:0 0 4px;font-size:28px}
+.doc>header p{margin:4px 0;color:var(--muted);max-width:900px}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 8px}
+nav.toc a{background:var(--card);border:1px solid var(--border);border-radius:var(--r-pill);padding:8px 14px;color:var(--text);text-decoration:none;font-weight:600}
+section.screen{background:var(--page);border-radius:24px;padding:24px;margin-top:28px;box-shadow:var(--shadow)}
+section.screen>h2{margin:0 0 4px;font-size:22px}
+section.screen>p.sub{margin:0 0 16px;color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.col{display:flex;flex-direction:column;gap:8px}
+.label{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.label.new{color:var(--primary)}
+.shot{width:375px;max-width:100%;border:1px solid var(--border);border-radius:20px;display:block;background:#fff}
+.shot.wide{width:100%;max-width:760px}
+.changes{flex:1 1 280px;min-width:260px}
+.changes ul{margin:8px 0 0;padding-left:20px}
+.changes li{margin-bottom:8px}
+.note{background:var(--surface);border-radius:var(--r-panel);padding:10px 14px;color:var(--muted);font-size:13px}
+.scroll-x{overflow-x:auto;max-width:100%;padding-bottom:8px}
+
+/* Phone frame */
+.phone{width:375px;max-width:100%;height:812px;background:var(--page);border:1px solid var(--border);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.phone .body{flex:1;overflow:auto;padding:12px 16px 16px}
+.topbar{height:64px;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--border);background:var(--page);flex:none}
+.topbar .logo{display:flex;align-items:center;gap:6px;font-weight:800;font-size:22px}
+.topbar .logo i{width:22px;height:22px;border-radius:50% 50% 50% 0;background:var(--primary);transform:rotate(-45deg);display:inline-block}
+.topbar .sp{flex:1}
+.icon-btn{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;position:relative;font-size:20px;color:var(--text)}
+.badge{position:absolute;top:4px;inset-inline-end:2px;background:var(--primary);color:#fff;border-radius:var(--r-pill);font-size:11px;font-weight:700;min-width:18px;height:18px;display:grid;place-items:center;padding:0 5px}
+.lang{color:var(--primary);font-weight:600;padding:0 6px}
+.back{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-weight:500}
+h3.title{font-size:26px;font-weight:800;margin:0}
+.muted{color:var(--muted)}
+.price{color:var(--primary);font-weight:800}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-panel);padding:14px}
+.btn{min-height:44px;border-radius:var(--r-pill);border:0;background:var(--primary);color:#fff;font:inherit;font-weight:600;padding:0 18px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn.block{width:100%;min-height:52px;font-size:16px}
+.btn.outline{background:var(--card);color:var(--text);border:1px solid var(--border)}
+.btn.ghost{background:transparent;color:var(--primary);padding:0 10px}
+.btn.tonal{background:var(--surface);color:var(--primary-dark)}
+.bottom{flex:none;padding:10px 16px 14px;background:var(--page);border-top:1px solid var(--border)}
+.chip{display:inline-flex;align-items:center;gap:4px;border-radius:var(--r-pill);padding:3px 10px;font-size:13px;font-weight:600;border:1px solid var(--border);background:var(--card)}
+.chip.opt{background:var(--surface);border-color:var(--surface)}
+.chip.extra{color:var(--primary);border-color:#EBC9C3;background:#FFF6F4}
+.chip.removed{color:var(--text);border:1px dashed var(--muted);background:var(--card)}
+.chip.removed s{text-decoration-thickness:1.5px}
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:var(--r-pill);background:var(--card)}
+.stepper b{width:44px;height:44px;display:grid;place-items:center;font-size:20px;color:var(--primary);font-weight:500}
+.stepper span{min-width:24px;text-align:center;font-weight:700}
+.line{display:flex;gap:12px}
+.thumb{width:84px;height:84px;flex:none;border-radius:var(--r-panel);background:var(--surface);display:grid;place-items:center;overflow:hidden}
+.pizza{width:70px;height:70px;border-radius:50%;background:radial-gradient(circle at 50% 50%,#C8402F 0 55%,#E8B860 58% 70%,#C98E3A 72%);box-shadow:inset 0 0 0 3px rgba(0,0,0,.05)}
+.crepe{width:72px;height:36px;border-radius:72px 72px 0 0;background:linear-gradient(#EBC98A,#D9AE67);position:relative;margin-top:30px}
+.crepe:after{content:"";position:absolute;left:14px;right:14px;top:10px;height:8px;border-radius:6px;background:repeating-linear-gradient(90deg,#5A3220 0 6px,transparent 6px 10px)}
+.grow{flex:1;min-width:0}
+.between{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.actions{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:6px}
+.sum-row{display:flex;justify-content:space-between;padding:3px 0}
+.sum-row.total{font-weight:800;font-size:18px;border-top:1px solid var(--border);margin-top:6px;padding-top:10px}
+.sec-title{display:flex;align-items:center;gap:8px;font-weight:700;font-size:17px;margin:18px 0 10px}
+.sec-title .ic{color:var(--primary)}
+.field{border:1px solid var(--border);background:var(--card);border-radius:var(--r-panel);min-height:52px;padding:6px 14px;display:flex;flex-direction:column;justify-content:center;margin-bottom:10px}
+.field small{color:var(--muted);font-size:12px}
+.choice{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.choice div{border:1.5px solid var(--border);background:var(--card);border-radius:var(--r-panel);padding:12px;min-height:72px}
+.choice div.on{border:2.5px solid var(--primary);background:#FFF6F4}
+.choice b{display:block}
+.info{display:flex;gap:8px;align-items:center;background:var(--surface);border-radius:var(--r-panel);padding:10px 12px;font-size:14px}
+.ok{color:var(--done);font-weight:700}
+.steps{display:flex;gap:0;margin:8px 0 4px}
+.steps .s{flex:1;text-align:center;font-size:11px;position:relative;color:var(--muted)}
+.steps .s .dot{width:26px;height:26px;border-radius:50%;margin:0 auto 4px;border:2px solid var(--border);background:var(--card);display:grid;place-items:center;font-size:13px;position:relative;z-index:1}
+.steps .s:not(:first-child):before{content:"";position:absolute;top:12px;inset-inline-end:50%;width:100%;height:2px;background:var(--border)}
+.steps .s.done .dot{background:var(--primary);border-color:var(--primary);color:#fff}
+.steps .s.done:not(:first-child):before,.steps .s.cur:not(:first-child):before{background:var(--primary)}
+.steps .s.cur .dot{border-color:var(--primary);color:var(--primary);box-shadow:0 0 0 4px #F3D9D5}
+.steps .s.cur{color:var(--text);font-weight:700}
+.status2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pill-status{border-radius:var(--r-panel);padding:10px 12px;border:1px solid var(--border);background:var(--card)}
+.pill-status small{display:block;color:var(--muted);font-size:12px}
+.pill-status b{font-size:15px}
+
+/* Desktop frame */
+.desk{width:1100px;background:var(--page);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.desk .topbar{height:72px;padding:0 32px}
+.desk .nav{display:flex;gap:28px;font-weight:500}
+.desk .nav .on{color:var(--primary);font-weight:700;border-bottom:3px solid var(--primary);padding-bottom:22px;margin-bottom:-25px}
+
+/* Reception (Arabic) */
+.rec{width:1180px;background:#F4F1EF;border:1px solid var(--border);border-radius:16px;overflow:hidden;direction:rtl;font-family:"Noto Sans Arabic","Segoe UI",Tahoma,sans-serif}
+.rec .bar{display:flex;align-items:center;gap:12px;background:var(--card);padding:10px 20px;border-bottom:1px solid var(--border)}
+.rec .bar h4{margin:0;font-size:20px}
+.cols{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:14px}
+.colh{display:flex;justify-content:space-between;align-items:center;font-weight:800;padding:6px 4px 10px}
+.colh .n{background:var(--text);color:#fff;border-radius:var(--r-pill);padding:0 9px;font-size:13px}
+.oc{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px;font-size:14px}
+.oc.new{border:3px solid var(--primary);box-shadow:0 0 0 4px #F3D9D5}
+.oc.bad{border:3px solid var(--error)}
+.oc .hd{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.oc .ref{font:800 20px/1 Roboto,Arial,sans-serif;direction:ltr}
+.tag{border-radius:8px;padding:2px 8px;font-size:12px;font-weight:700;background:var(--surface)}
+.tag.del{background:#E7F0FB;color:#1F4E89}
+.tag.pick{background:#EEF6EC;color:#2E5E22}
+.tag.unpaid{background:#FFF3D6;color:#7A5200}
+.tag.paid{background:#E5F3E6;color:#1F5E24}
+.age{margin-inline-start:auto;color:var(--muted);font-size:12px}
+.alert{background:var(--error-bg);color:var(--error);font-weight:700;border-radius:8px;padding:8px 10px;margin-top:8px}
+.item{border-top:1px dashed var(--border);padding-top:8px;margin-top:8px}
+.item .q{font-weight:800;font-size:16px}
+.without{display:inline-block;background:var(--error-bg);color:var(--error);border:2px solid var(--error);font-weight:800;border-radius:6px;padding:1px 8px;margin:3px 0 0 4px}
+.plus{color:#1F5E24;font-weight:700}
+.inc{color:var(--muted);font-size:12px}
+.notebox{background:#FFF8E1;border-inline-start:4px solid #E0A800;padding:6px 10px;border-radius:6px;margin-top:6px;font-weight:600}
+.cust{background:var(--surface);border-radius:10px;padding:8px 10px;margin-top:8px;font-size:13px}
+.acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.acts .btn{min-height:44px;flex:1}
+.mini{font-size:12px;color:var(--muted)}
+
+/* Ticket */
+.ticket{width:302px;background:#fff;color:#000;padding:10px;font:13px/1.35 "Noto Sans Arabic",Tahoma,sans-serif;direction:rtl;border:1px solid #ccc;box-shadow:0 2px 10px rgba(0,0,0,.1)}
+.ticket .c{text-align:center}
+.ticket .big{font:800 30px/1.1 Roboto,Arial,sans-serif;direction:ltr}
+.ticket .inv{background:#000;color:#fff;font-weight:800;font-size:18px;text-align:center;padding:3px 0;margin:4px 0}
+.ticket hr{border:0;border-top:1.5px dashed #000;margin:7px 0}
+.ticket .it{font-weight:800;font-size:16px}
+.ticket .wo{border:2.5px solid #000;font-weight:800;font-size:16px;padding:1px 6px;margin:3px 0;display:block}
+.ticket .ex{font-weight:800}
+.ticket .nb{border:1.5px dashed #000;padding:4px 6px;margin:4px 0;font-weight:700}
+.ticket .r{display:flex;justify-content:space-between}
+</style>
+</head>
+<body>
+<div class="doc">
+<header>
+  <h1>Menova: screen proposals for owner approval (P0-08)</h1>
+  <p>For each screen: the live screen captured on 2026-11-20 (headless Chrome, 375 × 812 phone, or 1280 px desktop; the cart was pre-filled through <code>localStorage</code>, analytics requests were blocked, and nothing was submitted), the proposed design built with the approved tokens from <code>app_theme.dart</code> (colours, 18/14 px radii, pill buttons, Roboto), and what changes and why. Real menu data from <code>tools/seed</code>: Supreme (EGP 175, Medium +60, Stuffed crust +45, Pepperoni +35 each, Ranch sauce +15) and Nutella &amp; banana crepe (EGP 95, Caramel sauce +15).</p>
+  <p>Limits kept on purpose: cash only (no online payment), no ratings, no driver tracking, no new data. Everything shown already exists in the cart, <code>Order</code> or <code>OrderItem</code> snapshots. All buttons are 44 px or taller.</p>
+  <nav class="toc"><a href="#builder">a. Builder</a><a href="#cart">b. Cart</a><a href="#checkout">c. Checkout &amp; confirmation</a><a href="#kitchen">d. Reception board &amp; ticket</a></nav>
+</header>
+
+<!-- ============ A. BUILDER ============ -->
+<section class="screen" id="builder">
+  <h2>a. Builder page: small refinements</h2>
+  <p class="sub">The layout is the approved reference and stays. Only three optional touches, each a few lines in <code>builder_screen.dart</code> / <code>choice_selectors.dart</code>.</p>
+  <div class="row">
+    <div class="col"><span class="label">Current (live)</span><img class="shot" src="current_builder_mobile.png" alt="Current builder page, Supreme"></div>
+    <div class="col"><span class="label new">Proposed</span>
+      <div class="phone">
+        <div class="topbar"><span class="icon-btn">☰</span><span class="logo"><i></i>Menova</span><span class="sp"></span><span class="icon-btn">👜<span class="badge">3</span></span><span class="lang ar">العربية</span></div>
+        <div class="body">
+          <div class="back">← Back to Menu</div>
+          <div style="background:var(--surface);border-radius:var(--r-card);height:300px;display:grid;place-items:center"><div class="pizza" style="width:220px;height:220px"></div></div>
+          <h3 class="title" style="margin-top:14px">Supreme</h3>
+          <div class="muted">Mozzarella · Pepperoni · Sausage · Green pepper · Onion · Mushrooms · Black olives</div>
+          <div class="between" style="margin-top:8px"><span class="price" style="font-size:28px">EGP 365</span><span class="btn ghost">↺ Reset</span></div>
+          <div class="chips"><span class="chip opt">Medium</span><span class="chip opt">Stuffed crust</span><span class="chip extra">+ Pepperoni ×2</span><span class="chip extra">+ Ranch sauce</span><span class="chip removed">No <s>Onion</s></span></div>
+          <div class="card" style="margin-top:10px"><div class="sec-title" style="margin-top:0"><span class="ic">◭</span>Size</div>
+            <div class="chips"><span class="chip" style="min-height:44px">Small</span><span class="chip" style="min-height:44px;background:var(--primary);color:#fff;border-color:var(--primary)">Medium · +EGP 60</span><span class="chip" style="min-height:44px">Large · +EGP 120</span></div></div>
+        </div>
+        <div class="bottom"><button class="btn block">Add to Cart · EGP 365</button></div>
+      </div>
+    </div>
+    <div class="changes"><span class="label">What changes and why</span>
+      <ul>
+        <li><b>“Your changes” line under the price</b>: size, crust, “+ Pepperoni ×2”, “No Onion” as the same chips the cart uses. The customer sees what they changed without scrolling back through the grid. Data: <code>BuilderState</code> extras/removed, already used by the cart.</li>
+        <li><b>Size chips show their price difference</b> (“Medium · +EGP 60”), like the crust chip already does (“Stuffed crust · +EGP 45”). Data: <code>product.sizeDeltas</code>.</li>
+        <li><b>Reset moves next to the price</b> (shown only when modified, as today), so it is visible without scrolling to the bottom.</li>
+        <li><b>Cart badge</b> with the item count on the bag icon, the fly-to-cart target (<code>cart.itemCount</code>).</li>
+        <li>Everything else (canvas, ingredient grid, add bar states, oven) stays as approved.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ B. CART ============ -->
+<section class="screen" id="cart">
+  <h2>b. Cart</h2>
+  <p class="sub">Two lines: Supreme · Medium · Stuffed crust · +Pepperoni ×2 · +Ranch sauce · No Onion · note “Well done” = EGP 365; Nutella &amp; banana crepe + Caramel sauce × 2 = EGP 220. Items EGP 585.</p>
+  <div class="row">
+    <div class="col"><span class="label">Current (live, English)</span><img class="shot" src="current_cart_en_mobile.png" alt="Current cart in English"></div>
+    <div class="col"><span class="label new">Proposed (English, LTR)</span>
+      <div class="phone" dir="ltr">
+        <div class="topbar"><span class="icon-btn">←</span><span class="logo"><i></i>Menova</span><span class="sp"></span><span class="icon-btn">👜<span class="badge">3</span></span><span class="lang ar">العربية</span></div>
+        <div class="body">
+          <div class="between"><h3 class="title">Your cart</h3><span class="muted">3 items</span></div>
+          <div class="card" style="margin-top:12px">
+            <div class="line"><div class="thumb"><div class="pizza"></div></div>
+              <div class="grow"><div class="between"><b style="font-size:16px">Supreme</b><b>EGP 365</b></div>
+                <div class="chips"><span class="chip opt">Medium</span><span class="chip opt">Stuffed crust</span></div>
+                <div class="chips" style="margin-top:0"><span class="chip extra">+ Pepperoni ×2</span><span class="chip extra">+ Ranch sauce</span><span class="chip removed">No <s>Onion</s></span></div>
+                <div class="muted" style="font-size:13px">📝 Well done</div></div></div>
+            <div class="actions" style="justify-content:space-between"><span class="stepper"><b>−</b><span>1</span><b>+</b></span><span><span class="btn ghost">✎ Edit</span><span class="btn ghost" style="color:var(--muted)">🗑 Remove</span></span></div>
+          </div>
+          <div class="card" style="margin-top:12px">
+            <div class="line"><div class="thumb"><div class="crepe"></div></div>
+              <div class="grow"><div class="between"><b style="font-size:16px">Nutella &amp; banana crepe</b><b>EGP 220</b></div>
+                <div class="chips"><span class="chip extra">+ Caramel sauce</span></div>
+                <div class="muted" style="font-size:13px">EGP 110 each</div></div></div>
+            <div class="actions" style="justify-content:space-between"><span class="stepper"><b>−</b><span>2</span><b>+</b></span><span><span class="btn ghost">✎ Edit</span><span class="btn ghost" style="color:var(--muted)">🗑 Remove</span></span></div>
+          </div>
+          <div class="card" style="margin-top:12px">
+            <div class="sum-row"><span>Items</span><span>EGP 585</span></div>
+            <div class="sum-row muted" style="font-size:13px"><span>Delivery fee and coupon</span><span>at checkout</span></div>
+            <div class="sum-row total"><span>Total so far</span><span>EGP 585</span></div>
+          </div>
+        </div>
+        <div class="bottom"><button class="btn block">Checkout · EGP 585</button></div>
+      </div>
+    </div>
+    <div class="col"><span class="label">Current (live, Arabic)</span><img class="shot" src="current_cart_ar_mobile.png" alt="Current cart in Arabic"></div>
+    <div class="col"><span class="label new">Proposed (Arabic, RTL)</span>
+      <div class="phone" dir="rtl">
+        <div class="topbar"><span class="icon-btn">→</span><span class="logo">منوفا<i></i></span><span class="sp"></span><span class="icon-btn">👜<span class="badge">3</span></span><span class="lang">English</span></div>
+        <div class="body">
+          <div class="between"><h3 class="title">سلتك</h3><span class="muted">3 أصناف</span></div>
+          <div class="card" style="margin-top:12px">
+            <div class="line"><div class="thumb"><div class="pizza"></div></div>
+              <div class="grow"><div class="between"><b style="font-size:16px">سوبريم</b><b>365 ج.م</b></div>
+                <div class="chips"><span class="chip opt">وسط</span><span class="chip opt">ستافت كراست</span></div>
+                <div class="chips" style="margin-top:0"><span class="chip extra">+ بيبروني ×2</span><span class="chip extra">+ صوص رانش</span><span class="chip removed">بدون <s>بصل</s></span></div>
+                <div class="muted" style="font-size:13px">📝 Well done</div></div></div>
+            <div class="actions" style="justify-content:space-between"><span class="stepper"><b>−</b><span>1</span><b>+</b></span><span><span class="btn ghost">✎ تعديل</span><span class="btn ghost" style="color:var(--muted)">🗑 حذف</span></span></div>
+          </div>
+          <div class="card" style="margin-top:12px">
+            <div class="line"><div class="thumb"><div class="crepe"></div></div>
+              <div class="grow"><div class="between"><b style="font-size:16px">كريب نوتيلا وموز</b><b>220 ج.م</b></div>
+                <div class="chips"><span class="chip extra">+ صوص كراميل</span></div>
+                <div class="muted" style="font-size:13px">110 ج.م للواحد</div></div></div>
+            <div class="actions" style="justify-content:space-between"><span class="stepper"><b>−</b><span>2</span><b>+</b></span><span><span class="btn ghost">✎ تعديل</span><span class="btn ghost" style="color:var(--muted)">🗑 حذف</span></span></div>
+          </div>
+          <div class="card" style="margin-top:12px">
+            <div class="sum-row"><span>الأصناف</span><span>585 ج.م</span></div>
+            <div class="sum-row muted" style="font-size:13px"><span>رسوم التوصيل والكوبون</span><span>عند إتمام الطلب</span></div>
+            <div class="sum-row total"><span>الإجمالي حتى الآن</span><span>585 ج.م</span></div>
+          </div>
+        </div>
+        <div class="bottom"><button class="btn block">إتمام الطلب · 585 ج.م</button></div>
+      </div>
+    </div>
+    <div class="changes"><span class="label">What changes and why</span>
+      <ul>
+        <li><b>“No Onion” is no longer red text next to red extras.</b> Today extras (primary red) and removals (error red) look the same. Proposed: extras as tinted “+” chips, removals as a dashed chip with the name struck through, size/crust as neutral chips.</li>
+        <li><b>Each line is a card</b> with an 84 px square thumbnail that fits the whole product (the crepe preview is cropped today), the line price aligned with the name, and the unit price when qty &gt; 1.</li>
+        <li><b>One action row</b>: a pill stepper (44 px buttons) and Edit / Remove with icons, instead of Remove wrapping onto its own line.</li>
+        <li><b>Site top bar with back, cart badge and language</b>, like the approved pages; the cart today has a bare title and no way back on direct load.</li>
+        <li><b>Summary card</b> says delivery and coupon come at checkout (both are priced there), and the button carries the total.</li>
+        <li>Desktop: lines and the summary side by side, summary sticky (below). Empty cart: message plus a “Back to Menu” button.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:24px">
+    <div class="col" style="flex:1 1 100%"><span class="label">Current (live, desktop 1280 px)</span><img class="shot wide" src="current_cart_en_desktop.png" alt="Current cart on desktop"></div>
+    <div class="col scroll-x" style="flex:1 1 100%"><span class="label new">Proposed (desktop)</span>
+      <div class="desk">
+        <div class="topbar"><span class="logo"><i></i>Menova</span><span class="sp"></span><span class="nav"><span>Home</span><span class="on">Menu</span><span>About</span><span>Contact</span></span><span class="sp"></span><span class="icon-btn">👜<span class="badge">3</span></span><span class="lang ar">العربية</span></div>
+        <div style="display:grid;grid-template-columns:1fr 340px;gap:28px;padding:20px 32px 32px">
+          <div><div class="back">← Back to Menu</div><h3 class="title" style="margin:6px 0 14px">Your cart</h3>
+            <div class="card"><div class="line"><div class="thumb"><div class="pizza"></div></div><div class="grow"><div class="between"><b style="font-size:17px">Supreme</b><b>EGP 365</b></div><div class="chips"><span class="chip opt">Medium</span><span class="chip opt">Stuffed crust</span><span class="chip extra">+ Pepperoni ×2</span><span class="chip extra">+ Ranch sauce</span><span class="chip removed">No <s>Onion</s></span></div><div class="between"><span class="muted">📝 Well done</span><span><span class="stepper"><b>−</b><span>1</span><b>+</b></span> <span class="btn ghost">✎ Edit</span><span class="btn ghost" style="color:var(--muted)">🗑 Remove</span></span></div></div></div></div>
+            <div class="card" style="margin-top:12px"><div class="line"><div class="thumb"><div class="crepe"></div></div><div class="grow"><div class="between"><b style="font-size:17px">Nutella &amp; banana crepe</b><b>EGP 220</b></div><div class="chips"><span class="chip extra">+ Caramel sauce</span></div><div class="between"><span class="muted">EGP 110 each</span><span><span class="stepper"><b>−</b><span>2</span><b>+</b></span> <span class="btn ghost">✎ Edit</span><span class="btn ghost" style="color:var(--muted)">🗑 Remove</span></span></div></div></div></div>
+          </div>
+          <div class="card" style="align-self:start;margin-top:66px;box-shadow:var(--shadow)"><b style="font-size:17px">Order summary</b>
+            <div class="sum-row" style="margin-top:8px"><span>Items (3)</span><span>EGP 585</span></div>
+            <div class="sum-row muted" style="font-size:13px"><span>Delivery fee and coupon</span><span>at checkout</span></div>
+            <div class="sum-row total"><span>Total so far</span><span>EGP 585</span></div>
+            <button class="btn block" style="margin-top:12px">Checkout · EGP 585</button>
+            <div class="muted" style="font-size:12px;margin-top:8px">💵 Cash on delivery or pickup</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ C. CHECKOUT + CONFIRMATION ============ -->
+<section class="screen" id="checkout">
+  <h2>c. Checkout and order confirmation</h2>
+  <p class="sub">Same cart. Delivery example: 4.6 km by road → 5 started km × EGP 6 = EGP 30 (minimum 25, max 15 km), total EGP 615. Pickup total EGP 585. No order was placed for these captures.</p>
+  <div class="row">
+    <div class="col"><span class="label">Current (live, pickup)</span><img class="shot" src="current_checkout_pickup_mobile.png" alt="Current checkout, pickup"></div>
+    <div class="changes"><span class="label">Current delivery form (from <code>checkout_screen.dart</code>)</span>
+      <ul>
+        <li>The headless capture could not switch the segmented control to Delivery, so it is described instead.</li>
+        <li>Choosing Delivery inserts below the segmented control: a 2–4 line Address field, an outlined “Use my location” button (spinner while locating, then “Update location”) and a plain text line “4.6 km by road · Delivery fee: EGP 30”, or the error in red (denied, unavailable, route failed, out of range).</li>
+        <li>The totals gain a “Delivery fee” row (“—” until located) and Total waits for it; “Place order” without a location shows the snackbar “Share your location to price the delivery”.</li>
+        <li>Pickup (shown left) has no address or location. In both cases the page has no top bar, no order summary and the button does not show the total.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="row" style="margin-top:20px">
+    <div class="col"><span class="label new">Proposed checkout (delivery)</span>
+      <div class="phone">
+        <div class="topbar"><span class="icon-btn">←</span><span class="logo"><i></i>Menova</span><span class="sp"></span><span class="lang ar">العربية</span></div>
+        <div class="body">
+          <h3 class="title">Checkout</h3>
+          <div class="sec-title"><span class="ic">👤</span>Your details</div>
+          <div class="field"><small>Name</small>Ahmed</div>
+          <div class="field"><small>Phone</small><span style="direction:ltr">010 0000 0000</span></div>
+          <div class="sec-title"><span class="ic">🛍</span>How do you want it?</div>
+          <div class="choice"><div><b>🏪 Pick up</b><small class="muted">From the restaurant, Banha</small></div><div class="on"><b>🛵 Delivery</b><small class="muted">EGP 6 per km, from EGP 25</small></div></div>
+          <div class="field" style="margin-top:10px;min-height:68px"><small>Address</small>Building, street, floor, landmark</div>
+          <button class="btn outline block" style="min-height:48px">⌖ Update location</button>
+          <div class="info" style="margin-top:8px"><span class="ok">✓</span>4.6 km by road · Delivery fee EGP 30</div>
+          <div class="sec-title"><span class="ic">🧾</span>Your order (3 items)</div>
+          <div class="card" style="font-size:14px">
+            <div class="between"><b>1 × Supreme</b><span>EGP 365</span></div><div class="muted" style="font-size:13px">Medium · Stuffed crust · + Pepperoni ×2 · + Ranch sauce · No Onion</div>
+            <div class="between" style="margin-top:6px"><b>2 × Nutella &amp; banana crepe</b><span>EGP 220</span></div><div class="muted" style="font-size:13px">+ Caramel sauce</div>
+            <div class="field" style="margin:10px 0 0;min-height:44px"><small>Order notes</small></div>
+            <div class="actions"><div class="field" style="flex:1;margin:0;min-height:44px"><small>Coupon code</small></div><span class="btn tonal">Apply</span></div>
+            <div class="sum-row" style="margin-top:8px"><span>Items</span><span>EGP 585</span></div>
+            <div class="sum-row"><span>Delivery fee</span><span>EGP 30</span></div>
+            <div class="sum-row total"><span>Total</span><span>EGP 615</span></div>
+            <div class="muted" style="font-size:13px">💵 Cash on delivery or pickup</div>
+          </div>
+        </div>
+        <div class="bottom"><button class="btn block">Place order · EGP 615</button></div>
+      </div>
+    </div>
+    <div class="col"><span class="label new">Proposed confirmation (delivery, live)</span>
+      <div class="phone">
+        <div class="topbar"><span class="logo"><i></i>Menova</span><span class="sp"></span><span class="icon-btn">👜</span><span class="lang ar">العربية</span></div>
+        <div class="body">
+          <div style="text-align:center;padding:8px 0 4px"><div style="width:56px;height:56px;border-radius:50%;background:#E5F3E6;color:var(--done);display:grid;place-items:center;font-size:28px;margin:0 auto">✓</div>
+            <h3 class="title" style="font-size:22px;margin-top:8px">Order received</h3>
+            <div class="muted">Order number</div><div style="font:800 30px Roboto,Arial;letter-spacing:.04em">#7QX2M4KD</div>
+            <div class="muted" style="font-size:13px">Keep it for any call to the restaurant</div></div>
+          <div class="status2" style="margin-top:12px"><div class="pill-status"><small>Order status</small><b style="color:var(--primary)">Preparing</b></div><div class="pill-status"><small>Payment</small><b>Unpaid</b><small>Cash on delivery</small></div></div>
+          <div class="card" style="margin-top:12px;padding:12px 6px">
+            <div class="steps"><div class="s done"><div class="dot">✓</div>Received</div><div class="s done"><div class="dot">✓</div>Accepted</div><div class="s cur"><div class="dot">3</div>Preparing</div><div class="s"><div class="dot">4</div>Ready</div><div class="s"><div class="dot">5</div>On the way</div><div class="s"><div class="dot">6</div>Delivered</div></div>
+            <div class="muted" style="font-size:12px;text-align:center">Updates live, no need to refresh</div></div>
+          <div class="card" style="margin-top:12px;font-size:14px"><b>🛵 Delivery to</b><div class="muted">Building, street, floor, landmark · 4.6 km</div></div>
+          <div class="card" style="margin-top:12px;font-size:14px">
+            <div class="between"><b>1 × Supreme</b><span>EGP 365</span></div><div class="muted" style="font-size:13px">Medium · Stuffed crust · + Pepperoni ×2 · + Ranch sauce · No Onion</div>
+            <div class="between" style="margin-top:6px"><b>2 × Nutella &amp; banana crepe</b><span>EGP 220</span></div>
+            <div class="sum-row" style="margin-top:8px"><span>Items</span><span>EGP 585</span></div><div class="sum-row"><span>Delivery fee</span><span>EGP 30</span></div><div class="sum-row total"><span>Total</span><span>EGP 615</span></div></div>
+          <button class="btn outline block" style="margin-top:12px">Back to Menu</button>
+        </div>
+      </div>
+    </div>
+    <div class="col"><span class="label new">Pickup variant (steps)</span>
+      <div class="card" style="width:375px;max-width:100%">
+        <div class="status2"><div class="pill-status"><small>Order status</small><b style="color:var(--primary)">Ready</b></div><div class="pill-status"><small>Payment</small><b style="color:var(--done)">Paid</b><small>Cash at pickup</small></div></div>
+        <div class="steps" style="margin-top:12px"><div class="s done"><div class="dot">✓</div>Received</div><div class="s done"><div class="dot">✓</div>Accepted</div><div class="s done"><div class="dot">✓</div>Preparing</div><div class="s cur"><div class="dot">4</div>Ready for pickup</div><div class="s"><div class="dot">5</div>Picked up</div></div>
+        <div class="muted" style="font-size:13px;margin-top:6px">No “On the way” step for pickup (as today). The last label reads “Picked up” instead of “Delivered”.</div>
+      </div>
+      <span class="label new" style="margin-top:12px">Cancelled variant</span>
+      <div class="card" style="width:375px;max-width:100%;border-color:var(--error)"><b style="color:var(--error)">This order was cancelled</b><div class="muted" style="font-size:13px">The steps are hidden; payment status stays visible on its own card.</div></div>
+      <span class="label new" style="margin-top:12px">Sending states on the button</span>
+      <div class="card" style="width:375px;max-width:100%;display:flex;flex-direction:column;gap:8px">
+        <button class="btn block" style="opacity:.6">Sending your order...</button>
+        <div class="muted" style="font-size:13px;text-align:center">Waiting to send: we could not confirm your order. Try again; it will not be duplicated.</div>
+        <button class="btn block">Try again</button>
+      </div>
+    </div>
+    <div class="changes"><span class="label">What changes and why (checkout)</span>
+      <ul>
+        <li><b>Three titled sections</b> (details, how, your order) instead of one long list of fields, with the approved section style (icon + bold title).</li>
+        <li><b>Pick up / Delivery as two large cards</b> with a one-line hint, replacing the small Material segmented control; delivery reveals address, location button and the priced result (“4.6 km by road · Delivery fee EGP 30”) in a tinted info box, errors in red as today.</li>
+        <li><b>Order summary on the page</b>: the customer confirms what they are paying for (the lines, from the cart) next to the totals; coupon and notes stay.</li>
+        <li><b>The button carries the total</b> (“Place order · EGP 615”) and keeps today's states: sending (locked), checking, waiting to send + Try again. Price-change dialog unchanged.</li>
+      </ul>
+      <span class="label" style="display:block;margin-top:14px">What changes and why (confirmation)</span>
+      <ul>
+        <li><b>Clear success header</b> and a large order number, both from <code>order.id</code> (short reference).</li>
+        <li><b>Order status and payment shown separately</b> as two cards; payment adds “Cash on delivery / at pickup” from the fulfillment.</li>
+        <li><b>Horizontal stepper</b> instead of a tall list; pickup skips “On the way” (already the logic) and ends with “Picked up”.</li>
+        <li><b>What was ordered</b>, delivery address and the frozen totals, all read from the order snapshot (no recalculation).</li>
+        <li>Top bar and “Back to Menu”, so the page is not a dead end.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ D. RECEPTION ============ -->
+<section class="screen" id="kitchen">
+  <h2>d. Reception / kitchen board, order card and 80 mm ticket</h2>
+  <p class="sub">Arabic only. The board and card were described from <code>apps/reception</code> (no orders were created): today a grid of identical cards (max 460 px wide, fixed 520 px tall with inner scroll), newest first, a 3 px red border when a new order arrives or a price/delivery check fails, chips for status and payment, and action buttons for the next allowed status and payment. Only the login page is captured.</p>
+  <div class="row">
+    <div class="col" style="flex:1 1 100%"><span class="label">Current (live, login)</span><img class="shot wide" src="current_reception_login_desktop.png" alt="Current reception login" style="max-width:640px"></div>
+    <div class="col scroll-x" style="flex:1 1 100%"><span class="label new">Proposed board (desktop / kitchen tablet landscape)</span>
+      <div class="rec">
+        <div class="bar"><h4>الطلبات</h4><span class="mini">منوفا: استقبال الطلبات</span><span style="flex:1"></span><span class="btn tonal">🔔 التنبيه مفعّل</span><span class="btn ghost">تسجيل الخروج</span></div>
+        <div class="cols">
+          <div><div class="colh"><span>جديد</span><span class="n">2</span></div>
+            <div class="oc new">
+              <div class="hd"><span class="ref">#7QX2M4KD</span><span class="tag del">🛵 توصيل</span><span class="tag unpaid">غير مدفوع</span><span class="age">منذ 2 د · 14:32</span></div>
+              <div class="item"><div class="q">1 × سوبريم</div><div>وسط · ستافت كراست</div>
+                <div class="inc">يشمل: موزاريلا، بيبروني، سوسيس، فلفل أخضر، مشروم، زيتون أسود</div>
+                <div class="plus">+ بيبروني ×2</div><div class="plus">+ صوص رانش</div>
+                <span class="without">بدون بصل</span>
+                <div class="notebox">ملاحظات: Well done</div></div>
+              <div class="item"><div class="q">2 × كريب نوتيلا وموز</div><div class="plus">+ صوص كراميل</div></div>
+              <div class="cust">أحمد · <span dir="ltr">01000000000</span><br>العنوان: عمارة، شارع، الدور، علامة مميزة<br>4.6 كم بالطريق · <a href="#kitchen" style="color:var(--primary)">📍 الموقع على الخريطة</a></div>
+              <div class="sum-row" style="margin-top:6px"><span>المنتجات</span><span>585 ج.م</span></div><div class="sum-row"><span>رسوم التوصيل</span><span>30 ج.م</span></div><div class="sum-row total" style="font-size:16px"><span>الإجمالي</span><span>615 ج.م</span></div>
+              <div class="acts"><button class="btn">قبول</button><button class="btn outline" style="color:var(--error)">إلغاء</button><button class="btn outline">🖨 طباعة</button></div>
+              <div class="acts" style="margin-top:4px"><button class="btn ghost">تم الدفع</button><button class="btn ghost">استرداد</button></div>
+            </div>
+            <div class="oc bad">
+              <div class="hd"><span class="ref">#P3LN0QWE</span><span class="tag pick">🏪 استلام</span><span class="tag unpaid">غير مدفوع</span><span class="age">منذ 4 د</span></div>
+              <div class="alert">⚠ السعر لا يطابق الحساب: المحسوب 585 ج.م. راجع قبل القبول</div>
+              <div class="item"><div class="q">1 × مارجريتا</div><div>كبير</div><div class="plus">+ موزاريلا</div><span class="without">بدون ريحان</span></div>
+              <div class="sum-row total" style="font-size:16px"><span>الإجمالي</span><span>200 ج.م</span></div>
+              <div class="acts"><button class="btn">قبول</button><button class="btn outline" style="color:var(--error)">إلغاء</button><button class="btn outline">🖨</button></div>
+            </div>
+          </div>
+          <div><div class="colh"><span>مقبول</span><span class="n">1</span></div>
+            <div class="oc"><div class="hd"><span class="ref">#A9D2KX7M</span><span class="tag pick">🏪 استلام</span><span class="tag paid">مدفوع</span><span class="age">منذ 9 د</span></div>
+              <div class="item"><div class="q">1 × فراخ باربكيو</div><div>وسط · عادية</div></div>
+              <div class="acts"><button class="btn">بدء التحضير</button><button class="btn outline" style="color:var(--error)">إلغاء</button></div></div>
+          </div>
+          <div><div class="colh"><span>قيد التحضير</span><span class="n">1</span></div>
+            <div class="oc"><div class="hd"><span class="ref">#M4TT8ZQ1</span><span class="tag del">🛵 توصيل</span><span class="tag unpaid">غير مدفوع</span><span class="age">منذ 15 د</span></div>
+              <div class="item"><div class="q">2 × كريب فراخ</div><span class="without">بدون فلفل أخضر</span></div>
+              <div class="acts"><button class="btn">جاهز</button></div></div>
+          </div>
+          <div><div class="colh"><span>جاهز / خرج للتوصيل</span><span class="n">1</span></div>
+            <div class="oc"><div class="hd"><span class="ref">#Z81WL65U</span><span class="tag del">🛵 توصيل</span><span class="tag unpaid">غير مدفوع</span><span class="age">منذ 22 د</span></div>
+              <div class="item"><div class="q">1 × خضار</div><div>صغير</div></div>
+              <div class="acts"><button class="btn">خرج للتوصيل</button></div></div>
+          </div>
+        </div>
+        <div class="mini" style="text-align:center;padding:0 0 12px">سطر حقوق المطور من DeveloperInfo (كما هو اليوم)</div>
+      </div>
+    </div>
+  </div>
+  <div class="row" style="margin-top:20px">
+    <div class="col"><span class="label new">Proposed board (phone): one column per status as tabs</span>
+      <div class="phone" dir="rtl" style="height:auto;font-family:'Noto Sans Arabic',Tahoma,sans-serif;background:#F4F1EF">
+        <div class="topbar"><b style="font-size:18px">الطلبات</b><span class="sp"></span><span class="icon-btn">🔔</span><span class="icon-btn">⎋</span></div>
+        <div style="display:flex;gap:6px;padding:8px 12px;overflow:auto"><span class="chip" style="background:var(--primary);color:#fff;min-height:44px">جديد 2</span><span class="chip" style="min-height:44px">مقبول 1</span><span class="chip" style="min-height:44px">قيد التحضير 1</span><span class="chip" style="min-height:44px">جاهز 1</span></div>
+        <div style="padding:0 12px 12px"><div class="oc new"><div class="hd"><span class="ref">#7QX2M4KD</span><span class="tag del">🛵 توصيل</span><span class="age">منذ 2 د</span></div><div class="item"><div class="q">1 × سوبريم</div><div class="plus">+ بيبروني ×2 · + صوص رانش</div><span class="without">بدون بصل</span></div><div class="acts"><button class="btn">قبول</button><button class="btn outline" style="color:var(--error)">إلغاء</button></div></div></div>
+      </div>
+    </div>
+    <div class="col"><span class="label new">Proposed 80 mm ticket (black on white)</span>
+      <div class="ticket">
+        <div class="c big">#7QX2M4KD</div>
+        <div class="c" dir="ltr">14:32 · 2026-11-20</div>
+        <div class="inv">توصيل</div>
+        <hr>
+        <div class="it">1 × سوبريم</div><div>وسط · ستافت كراست</div>
+        <div class="ex">+ بيبروني ×2</div><div class="ex">+ صوص رانش</div>
+        <span class="wo">✕ بدون بصل</span>
+        <div class="nb">ملاحظات: Well done</div>
+        <div class="it" style="margin-top:6px">2 × كريب نوتيلا وموز</div><div class="ex">+ صوص كراميل</div>
+        <hr>
+        <div>أحمد · <span dir="ltr">01000000000</span></div><div>عمارة، شارع، الدور، علامة مميزة</div><div>4.6 كم بالطريق</div>
+        <hr>
+        <div class="r"><span>المنتجات</span><span>585 ج.م</span></div><div class="r"><span>رسوم التوصيل</span><span>30 ج.م</span></div>
+        <div class="r" style="font-weight:800;font-size:16px"><span>الإجمالي</span><span>615 ج.م</span></div>
+        <div class="c" style="font-weight:800;border:1.5px solid #000;margin-top:4px">غير مدفوع · نقداً</div>
+        <hr><div class="c" style="font-size:9px">تطوير … (سطر DeveloperInfo كما هو)</div>
+      </div>
+    </div>
+    <div class="changes"><span class="label">What changes and why (board and card)</span>
+      <ul>
+        <li><b>Columns by status</b> (new, accepted, preparing, ready / on the way) instead of one mixed grid: the kitchen sees what to start next at a glance. Same live query and the same <code>activeStatuses</code>, grouped on the client; on a phone the columns become tabs with counts.</li>
+        <li><b>Cards grow with their content</b> (no fixed 520 px height with a hidden inner scroll that can hide a “بدون” line).</li>
+        <li><b>“بدون X” as a bordered red block</b>, extras as bold green “+” lines, kept defaults small and muted, notes in a yellow box: the three things the kitchen must not miss are styled differently from each other.</li>
+        <li><b>Header shows ref, pickup/delivery tag, payment tag and the age</b> of the order (from <code>createdAt</code>); new orders keep the red outline + sound. A failed price or delivery check gets a red border and the existing red message at the top of the card, before the buttons.</li>
+        <li><b>Full-width 44 px actions</b>: the next allowed status (from <code>nextStatuses</code>), cancel in outline red, print; payment actions as a lighter second row so they are not confused with status.</li>
+        <li>Reception uses the storefront tokens (copied values) instead of the default Material seed colour, so both sites look like one brand.</li>
+      </ul>
+      <span class="label" style="display:block;margin-top:14px">What changes and why (ticket)</span>
+      <ul>
+        <li>Order number larger (30 px) and pickup/delivery as an inverted black band, readable from the pass.</li>
+        <li>“بدون X” keeps the thick box and gains a ✕ mark; extras stay bold; notes move into a dashed box.</li>
+        <li>Itemised totals and a boxed payment line (“غير مدفوع · نقداً”) so the driver or cashier knows what to collect. Same 302 px width and frozen data.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<p class="note" style="margin-top:24px">Buildability: all proposals use widgets already in the apps (Card/Container, Chip, FilledButton/OutlinedButton/TextButton, ListView/GridView or Row of columns, TabBar, the existing TopBar) and data already in <code>CartLineView</code>, <code>Order</code> and <code>OrderItem</code>. New strings go to <code>AppStrings</code> in both languages (storefront) or Arabic (reception). Screenshots are in this folder (<code>current_*.png</code>); emoji icons in the mockups stand for Material icons.</p>
+</div>
+</body>
+</html>
