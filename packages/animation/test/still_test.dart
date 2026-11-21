@@ -30,7 +30,7 @@ void main() {
       image.dispose();
       return bytes!;
     });
-    final i = (20 * 40 + 20) * 4;
+    const i = (20 * 40 + 20) * 4;
     final px = data!.buffer.asUint8List();
     return Color.fromARGB(px[i + 3], px[i], px[i + 1], px[i + 2]);
   }
@@ -89,7 +89,7 @@ void main() {
       });
       final px = data!.buffer.asUint8List();
       // Squashed to the top: nothing near the bottom.
-      final i = (35 * 40 + 20) * 4;
+      const i = (35 * 40 + 20) * 4;
       expect(px[i + 3], 0, reason: '$m');
     }
   });
