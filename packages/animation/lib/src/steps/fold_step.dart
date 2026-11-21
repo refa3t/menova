@@ -226,7 +226,16 @@ class FoldStep implements AnimStep {
     final lifted = finishing
         ? interval(time, _settleFrom, 1, Curves.easeInOut)
         : 0.0;
-    final pieces = bakedContents(input);
+    // The pieces do not change: one image, however often a fold draws
+    // them (each side's band draws them again).
+    final pieces = switch (bakedContents(input)) {
+      final c? => Still(
+        share: input.product,
+        inputs: const ['pieces'],
+        child: c,
+      ),
+      null => null,
+    };
     // Lifted off, it ends as Swap begins: its paper on, a little smaller
     // (Swap pops it from there) and the background as dark.
     // The paper fades in over the wrap as it was (two still images).
@@ -262,21 +271,24 @@ class FoldStep implements AnimStep {
       child: face,
     );
 
-    // Rounding across the wrap, growing with the folds.
-    Widget rounded(Widget child) => ShaderMask(
-      blendMode: BlendMode.srcATop,
-      shaderCallback: (b) => LinearGradient(
-        colors: [
-          Colors.black.withValues(alpha: 0.6 * progress),
-          Colors.black.withValues(alpha: 0.13 * progress),
-          Colors.white.withValues(alpha: 0.2 * progress),
-          Colors.black.withValues(alpha: 0.13 * progress),
-          Colors.black.withValues(alpha: 0.63 * progress),
-        ],
-        stops: const [0.2, 0.36, 0.5, 0.64, 0.8],
-      ).createShader(b),
-      child: child,
-    );
+    // Rounding across the wrap, growing with the folds (none on a sheet
+    // kept flat: no layer for it).
+    Widget rounded(Widget child) => progress <= 0
+        ? child
+        : ShaderMask(
+            blendMode: BlendMode.srcATop,
+            shaderCallback: (b) => LinearGradient(
+              colors: [
+                Colors.black.withValues(alpha: 0.6 * progress),
+                Colors.black.withValues(alpha: 0.13 * progress),
+                Colors.white.withValues(alpha: 0.2 * progress),
+                Colors.black.withValues(alpha: 0.13 * progress),
+                Colors.black.withValues(alpha: 0.63 * progress),
+              ],
+              stops: const [0.2, 0.36, 0.5, 0.64, 0.8],
+            ).createShader(b),
+            child: child,
+          );
 
     // A soft dark copy of [child], for shadows: blurred once (an image),
     // its strength animated.
@@ -291,14 +303,18 @@ class FoldStep implements AnimStep {
         bleed: blur * 3,
         share: input.product,
         inputs: ['shadow', blur, ...inputs],
-        child: ImageFiltered(
-          imageFilter: ui.ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-          child: ColorFiltered(
-            colorFilter: const ColorFilter.mode(
-              Color(0xFF000000),
-              BlendMode.srcIn,
+        // Kept, so not laid out and captured again every frame.
+        child: Kept(
+          inputs: ['shadow', blur, ...inputs, input.product, back != null],
+          child: ImageFiltered(
+            imageFilter: ui.ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+            child: ColorFiltered(
+              colorFilter: const ColorFilter.mode(
+                Color(0xFF000000),
+                BlendMode.srcIn,
+              ),
+              child: child,
             ),
-            child: child,
           ),
         ),
       ),
@@ -458,6 +474,46 @@ class FoldStep implements AnimStep {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The product's [pieces] as the first [count] of the fold [lines] leave
+/// them once folded flat (each side landed, without a finished wrap's
+/// heap): what is under a side pushed ahead of its edge into the middle,
+/// within the part no side took away. The frame a fold ends on, for a step
+/// that goes on from the folded sheet (a roll).
+class FoldedFilling extends StatelessWidget {
+  const FoldedFilling({
+    super.key,
+    required this.pieces,
+    required this.lines,
+    required this.count,
+  });
+
+  final Widget pieces;
+  final List<FoldLine> lines;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final n = count.clamp(0, lines.length);
+    if (n == 0) return pieces;
+    final active = lines.take(n).toList();
+    return LayoutBuilder(
+      builder: (context, box) {
+        final layer = FoldStep._filling(
+          pieces,
+          lines,
+          n,
+          1,
+          1,
+          null,
+          box.biggest,
+        );
+        if (layer == null) return const SizedBox.shrink();
+        return ClipPath(clipper: _RestClip(active), child: layer);
+      },
     );
   }
 }

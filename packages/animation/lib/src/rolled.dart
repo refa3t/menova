@@ -71,12 +71,16 @@ class RollShape {
 
 /// The product rolled into a log, as the steps after the roll show it
 /// (served, in its paper when the shape has one).
-Widget rolledProduct(AnimStepInput input, RollShape roll, Widget baked) =>
-    // Rolled, it no longer changes: one image while the steps move it.
-    Still(
-      bleed: input.productRect.shortestSide * 0.1,
-      share: input.product,
-      inputs: ['rolled', roll.settled, roll.contents, roll.sleeve],
+Widget rolledProduct(AnimStepInput input, RollShape roll, Widget baked) {
+  // Rolled, it no longer changes: one image while the steps move it (kept,
+  // so it is not laid out, and captured, again every frame).
+  final inputs = ['rolled', roll.settled, roll.contents, roll.sleeve];
+  return Still(
+    bleed: input.productRect.shortestSide * 0.1,
+    share: input.product,
+    inputs: inputs,
+    child: Kept(
+      inputs: [...inputs, input.product, input.images['back']?.firstOrNull],
       child: RolledLog(
         rect: roll.settled,
         product: baked,
@@ -84,15 +88,18 @@ Widget rolledProduct(AnimStepInput input, RollShape roll, Widget baked) =>
         contents: roll.contents,
         sleeve: roll.sleeve,
       ),
-    );
+    ),
+  );
+}
 
 /// A rolled product seen from above (a wrap): a cylinder lying across the
 /// box at [rect] (fractions of the box), its outside the product's [back]
 /// (round: lit along the top, in shade below), the sheet's edge as a seam
 /// that turns with it ([turn], 0 to 1 over the roll), the left end closed
 /// and the right end open on the rolled layers with the filling ([contents]
-/// of [product]) inside, [open] of it showing. An optional paper [sleeve]
-/// wraps its left half.
+/// of [product]) inside: [open] (0 to 1) is how much of it is rolled in,
+/// the filling there growing with it. An optional paper [sleeve] wraps its
+/// left half.
 class RolledLog extends StatelessWidget {
   const RolledLog({
     super.key,
@@ -103,6 +110,7 @@ class RolledLog extends StatelessWidget {
     this.sleeve,
     this.turn = 1,
     this.open = 1,
+    this.sleeveOpacity = 1,
   });
 
   final Rect rect;
@@ -112,6 +120,9 @@ class RolledLog extends StatelessWidget {
   final Color? sleeve;
   final double turn;
   final double open;
+
+  /// How far the [sleeve] has come on (0 to 1), as it is put on.
+  final double sleeveOpacity;
 
   /// The tortilla's colour where no image shows (and under its outside).
   static const _sheet = Color(0xFFE9D3A2);
@@ -228,10 +239,13 @@ class RolledLog extends StatelessWidget {
         final show = open.clamp(0.0, 1.0);
         Widget? filling;
         if (region != null && !region.isEmpty && show > 0) {
-          final k = h * 0.8 / region.height;
+          // As more of it is rolled in, the filling at the end grows from
+          // a little in the middle to filling the layers.
+          final k = h * 0.8 / region.height * (0.3 + 0.7 * show);
           final c = rightEnd.center;
+          final fade = interval(show, 0, 0.25);
           filling = Opacity(
-            opacity: show,
+            opacity: fade,
             child: Transform(
               transform: Matrix4.identity()
                 ..translateByDouble(c.dx, c.dy, 0, 1)
@@ -257,7 +271,8 @@ class RolledLog extends StatelessWidget {
           ),
         );
 
-        final paper = sleeve;
+        final paperOn = sleeveOpacity.clamp(0.0, 1.0);
+        final paper = paperOn > 0 ? sleeve : null;
         final cut = [
           Offset(r.left - e * 0.25, r.top - h * 0.1),
           Offset(r.left + r.width * 0.46, r.top - h * 0.1),
@@ -286,51 +301,58 @@ class RolledLog extends StatelessWidget {
               child: CustomPaint(painter: _ClosedEndPainter(leftEnd)),
             ),
             end,
-            if (paper != null) ...[
-              // The paper's shade on the log beside its slanted edge.
-              IgnorePointer(
-                child: CustomPaint(
-                  painter: _SoftShape(
-                    (_) => Path()
-                      ..addPolygon([
-                        for (final p in cut) p + Offset(h * 0.06, 0),
-                      ], true),
-                    [...geometry, h],
-                    const Color(0x59000000),
-                    3,
-                  ),
-                ),
-              ),
-              ClipPath(
-                clipper: _PathClip(
-                  (_) => Path()..addPolygon(cut, true),
-                  geometry,
-                ),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Color.lerp(paper, const Color(0xFF000000), 0.25)!,
-                        Color.lerp(paper, const Color(0xFFFFFFFF), 0.3)!,
-                        paper,
-                        Color.lerp(paper, const Color(0xFF000000), 0.4)!,
-                      ],
-                      stops: [
-                        for (final y in [
-                          r.top - h * 0.1,
-                          r.top + h * 0.3,
-                          r.top + h * 0.6,
-                          r.bottom + h * 0.1,
-                        ])
-                          (y / size.height).clamp(0.0, 1.0),
-                      ],
+            if (paper != null)
+              Opacity(
+                opacity: paperOn,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // The paper's shade on the log beside its slanted edge.
+                    IgnorePointer(
+                      child: CustomPaint(
+                        painter: _SoftShape(
+                          (_) => Path()
+                            ..addPolygon([
+                              for (final p in cut) p + Offset(h * 0.06, 0),
+                            ], true),
+                          [...geometry, h],
+                          const Color(0x59000000),
+                          3,
+                        ),
+                      ),
                     ),
-                  ),
+                    ClipPath(
+                      clipper: _PathClip(
+                        (_) => Path()..addPolygon(cut, true),
+                        geometry,
+                      ),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Color.lerp(paper, const Color(0xFF000000), 0.25)!,
+                              Color.lerp(paper, const Color(0xFFFFFFFF), 0.3)!,
+                              paper,
+                              Color.lerp(paper, const Color(0xFF000000), 0.4)!,
+                            ],
+                            stops: [
+                              for (final y in [
+                                r.top - h * 0.1,
+                                r.top + h * 0.3,
+                                r.top + h * 0.6,
+                                r.bottom + h * 0.1,
+                              ])
+                                (y / size.height).clamp(0.0, 1.0),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
           ],
         );
       },

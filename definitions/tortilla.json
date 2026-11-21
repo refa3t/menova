@@ -297,6 +297,7 @@
           ]
         ],
         "volume": 0,
+        "pieces": true,
         "images": {
           "surface": "griddle_surface",
           "back": "tortilla_back"
@@ -324,6 +325,7 @@
           ]
         ],
         "volume": 0,
+        "pieces": true,
         "images": {
           "surface": "griddle_surface",
           "back": "tortilla_back"
@@ -369,8 +371,10 @@
             0.475,
             0.75,
             0.675
-          ]
+          ],
+          "sleeve": "#D9CCB0"
         },
+        "pieces": true,
         "images": {
           "surface": "griddle_surface",
           "back": "tortilla_back"
