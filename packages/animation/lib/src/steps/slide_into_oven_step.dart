@@ -168,12 +168,15 @@ class SlideIntoOvenStep implements AnimStep {
           Positioned.fill(
             child: Transform.translate(
               offset: Offset(0, drop),
-              child: CustomPaint(
-                painter: _OvenInsidePainter(
-                  geo: geo,
-                  opacity: oven,
-                  glow: glow,
-                  flicker: still ? 0 : ms / 1000,
+              // Repainted every frame (the flames): kept apart.
+              child: RepaintBoundary(
+                child: CustomPaint(
+                  painter: _OvenInsidePainter(
+                    geo: geo,
+                    opacity: oven,
+                    glow: glow,
+                    flicker: still ? 0 : ms / 1000,
+                  ),
                 ),
               ),
             ),
@@ -199,11 +202,15 @@ class SlideIntoOvenStep implements AnimStep {
             child: IgnorePointer(
               child: Transform.translate(
                 offset: Offset(0, drop),
-                child: CustomPaint(
-                  painter: _OvenWallPainter(
-                    geo: geo,
-                    opacity: oven,
-                    glow: glow,
+                // Painted once it has faded in, then only moved (its
+                // firelight is steady, not breathing, for that reason).
+                child: RepaintBoundary(
+                  child: CustomPaint(
+                    painter: _OvenWallPainter(
+                      geo: geo,
+                      opacity: oven,
+                      glow: 0.75,
+                    ),
                   ),
                 ),
               ),

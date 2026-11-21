@@ -271,6 +271,11 @@ OPTION_GROUPS = [
          'base_pizza_stuffed_raw'),
     ]),
 ]
+# The pizza box the baked pizza is closed in (Box step, drawn in code):
+# kraft cardboard printed with the app's name, hinged at the far side.
+PIZZA_BOX = {'size': 1.04, 'color': '#C8975E', 'print': '#A8322A',
+             'text': 'Menova', 'hinge': 'top', 'openDeg': 105, 'fit': 0.92}
+
 # How far the toppings reach on a base, as a share of the regular base: the
 # stuffed crust's thick rim starts where its sauce ends, at about 0.73 of
 # the radius against 0.87 (measured on the images), so the toppings are
@@ -411,23 +416,28 @@ def main() -> None:
                    if base else {}),
             } for c, ar, en, _, base in choices],
         } for gid, gar, gen, default, choices in OPTION_GROUPS],
-        # ANIMATIONS.md 7 + OVEN.md 4 (proposed values, TEMP until G06).
+        # Owner request: the pizza slides into a brick oven (the whole arch
+        # on screen) like the cheese pan and comes out baked (Cooked, no
+        # melt), then is lowered into its box and the lid closes; the closed
+        # box flies to the cart. Reduced motion: Swap, FlyToCart (boxed).
         'animation': [
-            # Durations requested by the owner (longer oven); weights match.
-            {'step': 'Oven', 'weight': 2200, 'params': {
-                'durationMs': 2200, 'saturation': 1.45,
-                'images': {
-                    'hearth': 'oven_hearth', 'fireBack': 'oven_fire_back',
-                    'fireFront': 'oven_fire_front', 'embers': 'oven_embers',
-                    'steam': 'oven_steam', 'rim': 'oven_rim',
-                },
-                'scrimMaxPct': 35, 'vignetteMaxPct': 45, 'shrinkTo': 0.9,
-                'flashPeakPct': 35,
+            {'step': 'SlideIntoOven', 'weight': 1900, 'params': {
+                'durationMs': 1900, 'saturation': 1.45, 'insideScale': 0.62,
+                'tilt': 0.6, 'archWidth': 0.95, 'shrinkTo': 0.9,
+                # Steam only: the flames are drawn in code (lighter per
+                # frame than the clipped embers image).
+                'scrimMaxPct': 35, 'images': {'steam': 'oven_steam'},
             }},
-            {'step': 'Swap', 'weight': 300, 'params': {'durationMs': 300}},
-            {'step': 'FlyToCart', 'weight': 900, 'params': {
-                'durationMs': 900,
+            {'step': 'Box', 'weight': 900, 'params': {
+                'durationMs': 900, 'scale': 0.9, 'scrimMaxPct': 35,
+                'box': PIZZA_BOX,
+            }},
+            {'step': 'Swap', 'weight': 250, 'params': {
+                'durationMs': 250, 'box': PIZZA_BOX}},
+            {'step': 'FlyToCart', 'weight': 800, 'params': {
+                'durationMs': 800,
                 'shrinkTo': 0.18, 'arcControlPct': 20, 'rotateDeg': -12,
+                'box': PIZZA_BOX,
             }},
         ],
         'productGroups': [{'id': g, 'name': n, 'names': {'en': GROUP_EN[g], 'ar': n}}

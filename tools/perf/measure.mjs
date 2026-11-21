@@ -5,6 +5,7 @@
 //
 // Usage (from tools/perf/): npm install && npm run measure
 //   SITE=https://menova-80602.web.app CPU=4 npm run measure
+//   ONLY=margherita npm run measure (just the matching cases)
 import puppeteer from 'puppeteer-core';
 
 const site = process.env.SITE ?? 'https://menova-80602.web.app';
@@ -132,6 +133,8 @@ try {
   // Each add runs twice on the same page: the first pays one-time costs
   // (decoding oven frames, first snapshot), the second is the steady state.
   const twice = async (label, path, setup) => {
+    // ONLY=<text>: measure just the cases whose label contains it.
+    if (process.env.ONLY && !label.includes(process.env.ONLY)) return;
     const page = await open(browser, path, null);
     if (setup) {
       await setup(page);

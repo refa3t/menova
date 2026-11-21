@@ -351,40 +351,72 @@
   ],
   "animation": [
     {
-      "step": "Oven",
-      "weight": 2200,
+      "step": "SlideIntoOven",
+      "weight": 1900,
       "params": {
-        "durationMs": 2200,
+        "durationMs": 1900,
         "saturation": 1.45,
-        "images": {
-          "hearth": "oven_hearth",
-          "fireBack": "oven_fire_back",
-          "fireFront": "oven_fire_front",
-          "embers": "oven_embers",
-          "steam": "oven_steam",
-          "rim": "oven_rim"
-        },
-        "scrimMaxPct": 35,
-        "vignetteMaxPct": 45,
+        "insideScale": 0.62,
+        "tilt": 0.6,
+        "archWidth": 0.95,
         "shrinkTo": 0.9,
-        "flashPeakPct": 35
+        "scrimMaxPct": 35,
+        "images": {
+          "steam": "oven_steam"
+        }
+      }
+    },
+    {
+      "step": "Box",
+      "weight": 900,
+      "params": {
+        "durationMs": 900,
+        "scale": 0.9,
+        "scrimMaxPct": 35,
+        "box": {
+          "size": 1.04,
+          "color": "#C8975E",
+          "print": "#A8322A",
+          "text": "Menova",
+          "hinge": "top",
+          "openDeg": 105,
+          "fit": 0.92
+        }
       }
     },
     {
       "step": "Swap",
-      "weight": 300,
+      "weight": 250,
       "params": {
-        "durationMs": 300
+        "durationMs": 250,
+        "box": {
+          "size": 1.04,
+          "color": "#C8975E",
+          "print": "#A8322A",
+          "text": "Menova",
+          "hinge": "top",
+          "openDeg": 105,
+          "fit": 0.92
+        }
       }
     },
     {
       "step": "FlyToCart",
-      "weight": 900,
+      "weight": 800,
       "params": {
-        "durationMs": 900,
+        "durationMs": 800,
         "shrinkTo": 0.18,
         "arcControlPct": 20,
-        "rotateDeg": -12
+        "rotateDeg": -12,
+        "box": {
+          "size": 1.04,
+          "color": "#C8975E",
+          "print": "#A8322A",
+          "text": "Menova",
+          "hinge": "top",
+          "openDeg": 105,
+          "fit": 0.92
+        }
       }
     }
   ],

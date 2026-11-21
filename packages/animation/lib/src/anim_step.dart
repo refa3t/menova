@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+part 'boxed.dart';
 part 'melt_cover.dart';
 part 'rolled.dart';
 
@@ -1140,6 +1141,11 @@ Widget shapedProduct(AnimStepInput input, {double coverProgress = 1}) {
   final folds = (input.params['folds'] as num?)?.toInt() ?? 0;
   final melt = MeltSpec.from(input.params['melt']);
   final cover = CoverSpec.from(input.params['cover']);
+  // Closed in its box (step param `box`, see [Boxed]).
+  if (BoxSpec.from(input.params['box']) case final box?) {
+    final baked = Cooked(amount: 1, child: input.product);
+    return Boxed(spec: box, baseScale: input.baseScale, product: baked);
+  }
   // Melted (step param `melt`) and covered with film (param `cover`): a
   // baked pan of cheese, see [Melted] and [Covered].
   if (melt != null || cover != null) {
