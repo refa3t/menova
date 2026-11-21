@@ -262,11 +262,11 @@ void main() {
     }
   });
 
-  testWidgets('the wrap in its own layer looks like it painted afresh', (
+  testWidgets('the wrap kept as an image looks like it painted afresh', (
     tester,
   ) async {
-    addTearDown(() => debugWrapOwnLayer = true);
-    var worst = 0, worstShare = 0.0;
+    addTearDown(() => debugStillImages = true);
+    var worst = 0, worstShare = 0.0, worstMean = 0.0;
     for (final (step, t) in [
       ('Fold2', 0.9),
       ('Fold2', 1.0),
@@ -281,42 +281,48 @@ void main() {
     ]) {
       cacheNetworkImages();
       final p = params(step);
-      debugWrapOwnLayer = true;
+      debugStillImages = true;
       await tester.pumpWidget(const SizedBox());
       await render(tester, stepAt(step, p, 0));
       final layered = await render(tester, stepAt(step, p, t));
-      debugWrapOwnLayer = false;
+      debugStillImages = false;
       await tester.pumpWidget(const SizedBox());
       final afresh = await render(tester, stepAt(step, p, t));
       expect(layered, hasLength(afresh.length));
-      var most = 0, pixels = 0;
+      var most = 0, pixels = 0, sum = 0;
       for (var i = 0; i < afresh.length; i += 4) {
         var px = 0;
         for (var c = 0; c < 4; c++) {
-          px = max(px, (layered[i + c] - afresh[i + c]).abs());
+          final d = (layered[i + c] - afresh[i + c]).abs();
+          px = max(px, d);
+          sum += d;
         }
-        if (px > 0) pixels++;
+        if (px > 16) pixels++;
         most = max(most, px);
       }
       final share = pixels / (afresh.length / 4);
-      // Only the rim's thin lines anti-alias a little differently.
-      expect(most, lessThanOrEqualTo(24), reason: '$step at $t');
+      final mean = sum / afresh.length;
+      // The image is resampled: thin lines and edges anti-alias a little
+      // differently; nothing else changes.
       expect(share, lessThanOrEqualTo(0.01), reason: '$step at $t');
+      expect(mean, lessThan(0.5), reason: '$step at $t');
       worst = max(worst, most);
       worstShare = max(worstShare, share);
+      worstMean = max(worstMean, mean);
     }
     debugPrint(
-      'wrap layer vs afresh: max diff $worst/255, '
-      'at most ${(worstShare * 100).toStringAsFixed(3)}% of pixels',
+      'wrap image vs afresh: max diff $worst/255, '
+      '${(worstShare * 100).toStringAsFixed(3)}% of pixels over 16, '
+      'mean ${worstMean.toStringAsFixed(3)}/255',
     );
   });
 
   testWidgets('the wrap is painted once while the steps move it', (
     tester,
   ) async {
-    addTearDown(() => debugWrapOwnLayer = true);
+    addTearDown(() => debugStillImages = true);
     for (final layered in [true, false]) {
-      debugWrapOwnLayer = layered;
+      debugStillImages = layered;
       final counter = _PaintCounter();
       final counted = Stack(
         fit: StackFit.expand,
@@ -407,7 +413,9 @@ void main() {
     await render(tester, stepAt('Fold2', p, 0.5));
     expect(finished, findsNothing);
     await render(tester, stepAt('Fold2', p, 0.9));
-    expect(finished, findsOneWidget);
+    // (While its paper fades in, the wrap with it shows over the one
+    // without.)
+    expect(finished, findsWidgets);
   });
 
   testWidgets('a degenerate opening draws without NaN', (tester) async {

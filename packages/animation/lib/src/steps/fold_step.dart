@@ -229,17 +229,8 @@ class FoldStep implements AnimStep {
     final pieces = bakedContents(input);
     // Lifted off, it ends as Swap begins: its paper on, a little smaller
     // (Swap pops it from there) and the background as dark.
-    final paper = served?.sleeve;
-    final finished = paper == null || lifted >= 1
-        ? served
-        : lifted <= 0
-        ? opening
-        : WrapOpening(
-            ellipse: served!.ellipse,
-            contents: served.contents,
-            frame: served.frame,
-            sleeve: paper.withValues(alpha: paper.a * lifted),
-          );
+    // The paper fades in over the wrap as it was (two still images).
+    final paper = served?.sleeve != null;
     final swapFrom = input.reduceMotion ? 1.0 : _swapFromScale;
     final servedScale = 1 + (swapFrom - 1) * lifted;
 
@@ -250,15 +241,21 @@ class FoldStep implements AnimStep {
     final dir = line.b - line.a;
     final u = dir / dir.distance;
     final towardFree = Offset(u.dy, -u.dx) * 0.45; // folding side
+    // With it, darker as it turns away from the light: both in one layer
+    // (each tint over the darkening; srcATop shades only its own pixels).
+    final shade = Colors.black.withValues(alpha: 0.2 * lift);
     final bent = ShaderMask(
       blendMode: BlendMode.srcATop,
       shaderCallback: (b) => LinearGradient(
         begin: at(mid),
         end: at(mid + towardFree),
         colors: [
-          const Color(0x40FFF6E6),
-          const Color(0x00000000),
-          Colors.black.withValues(alpha: 0.2 + 0.25 * lift),
+          for (final c in [
+            const Color(0x40FFF6E6),
+            const Color(0x00000000),
+            Colors.black.withValues(alpha: 0.2 + 0.25 * lift),
+          ])
+            Color.alphaBlend(c, shade),
         ],
         stops: const [0, 0.35, 1],
       ).createShader(b),
@@ -281,15 +278,29 @@ class FoldStep implements AnimStep {
       child: child,
     );
 
-    // A soft dark copy of [child], for shadows.
-    Widget shadowOf(Widget child, double opacity, double blur) => ImageFiltered(
-      imageFilter: ui.ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-      child: ColorFiltered(
-        colorFilter: ColorFilter.mode(
-          Colors.black.withValues(alpha: opacity),
-          BlendMode.srcIn,
+    // A soft dark copy of [child], for shadows: blurred once (an image),
+    // its strength animated.
+    Widget shadowOf(
+      Widget child,
+      double opacity,
+      double blur,
+      List<Object?> inputs,
+    ) => Opacity(
+      opacity: opacity.clamp(0.0, 1.0),
+      child: Still(
+        bleed: blur * 3,
+        share: input.product,
+        inputs: ['shadow', blur, ...inputs],
+        child: ImageFiltered(
+          imageFilter: ui.ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+          child: ColorFiltered(
+            colorFilter: const ColorFilter.mode(
+              Color(0xFF000000),
+              BlendMode.srcIn,
+            ),
+            child: child,
+          ),
         ),
-        child: child,
       ),
     );
 
@@ -329,7 +340,10 @@ class FoldStep implements AnimStep {
                   // The wrap lifts off the surface as it takes shape.
                   Transform.translate(
                     offset: Offset(0, size.height * 0.025 * progress),
-                    child: shadowOf(resting, 0.4 * progress, 6),
+                    child: shadowOf(resting, 0.4 * progress, 6, [
+                      stage,
+                      ...lines,
+                    ]),
                   ),
                   if (pieces == null)
                     rounded(resting)
@@ -371,7 +385,11 @@ class FoldStep implements AnimStep {
                       offset: Offset(size.width, size.height) * 0.02 * lift,
                       child: Transform(
                         transform: line.turn(size, angle, 0),
-                        child: shadowOf(movingShape, 0.35 * lift, 5),
+                        child: shadowOf(movingShape, 0.35 * lift, 5, [
+                          stage,
+                          ...lines,
+                          identical(face, back),
+                        ]),
                       ),
                     ),
                   // The part folding now, turning about the line.
@@ -379,15 +397,7 @@ class FoldStep implements AnimStep {
                     transform: line.turn(size, angle, perspective),
                     child: ClipPath(
                       clipper: _MovingClip(line, done),
-                      // Darker as it turns away from the light; srcATop
-                      // shades only the product's own pixels.
-                      child: ColorFiltered(
-                        colorFilter: ColorFilter.mode(
-                          Colors.black.withValues(alpha: 0.2 * lift),
-                          BlendMode.srcATop,
-                        ),
-                        child: bent,
-                      ),
+                      child: bent,
                     ),
                   ),
                   // As the heap rises, the pile comes up out of the open
@@ -416,15 +426,29 @@ class FoldStep implements AnimStep {
                       opacity: settle,
                       child: Transform.scale(
                         scale: servedScale,
-                        child: Folded(
-                          lines: lines,
-                          count: lines.length,
-                          product: baked,
-                          back: back,
-                          opening: finished,
-                          // It grows into its frame as it settles.
-                          zoom: zoom,
-                          contents: pieces,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            for (final (o, shown) in [
+                              (opening, !paper || lifted < 1 ? 1.0 : 0.0),
+                              (served, paper ? lifted : 0.0),
+                            ])
+                              if (shown > 0)
+                                Opacity(
+                                  key: ValueKey(identical(o, served)),
+                                  opacity: shown,
+                                  child: Folded(
+                                    lines: lines,
+                                    count: lines.length,
+                                    product: baked,
+                                    back: back,
+                                    opening: o,
+                                    // It grows into its frame as it settles.
+                                    zoom: zoom,
+                                    contents: pieces,
+                                  ),
+                                ),
+                          ],
                         ),
                       ),
                     ),

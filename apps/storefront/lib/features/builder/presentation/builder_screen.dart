@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:animation/animation.dart';
@@ -145,10 +146,14 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
     // screen on every later change (e.g. the keyboard's insets).
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     final sequence = StepSequence.fromDefinition(def);
-    final plan = planSequence(
+    final total = sequenceDuration(
+      sequence,
+      const Duration(milliseconds: 2000),
+    );
+    var plan = planSequence(
       sequence: sequence,
       registry: animSteps,
-      total: sequenceDuration(sequence, const Duration(milliseconds: 2000)),
+      total: total,
       reduceMotion: reduceMotion,
     );
     // Nothing to play: nothing to capture.
@@ -156,16 +161,26 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
 
     // The customer's product exactly as built, frozen at the press: one
     // raster of the canvas, so the per-frame cooking filter recolours a
-    // single image instead of every piece (P1-B06). Falls back to drawing
-    // the selection again if the raster is unavailable.
+    // single image instead of every piece (P1-B06).
     final raster = _rasterize(canvasBox);
     _snapshot?.dispose();
     _snapshot = raster;
+    // Without it (not capturable here) the selection is drawn again every
+    // frame: only the short version, never the full sequence over it.
+    if (raster == null && !reduceMotion) {
+      plan = planSequence(
+        sequence: sequence,
+        registry: animSteps,
+        total: total,
+        reduceMotion: true,
+      );
+      if (plan.steps.isEmpty) return false;
+    }
     // Its pieces alone, only for a step that shows them apart from the
     // product: a wrap's open end (its `opening`), or any step that asks for
     // them (`pieces`, e.g. to sink them into melting cheese). A pizza needs
     // none.
-    final piecesBox = plan.steps.any(_showsContents)
+    final piecesBox = raster != null && plan.steps.any(_showsContents)
         ? _piecesKey.currentContext?.findRenderObject()
         : null;
     final pieces = piecesBox is RenderBox ? _rasterize(piecesBox) : null;
@@ -195,7 +210,7 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
           productRect: rectOf(canvasBox),
           cartTarget: cartBox == null ? null : rectOf(cartBox).center,
           images: images,
-          reduceMotion: reduceMotion,
+          reduceMotion: reduceMotion || raster == null,
           baseScale: state.sizeScale,
           // Captured inside the canvas's size and surface scales, which the
           // capture leaves out (the full raster has them): scaled again.
@@ -236,8 +251,10 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
   ui.Image? _rasterize(RenderBox canvasBox) {
     if (canvasBox is! RenderRepaintBoundary) return null;
     try {
+      // As sharp as a 2x screen: a 3x phone's full resolution costs more
+      // than twice the pixels to capture and to draw every frame, unseen.
       return canvasBox.toImageSync(
-        pixelRatio: MediaQuery.devicePixelRatioOf(context),
+        pixelRatio: min(MediaQuery.devicePixelRatioOf(context), 2),
       );
     } on Object {
       return null;
