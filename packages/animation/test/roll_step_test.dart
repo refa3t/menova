@@ -77,17 +77,24 @@ void main() {
     });
   }
 
-  testWidgets('the roll ends as the served log, before its paper', (
+  testWidgets('the roll ends as the served log, its paper put on last', (
     tester,
   ) async {
-    Future<RolledLog> logAt(String key, Map<String, Object?> p) async {
+    Future<RolledLog> logAt(
+      String key,
+      Map<String, Object?> p, {
+      double t = 1,
+    }) async {
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
           child: Builder(
             builder: (context) => animSteps[key]!.build(
               context,
-              const AnimFrame(t: 1, elapsed: Duration(seconds: 1)),
+              AnimFrame(
+                t: t,
+                elapsed: Duration(milliseconds: (t * 1000).round()),
+              ),
               input(p),
             ),
           ),
@@ -102,9 +109,12 @@ void main() {
     expect(rolled.rect.top, closeTo(swapped.rect.top, 1e-9));
     expect(rolled.rect.right, closeTo(swapped.rect.right, 1e-9));
     expect(rolled.rect.bottom, closeTo(swapped.rect.bottom, 1e-9));
-    // Paper only once served.
-    expect(rolled.sleeve, isNull);
+    // In its paper as Swap begins; none while it rolls.
+    expect(rolled.sleeve, swapped.sleeve);
+    expect(rolled.sleeveOpacity, 1);
     expect(swapped.sleeve, const Color(0xFFD9CCB0));
+    final rolling = await logAt('Roll', {'roll': served}, t: 0.5);
+    expect(rolling.sleeveOpacity, 0);
   });
 
   testWidgets('reduced motion shows the finished log at once', (tester) async {

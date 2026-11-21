@@ -188,7 +188,10 @@ def main() -> None:
         motion[k] = {'enter': enter,
                      'exit': 'dissolve' if enter == 'shower' else 'liftFade'}
 
-    sides = {'lines': SIDES, 'volume': 0}
+    # `pieces`: the steps get the filling's pieces apart from the tortilla,
+    # so the sides push them in as they fold over, and the roll gathers them
+    # and takes them in as it passes.
+    sides = {'lines': SIDES, 'volume': 0, 'pieces': True}
     dump('definitions/tortilla.json', {
         'id': 'tortilla',
         'definitionVersion': 1,
@@ -227,7 +230,9 @@ def main() -> None:
                 'images': {'surface': 'griddle_surface',
                            'back': 'tortilla_back'}}},
             {'step': 'Roll', 'weight': 1000, 'params': {
-                'durationMs': 1000, 'folds': 2, 'lines': SIDES, 'roll': ROLL,
+                # Served at its end: its paper comes on as it is lifted off.
+                'durationMs': 1000, 'folds': 2, 'lines': SIDES,
+                'roll': SERVED, 'pieces': True,
                 'images': {'surface': 'griddle_surface',
                            'back': 'tortilla_back'}}},
             {'step': 'Swap', 'weight': 300, 'params': {

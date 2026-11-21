@@ -297,7 +297,9 @@ class Folded extends StatelessWidget {
   final Widget? back;
 
   /// The product's pieces alone, same box: a finished wrap heaps them in
-  /// its opening (see [AnimStepInput.contents]).
+  /// its opening (see [AnimStepInput.contents]); a [flat] one draws them
+  /// as given (e.g. a `FoldedFilling`) over the unfolded part and under the
+  /// folded sides.
   final Widget? contents;
 
   /// The open end of a wrap: once every line is folded, the product's
@@ -334,6 +336,7 @@ class Folded extends StatelessWidget {
               clipper: _PathClip(keep, [...done, without]),
               child: product,
             ),
+            if (flat && contents != null) contents!,
             for (var i = 0; i < done.length; i++)
               Transform(
                 transform: done[i].reflection(size),
@@ -513,6 +516,34 @@ class WrapOpening {
           : null,
     );
   }
+}
+
+/// [child] as first built, kept while [inputs] (all it shows) stay the
+/// same: a step builds its widgets afresh every frame, and a part laid out
+/// again (a [LayoutBuilder] in it) is painted again, so a [Still] around
+/// it would capture it again every frame. Kept, it is neither rebuilt nor
+/// laid out again until [inputs] change.
+class Kept extends StatefulWidget {
+  const Kept({super.key, required this.inputs, required this.child});
+
+  final List<Object?> inputs;
+  final Widget child;
+
+  @override
+  State<Kept> createState() => _KeptState();
+}
+
+class _KeptState extends State<Kept> {
+  late Widget _child = widget.child;
+
+  @override
+  void didUpdateWidget(Kept oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!listEquals(oldWidget.inputs, widget.inputs)) _child = widget.child;
+  }
+
+  @override
+  Widget build(BuildContext context) => _child;
 }
 
 /// Whether [Still] keeps its child as an image. Tests turn it off to
