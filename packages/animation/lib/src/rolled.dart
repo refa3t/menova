@@ -72,12 +72,18 @@ class RollShape {
 /// The product rolled into a log, as the steps after the roll show it
 /// (served, in its paper when the shape has one).
 Widget rolledProduct(AnimStepInput input, RollShape roll, Widget baked) =>
-    RolledLog(
-      rect: roll.settled,
-      product: baked,
-      back: backImage(input),
-      contents: roll.contents,
-      sleeve: roll.sleeve,
+    // Rolled, it no longer changes: one image while the steps move it.
+    Still(
+      bleed: input.productRect.shortestSide * 0.1,
+      share: input.product,
+      inputs: ['rolled', roll.settled, roll.contents, roll.sleeve],
+      child: RolledLog(
+        rect: roll.settled,
+        product: baked,
+        back: backImage(input),
+        contents: roll.contents,
+        sleeve: roll.sleeve,
+      ),
     );
 
 /// A rolled product seen from above (a wrap): a cylinder lying across the
@@ -263,13 +269,14 @@ class RolledLog extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             // Soft contact shadow under the log.
-            Transform.translate(
-              offset: Offset(r.width * 0.01, h * 0.14),
-              child: ImageFiltered(
-                imageFilter: ui.ImageFilter.blur(sigmaX: 7, sigmaY: 7),
-                child: ClipPath(
-                  clipper: _PathClip(outline, geometry),
-                  child: const ColoredBox(color: Color(0x66000000)),
+            // (A blurred shape, not a blurred layer: cheap every frame.)
+            IgnorePointer(
+              child: CustomPaint(
+                painter: _SoftShape(
+                  (s) => outline(s).shift(Offset(r.width * 0.01, h * 0.14)),
+                  [...geometry, r.width, h],
+                  const Color(0x66000000),
+                  7,
                 ),
               ),
             ),
@@ -281,17 +288,17 @@ class RolledLog extends StatelessWidget {
             end,
             if (paper != null) ...[
               // The paper's shade on the log beside its slanted edge.
-              ImageFiltered(
-                imageFilter: ui.ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                child: ClipPath(
-                  clipper: _PathClip(
+              IgnorePointer(
+                child: CustomPaint(
+                  painter: _SoftShape(
                     (_) => Path()
                       ..addPolygon([
                         for (final p in cut) p + Offset(h * 0.06, 0),
                       ], true),
-                    geometry,
+                    [...geometry, h],
+                    const Color(0x59000000),
+                    3,
                   ),
-                  child: const ColoredBox(color: Color(0x59000000)),
                 ),
               ),
               ClipPath(
@@ -418,4 +425,29 @@ class _ClosedEndPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_ClosedEndPainter oldDelegate) => oldDelegate.end != end;
+}
+
+/// A shape filled with [color] and blurred by [sigma] (a soft shadow), drawn
+/// again only when [inputs] (all [build] reads besides the size) change.
+class _SoftShape extends CustomPainter {
+  const _SoftShape(this.build, this.inputs, this.color, this.sigma);
+
+  final Path Function(Size size) build;
+  final List<Object?> inputs;
+  final Color color;
+  final double sigma;
+
+  @override
+  void paint(Canvas canvas, Size size) => canvas.drawPath(
+    build(size),
+    Paint()
+      ..color = color
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, sigma),
+  );
+
+  @override
+  bool shouldRepaint(_SoftShape oldDelegate) =>
+      oldDelegate.color != color ||
+      oldDelegate.sigma != sigma ||
+      !listEquals(oldDelegate.inputs, inputs);
 }

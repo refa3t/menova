@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 part 'boxed.dart';
@@ -514,11 +515,200 @@ class WrapOpening {
   }
 }
 
-/// Whether a finished wrap paints into its own layer, reused between
-/// frames while only the transforms around it change. Tests turn it off to
-/// compare against the wrap painted afresh each frame.
+/// Whether [Still] keeps its child as an image. Tests turn it off to
+/// compare against everything painted afresh each frame.
 @visibleForTesting
-bool debugWrapOwnLayer = true;
+bool debugStillImages = true;
+
+/// [child], which does not change, painted once into an image (at the
+/// device's pixel ratio times [scale], at most 3) and that image drawn from
+/// then on: the effects in it (filters, blurs, shader masks, clips) cost
+/// once, not every frame, while the transforms and opacity around it
+/// animate. Painted again when anything in it changes (an image loading,
+/// say), and painted directly when it cannot be captured. [bleed] is room
+/// kept around the box for what is drawn beyond it (a soft shadow).
+///
+/// A change under a layer of its own in [child] (a blur, an opacity) does
+/// not reach it: what such a part shows must be in [inputs], which capture
+/// it again when they change.
+///
+/// With [share] (e.g. the product the animation shows), every [Still] with
+/// the same [share], [inputs] and size uses one capture: a capture reads
+/// the image back from the GPU (slow on the web), so the steps of one
+/// sequence capture a part once, not each again. [inputs] must then tell
+/// apart everything shared under it.
+class Still extends SingleChildRenderObjectWidget {
+  const Still({
+    super.key,
+    this.scale = 1,
+    this.bleed = 0,
+    this.inputs = const [],
+    this.share,
+    required Widget super.child,
+  });
+
+  final double scale;
+  final double bleed;
+  final List<Object?> inputs;
+  final Object? share;
+
+  double _ratio(BuildContext context) =>
+      min((MediaQuery.maybeDevicePixelRatioOf(context) ?? 1) * scale, 3.0);
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderStill(_ratio(context), bleed, inputs, share);
+
+  @override
+  void updateRenderObject(BuildContext context, RenderObject renderObject) =>
+      (renderObject as _RenderStill)
+        ..ratio = _ratio(context)
+        ..bleed = bleed
+        ..inputs = inputs
+        ..share = share;
+}
+
+/// What a shared capture is of.
+class _StillKey {
+  _StillKey(this.inputs, this.area, this.ratio);
+
+  final List<Object?> inputs;
+  final Rect area;
+  final double ratio;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _StillKey &&
+      other.area == area &&
+      other.ratio == ratio &&
+      listEquals(other.inputs, inputs);
+
+  @override
+  int get hashCode => Object.hash(area, ratio, Object.hashAll(inputs));
+}
+
+/// Shared captures by what they are shared with; dropped with it.
+final _stills = Expando<Map<_StillKey, ui.Image>>('stills');
+
+class _RenderStill extends RenderProxyBox {
+  _RenderStill(this._ratio, this._bleed, this._inputs, this._share);
+
+  double _ratio;
+  set ratio(double value) {
+    if (value == _ratio) return;
+    _ratio = value;
+    markNeedsPaint();
+  }
+
+  double _bleed;
+  set bleed(double value) {
+    if (value == _bleed) return;
+    _bleed = value;
+    markNeedsPaint();
+  }
+
+  List<Object?> _inputs;
+  set inputs(List<Object?> value) {
+    if (listEquals(value, _inputs)) return;
+    _inputs = value;
+    markNeedsPaint();
+  }
+
+  Object? _share;
+  set share(Object? value) {
+    if (identical(value, _share)) return;
+    _share = value;
+    markNeedsPaint();
+  }
+
+  /// Its own capture (a shared one belongs to the cache).
+  ui.Image? _image;
+  bool _owned = false;
+  Rect? _area;
+  bool _failed = false;
+
+  /// Something in it changed since it was captured: not to be shared.
+  bool _changed = false;
+
+  void _drop() {
+    if (_owned) _image?.dispose();
+    _image = null;
+    _owned = false;
+  }
+
+  @override
+  void markNeedsPaint() {
+    // Something in it changed (or how it is captured): capture again. The
+    // first paint does not count (nothing captured yet).
+    if (_image != null) _changed = true;
+    _drop();
+    super.markNeedsPaint();
+  }
+
+  @override
+  void detach() {
+    _drop();
+    super.detach();
+  }
+
+  @override
+  void dispose() {
+    _drop();
+    super.dispose();
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    if (child == null || size.isEmpty) return;
+    if (_failed || !debugStillImages) return super.paint(context, offset);
+    final area = (Offset.zero & size).inflate(_bleed);
+    if (_image == null || _area != area) {
+      _drop();
+      final share = _share;
+      final key = _StillKey(_inputs, area, _ratio);
+      final shared = share == null || _changed ? null : (_stills[share] ??= {});
+      final cached = shared?[key];
+      if (cached != null) {
+        _image = cached;
+      } else {
+        try {
+          _image = _capture(area);
+        } on Object {
+          // Not capturable here: drawn directly from now on.
+          _failed = true;
+          return super.paint(context, offset);
+        }
+        if (shared != null) {
+          shared[key] = _image!;
+        } else {
+          _owned = true;
+        }
+      }
+      _area = area;
+    }
+    final image = _image!;
+    context.canvas.drawImageRect(
+      image,
+      Offset.zero & Size(image.width.toDouble(), image.height.toDouble()),
+      area.shift(offset),
+      Paint()..filterQuality = FilterQuality.medium,
+    );
+  }
+
+  ui.Image _capture(Rect area) {
+    final layer = OffsetLayer();
+    // ignore: invalid_use_of_protected_member
+    final context = PaintingContext(layer, area);
+    super.paint(context, Offset.zero);
+    // ignore: invalid_use_of_protected_member
+    context.stopRecordingIfNeeded();
+    try {
+      return layer.toImageSync(area, pixelRatio: _ratio);
+    } finally {
+      layer.dispose();
+    }
+  }
+}
 
 /// A finished wrap with an open end, drawn to look real (owner reference
 /// photo): the outside narrows from the rim to the point and is round (lit
@@ -989,11 +1179,21 @@ class _WrapViewState extends State<_WrapView> {
           ],
         );
 
-        // Its own layer, inside the zoom: nothing in it changes while the
-        // last fold grows it or the steps after move, scale or turn it, so
-        // it is painted once and its layer reused (owner: the rim's
-        // hairlines may anti-alias a little differently under a transform).
-        final content = debugWrapOwnLayer ? RepaintBoundary(child: wrap) : wrap;
+        // An image, inside the zoom: nothing in it changes while the last
+        // fold grows it or the steps after move, scale or turn it, so its
+        // shadows, filters and clips are drawn once (owner: the rim's
+        // hairlines may anti-alias a little differently). Sharp when grown.
+        final content = Still(
+          scale: 1.25,
+          bleed: size.width * 0.06,
+          share: product is Cooked ? product.child : product,
+          inputs: [
+            'wrap',
+            ...geometry,
+            pieces is Cooked ? pieces.child : pieces,
+          ],
+          child: wrap,
+        );
 
         final frame = opening.frame;
         if (frame == null || zoom <= 0) return content;
