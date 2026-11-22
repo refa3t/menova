@@ -9,6 +9,10 @@ import '../anim_step.dart';
 /// oven's dimmed background (`scrimMaxPct`, 35). Later steps keep the film
 /// by carrying the same `cover` param. Without a `cover` param it only
 /// holds the product.
+///
+/// With [AnimStepInput.lite] (a phone's GPU) the baked, melted product is
+/// the image painted once ([LiteBaked]) and the film is cut without a path
+/// clip ([Covered.lite]).
 class CoverStep implements AnimStep {
   const CoverStep();
 
@@ -41,10 +45,38 @@ class CoverStep implements AnimStep {
           rect: input.productRect,
           child: Transform.scale(
             scale: scale * (1 - give),
-            child: shapedProduct(input, coverProgress: pull),
+            child: input.lite
+                ? _liteShaped(input, pull)
+                : shapedProduct(input, coverProgress: pull),
           ),
         ),
       ],
+    );
+  }
+
+  /// [shapedProduct] for a phone: a melted, covered product drawn from its
+  /// baked look painted once. Any other shape is [shapedProduct]'s.
+  static Widget _liteShaped(AnimStepInput input, double pull) {
+    final p = input.params;
+    final melt = MeltSpec.from(p['melt']);
+    final cover = CoverSpec.from(p['cover']);
+    if (BoxSpec.from(p['box']) != null || (melt == null && cover == null)) {
+      return shapedProduct(input, coverProgress: pull);
+    }
+    final Widget baked = LiteBaked(
+      product: input.product,
+      share: input.product,
+      melt: melt,
+      baseScale: input.baseScale,
+      contents: melt == null ? null : bakedContents(input),
+    );
+    if (cover == null) return baked;
+    return Covered(
+      progress: pull,
+      spec: cover,
+      baseScale: input.baseScale,
+      lite: true,
+      child: baked,
     );
   }
 }
