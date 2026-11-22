@@ -7,7 +7,8 @@ import '../anim_step.dart';
 /// Griddle (P2-05): the cooking surface fades in under the product, which
 /// settles onto it, cooks golden (Cooked) and steams, with a light sizzle.
 /// Images by role: `surface`, `steam`. Missing images degrade to the
-/// product cooking over a dimmed background.
+/// product cooking over a dimmed background. Lite (a phone): it cooks in
+/// a few steps drawn once each (see [_cookedStill]).
 class GriddleStep implements AnimStep {
   const GriddleStep();
 
@@ -42,11 +43,13 @@ class GriddleStep implements AnimStep {
           rect: rect.shift(Offset(sizzle, 0)),
           child: Transform.scale(
             scale: settle,
-            child: Cooked(
-              amount: cook,
-              saturation: saturation,
-              child: input.product,
-            ),
+            child: input.lite
+                ? _cookedStill(input, cook, saturation)
+                : Cooked(
+                    amount: cook,
+                    saturation: saturation,
+                    child: input.product,
+                  ),
           ),
         ),
         if (steamUrl != null && steam > 0)
@@ -63,6 +66,34 @@ class GriddleStep implements AnimStep {
             ),
           ),
       ],
+    );
+  }
+
+  /// Cooking shades the product each frame through a colour filter and a
+  /// shader mask (two offscreen layers). Lite (a phone): it cooks in
+  /// [_liteShades] even steps instead, each drawn once as an image, so a
+  /// frame between them is one image moved.
+  static const _liteShades = 8;
+
+  static Widget _cookedStill(
+    AnimStepInput input,
+    double cook,
+    double saturation,
+  ) {
+    final shade = (cook * _liteShades).round() / _liteShades;
+    if (shade == 0) return input.product;
+    final inputs = ['griddle', shade, saturation];
+    return Still(
+      share: input.product,
+      inputs: inputs,
+      child: Kept(
+        inputs: [...inputs, input.product],
+        child: Cooked(
+          amount: shade,
+          saturation: saturation,
+          child: input.product,
+        ),
+      ),
     );
   }
 }

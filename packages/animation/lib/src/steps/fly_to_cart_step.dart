@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../anim_step.dart';
+import 'swap_step.dart';
 
 /// FlyToCart (ANIMATIONS.md 7.3): the snapshot shrinks to 18% and flies on a
 /// quadratic arc into the cart icon. Reduced motion: straight line, no spin.
@@ -48,7 +49,7 @@ class FlyToCartStep implements AnimStep {
           height: h,
           child: Transform.rotate(
             angle: angle,
-            child: Transform.scale(scale: scale, child: shapedProduct(input)),
+            child: Transform.scale(scale: scale, child: shownProduct(input)),
           ),
         ),
       ],
