@@ -96,10 +96,17 @@ class Cooked extends StatelessWidget {
     required this.child,
     this.saturation = 1.45,
     this.bubble = 0,
+    this.lite = false,
   });
 
   final double amount;
   final Widget child;
+
+  /// Drawn for a phone ([AnimStepInput.lite]): the fully baked look is
+  /// painted once into an image (a [Still], shared by every [Cooked] of the
+  /// same [child]) and faded in over the product by [amount], so a frame
+  /// draws two images and no layers; no bubbling.
+  final bool lite;
 
   /// Saturation reached when fully baked.
   final double saturation;
@@ -111,6 +118,27 @@ class Cooked extends StatelessWidget {
   Widget build(BuildContext context) {
     final a = amount.clamp(0.0, 1.0);
     if (a == 0) return child;
+    if (lite) {
+      final baked = Still(
+        share: child,
+        inputs: ['cooked', saturation],
+        opacity: a,
+        child: Kept(
+          inputs: ['cooked', saturation, child],
+          child: Cooked(amount: 1, saturation: saturation, child: child),
+        ),
+      );
+      return a == 1
+          ? baked
+          : Stack(
+              // The product laid out as on its own.
+              fit: StackFit.passthrough,
+              children: [
+                child,
+                Positioned.fill(child: baked),
+              ],
+            );
+    }
     // Both tints are drawn atop the product's own pixels only (srcATop), so
     // a product that does not fill its box (a half-moon crepe) gets no ring
     // in the empty space around it.
@@ -291,9 +319,19 @@ class Folded extends StatelessWidget {
     this.zoom = 1,
     this.contents,
     this.flat = false,
+    this.lite = false,
+    this.opacity = 1,
   });
 
   final List<FoldLine> lines;
+
+  /// Drawn for a phone ([AnimStepInput.lite]): a fully folded product is
+  /// one image (its shadow, rounding and creases drawn once, without blurs).
+  final bool lite;
+
+  /// How opaque a fully folded product is drawn: on an image of it ([lite])
+  /// without a layer of its own.
+  final double opacity;
 
   /// Whether a fully folded product stays a flat sheet (no wrap volume),
   /// e.g. one rolled up next.
@@ -322,7 +360,7 @@ class Folded extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final n = count.clamp(0, lines.length);
-    if (n == 0 && without == null) return product;
+    if (n == 0 && without == null) return _faded(product);
     final done = lines.take(n).toList();
     return LayoutBuilder(
       builder: (context, box) {
@@ -360,7 +398,9 @@ class Folded extends StatelessWidget {
               ),
           ],
         );
-        if (n < lines.length || without != null || flat) return layers;
+        if (n < lines.length || without != null || flat) {
+          return _faded(layers);
+        }
         if (opening case final o? when back != null) {
           return _WrapView(
             lines: done,
@@ -369,6 +409,8 @@ class Folded extends StatelessWidget {
             back: back!,
             zoom: zoom,
             contents: contents,
+            lite: lite,
+            opacity: lite ? opacity : 1,
           );
         }
 
@@ -378,6 +420,49 @@ class Folded extends StatelessWidget {
           clipper: _PathClip((s) => _unfolded(s, done), done),
           child: layers,
         );
+        if (lite) {
+          final shown = switch (product) {
+            final Cooked c => c.child,
+            final p => p,
+          };
+          return Still(
+            bleed: size.width * 0.06,
+            share: shown,
+            opacity: opacity,
+            inputs: ['folded', size, ...done],
+            child: Kept(
+              inputs: ['folded', size, ...done, shown, back != null],
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Transform.translate(
+                    offset: Offset(0, size.height * 0.025),
+                    child: spreadShadow(
+                      6,
+                      ColorFiltered(
+                        colorFilter: const ColorFilter.mode(
+                          Color(0x66000000),
+                          BlendMode.srcIn,
+                        ),
+                        child: core,
+                      ),
+                    ),
+                  ),
+                  ShaderMask(
+                    blendMode: BlendMode.srcATop,
+                    shaderCallback: _rounding,
+                    child: core,
+                  ),
+                  IgnorePointer(
+                    child: CustomPaint(
+                      painter: _CreasePainter(done, lite: true),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
         return Stack(
           fit: StackFit.expand,
           children: [
@@ -408,6 +493,34 @@ class Folded extends StatelessWidget {
       },
     );
   }
+
+  /// [child] at [opacity] (a layer: only a fully folded [lite] product is
+  /// drawn as an image that takes it directly).
+  Widget _faded(Widget child) =>
+      opacity >= 1 ? child : Opacity(opacity: opacity, child: child);
+}
+
+/// A cheap stand-in for a blur of [sigma] (no blur pass, for a phone's
+/// GPU): [child] drawn five times, faint and spread around, so its edge
+/// fades out. Meant to be drawn once, inside a [Still].
+Widget spreadShadow(double sigma, Widget child) {
+  final r = sigma * 0.7;
+  return Stack(
+    fit: StackFit.expand,
+    children: [
+      for (final o in const [
+        Offset.zero,
+        Offset(-1, -1),
+        Offset(1, -1),
+        Offset(-1, 1),
+        Offset(1, 1),
+      ])
+        Transform.translate(
+          offset: o * r,
+          child: Opacity(opacity: 0.3, child: child),
+        ),
+    ],
+  );
 }
 
 /// A rounded surface: darker at both sides, light in the middle.
@@ -581,6 +694,7 @@ class Still extends SingleChildRenderObjectWidget {
     this.bleed = 0,
     this.inputs = const [],
     this.share,
+    this.opacity = 1,
     required Widget super.child,
   });
 
@@ -589,12 +703,16 @@ class Still extends SingleChildRenderObjectWidget {
   final List<Object?> inputs;
   final Object? share;
 
+  /// How opaque the image is drawn, without a layer of its own; changing
+  /// it does not capture again.
+  final double opacity;
+
   double _ratio(BuildContext context) =>
       min((MediaQuery.maybeDevicePixelRatioOf(context) ?? 1) * scale, 3.0);
 
   @override
   RenderObject createRenderObject(BuildContext context) =>
-      _RenderStill(_ratio(context), bleed, inputs, share);
+      _RenderStill(_ratio(context), bleed, inputs, share)..opacity = opacity;
 
   @override
   void updateRenderObject(BuildContext context, RenderObject renderObject) =>
@@ -602,7 +720,8 @@ class Still extends SingleChildRenderObjectWidget {
         ..ratio = _ratio(context)
         ..bleed = bleed
         ..inputs = inputs
-        ..share = share;
+        ..share = share
+        ..opacity = opacity;
 }
 
 /// What a shared capture is of.
@@ -626,6 +745,10 @@ class _StillKey {
 
 /// Shared captures by what they are shared with; dropped with it.
 final _stills = Expando<Map<_StillKey, ui.Image>>('stills');
+
+/// How many times a [Still] has captured its child (tests count them).
+@visibleForTesting
+int debugStillCaptures = 0;
 
 class _RenderStill extends RenderProxyBox {
   _RenderStill(this._ratio, this._bleed, this._inputs, this._share);
@@ -658,6 +781,19 @@ class _RenderStill extends RenderProxyBox {
     markNeedsPaint();
   }
 
+  double _opacity = 1;
+  set opacity(double value) {
+    final v = value.clamp(0.0, 1.0);
+    if (v == _opacity) return;
+    _opacity = v;
+    // Only how the image is drawn changes: keep it.
+    _keep = true;
+    markNeedsPaint();
+    _keep = false;
+  }
+
+  bool _keep = false;
+
   /// Its own capture (a shared one belongs to the cache).
   ui.Image? _image;
   bool _owned = false;
@@ -677,8 +813,10 @@ class _RenderStill extends RenderProxyBox {
   void markNeedsPaint() {
     // Something in it changed (or how it is captured): capture again. The
     // first paint does not count (nothing captured yet).
-    if (_image != null) _changed = true;
-    _drop();
+    if (!_keep) {
+      if (_image != null) _changed = true;
+      _drop();
+    }
     super.markNeedsPaint();
   }
 
@@ -696,8 +834,12 @@ class _RenderStill extends RenderProxyBox {
 
   @override
   void paint(PaintingContext context, Offset offset) {
-    if (child == null || size.isEmpty) return;
-    if (_failed || !debugStillImages) return super.paint(context, offset);
+    if (child == null || size.isEmpty || _opacity <= 0) return;
+    if (_failed || !debugStillImages) {
+      if (_opacity >= 1) return super.paint(context, offset);
+      context.pushOpacity(offset, (_opacity * 255).round(), super.paint);
+      return;
+    }
     final area = (Offset.zero & size).inflate(_bleed);
     if (_image == null || _area != area) {
       _drop();
@@ -728,11 +870,14 @@ class _RenderStill extends RenderProxyBox {
       image,
       Offset.zero & Size(image.width.toDouble(), image.height.toDouble()),
       area.shift(offset),
-      Paint()..filterQuality = FilterQuality.medium,
+      Paint()
+        ..filterQuality = FilterQuality.medium
+        ..color = Color.fromRGBO(0, 0, 0, _opacity),
     );
   }
 
   ui.Image _capture(Rect area) {
+    debugStillCaptures++;
     final layer = OffsetLayer();
     // ignore: invalid_use_of_protected_member
     final context = PaintingContext(layer, area);
@@ -760,6 +905,8 @@ class _WrapView extends StatefulWidget {
     required this.back,
     required this.zoom,
     this.contents,
+    this.lite = false,
+    this.opacity = 1,
   });
 
   final List<FoldLine> lines;
@@ -768,6 +915,12 @@ class _WrapView extends StatefulWidget {
   final Widget back;
   final double zoom;
   final Widget? contents;
+
+  /// Shadows without blurs, and the wrap kept as built (see [Folded.lite]).
+  final bool lite;
+
+  /// How opaque the wrap's image is drawn.
+  final double opacity;
 
   /// The griddle side as the outside of a thin, lightly toasted crepe:
   /// paler and less yellow, with its browned spots kept.
@@ -851,7 +1004,8 @@ class _WrapViewState extends State<_WrapView> {
 
   @override
   Widget build(BuildContext context) {
-    final _WrapView(:opening, :product, :back, :zoom, :contents) = widget;
+    final _WrapView(:opening, :product, :back, :zoom, :contents, :lite) =
+        widget;
     return LayoutBuilder(
       builder: (context, box) {
         final size = box.biggest;
@@ -870,6 +1024,15 @@ class _WrapViewState extends State<_WrapView> {
           final a = atan2(p.dy - centre.dy, p.dx - centre.dx);
           return a < 0 ? a + 2 * pi : a;
         }
+
+        // A soft shadow: blurred, or on a phone a cheap spread (drawn once
+        // either way, in the image below).
+        Widget soft(double sigma, Widget child) => lite
+            ? spreadShadow(sigma, child)
+            : ImageFiltered(
+                imageFilter: ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
+                child: child,
+              );
 
         final rim = px(opening.ellipse);
         final lip = size.width * 0.008; // the crepe's own thickness
@@ -1126,12 +1289,9 @@ class _WrapViewState extends State<_WrapView> {
                             ),
                             Transform.translate(
                               offset: Offset(lip * 0.6, lip * 1.3),
-                              child: ImageFiltered(
-                                imageFilter: ui.ImageFilter.blur(
-                                  sigmaX: 2,
-                                  sigmaY: 2,
-                                ),
-                                child: ColorFiltered(
+                              child: soft(
+                                2,
+                                ColorFiltered(
                                   colorFilter: const ColorFilter.mode(
                                     Color(0x8C000000),
                                     BlendMode.srcIn,
@@ -1154,9 +1314,9 @@ class _WrapViewState extends State<_WrapView> {
             // Soft contact shadow under the wrap.
             Transform.translate(
               offset: Offset(size.width * 0.015, size.height * 0.03),
-              child: ImageFiltered(
-                imageFilter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                child: ClipPath(
+              child: soft(
+                8,
+                ClipPath(
                   clipper: _PathClip(outline, geometry),
                   child: const ColoredBox(color: Color(0x66000000)),
                 ),
@@ -1182,9 +1342,9 @@ class _WrapViewState extends State<_WrapView> {
                 ),
               ),
               // The wrap's shade on the paper beside it.
-              ImageFiltered(
-                imageFilter: ui.ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                child: ClipPath(
+              soft(
+                3,
+                ClipPath(
                   clipper: _PathClip(
                     (s) => cone(s).shift(Offset(lip, lip)),
                     geometry,
@@ -1220,16 +1380,22 @@ class _WrapViewState extends State<_WrapView> {
         // fold grows it or the steps after move, scale or turn it, so its
         // shadows, filters and clips are drawn once (owner: the rim's
         // hairlines may anti-alias a little differently). Sharp when grown.
+        final shown = product is Cooked ? product.child : product;
+        final shownPieces = pieces is Cooked ? pieces.child : pieces;
         final content = Still(
           scale: 1.25,
           bleed: size.width * 0.06,
-          share: product is Cooked ? product.child : product,
-          inputs: [
-            'wrap',
-            ...geometry,
-            pieces is Cooked ? pieces.child : pieces,
-          ],
-          child: wrap,
+          share: shown,
+          opacity: widget.opacity,
+          inputs: ['wrap', ...geometry, shownPieces],
+          // On a phone, kept as built: not built, laid out and so captured
+          // again each frame.
+          child: lite
+              ? Kept(
+                  inputs: ['wrap', ...geometry, shown, shownPieces],
+                  child: wrap,
+                )
+              : wrap,
         );
 
         final frame = opening.frame;
@@ -1325,17 +1491,24 @@ class _StretchToBounds extends GradientTransform {
 
 /// Lit creases along fold lines, drawn only inside the folded wrap.
 class _CreasePainter extends CustomPainter {
-  const _CreasePainter(this.lines);
+  const _CreasePainter(this.lines, {this.lite = false});
 
   final List<FoldLine> lines;
+
+  /// The shadow as a wider faint stroke, without a blur.
+  final bool lite;
 
   @override
   void paint(Canvas canvas, Size size) {
     canvas.clipPath(_unfolded(size, lines));
-    final shadow = Paint()
-      ..color = const Color(0x40000000)
-      ..strokeWidth = 5
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+    final shadow = lite
+        ? (Paint()
+            ..color = const Color(0x26000000)
+            ..strokeWidth = 8)
+        : (Paint()
+            ..color = const Color(0x40000000)
+            ..strokeWidth = 5
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
     final light = Paint()
       ..color = const Color(0x8CFFF2DA)
       ..strokeWidth = 2;
@@ -1356,7 +1529,7 @@ class _CreasePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_CreasePainter oldDelegate) =>
-      !listEquals(oldDelegate.lines, lines);
+      oldDelegate.lite != lite || !listEquals(oldDelegate.lines, lines);
 }
 
 /// The back image a step was given (role `back`), if any.
@@ -1375,18 +1548,19 @@ Widget? backImage(AnimStepInput input) {
 /// folded along the first `folds` of its fold `lines` (step params), the
 /// folded parts showing the back.
 Widget shapedProduct(AnimStepInput input, {double coverProgress = 1}) {
+  final lite = input.lite;
   final folds = (input.params['folds'] as num?)?.toInt() ?? 0;
   final melt = MeltSpec.from(input.params['melt']);
   final cover = CoverSpec.from(input.params['cover']);
   // Closed in its box (step param `box`, see [Boxed]).
   if (BoxSpec.from(input.params['box']) case final box?) {
-    final baked = Cooked(amount: 1, child: input.product);
+    final baked = Cooked(amount: 1, lite: lite, child: input.product);
     return Boxed(spec: box, baseScale: input.baseScale, product: baked);
   }
   // Melted (step param `melt`) and covered with film (param `cover`): a
   // baked pan of cheese, see [Melted] and [Covered].
   if (melt != null || cover != null) {
-    Widget out = Cooked(amount: 1, child: input.product);
+    Widget out = Cooked(amount: 1, lite: lite, child: input.product);
     if (melt != null) {
       out = Melted(
         amount: 1,
@@ -1406,7 +1580,7 @@ Widget shapedProduct(AnimStepInput input, {double coverProgress = 1}) {
     }
     return out;
   }
-  final baked = Cooked(amount: 1, child: input.product);
+  final baked = Cooked(amount: 1, lite: lite, child: input.product);
   // Rolled into a log (step param `roll`, see [RollShape]).
   if (RollShape.from(input.params['roll']) case final roll?) {
     return rolledProduct(input, roll, baked);
@@ -1419,12 +1593,13 @@ Widget shapedProduct(AnimStepInput input, {double coverProgress = 1}) {
     back: backImage(input),
     opening: WrapOpening.from(input.params['opening']),
     contents: bakedContents(input),
+    lite: lite,
   );
 }
 
 /// The product's pieces alone, baked like the product, when given.
 Widget? bakedContents(AnimStepInput input) => switch (input.contents) {
-  final c? => Cooked(amount: 1, child: c),
+  final c? => Cooked(amount: 1, lite: input.lite, child: c),
   null => null,
 };
 
