@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../anim_step.dart';
+import 'swap_step.dart';
 
 /// Shrink (P2-07): the shaped product (flat or folded, param `folds`) lifts
 /// off the surface and shrinks toward `shrinkTo` with a slight turn, ready
@@ -30,7 +31,7 @@ class ShrinkStep implements AnimStep {
             angle: input.reduceMotion ? 0 : -0.12 * t,
             child: Transform.scale(
               scale: lerpDouble(1, shrinkTo, t)!,
-              child: shapedProduct(input),
+              child: shownProduct(input),
             ),
           ),
         ),

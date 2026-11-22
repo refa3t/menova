@@ -18,7 +18,11 @@ import 'fold_step.dart';
 /// in. At the end the log settles into its `log` rect and is lifted off,
 /// in its paper (`sleeve`), ending on Swap's first frame. The cooking
 /// surface (role `surface`) stays underneath until then. Display only: a
-/// cancelled or skipped roll leaves nothing behind (ARC-05).
+/// cancelled or skipped roll leaves nothing behind (ARC-05). Lite (a
+/// phone, [AnimStepInput.lite]): the same roll with no offscreen layer or
+/// blur per frame (the baked product drawn once as an image, the strip
+/// not shaded as it turns, the log and the strip swapped halfway through
+/// their short cross-fade, the log's own lite look, see [RolledLog]).
 class RollStep implements AnimStep {
   const RollStep();
 
@@ -163,6 +167,7 @@ class RollStep implements AnimStep {
     final roll = interval(t, 0.15, 0.85, Curves.easeInOut);
     final settle = interval(t, 0.85, 1, Curves.easeOut);
     final logIn = interval(t, 0.14, 0.22);
+    final lite = input.lite;
 
     final strip = min(dEnd * 1.2, a.height * 0.3);
     final hinge = a.bottom - strip;
@@ -198,7 +203,8 @@ class RollStep implements AnimStep {
           ),
         ),
     ];
-    if (logIn < 1) {
+    final flat = children.length;
+    if (lite ? logIn < 0.5 : logIn < 1) {
       // The bottom strip turning over about the hinge line.
       final line = FoldLine(
         Offset(1, hinge / size.height),
@@ -207,23 +213,25 @@ class RollStep implements AnimStep {
       final angle = pi * 0.92 * curl;
       final lift = sin(angle);
       final face = angle > pi / 2 && backSheet != null ? backSheet : sheet;
-      children.add(
-        Opacity(
-          opacity: 1 - logIn,
-          child: Transform(
-            transform: line.turn(size, angle, perspective),
-            child: ClipRect(
-              clipper: _Band(hinge, double.infinity),
-              child: ColorFiltered(
-                colorFilter: ColorFilter.mode(
-                  Colors.black.withValues(alpha: 0.25 * lift),
-                  BlendMode.srcATop,
+      final turning = Transform(
+        transform: line.turn(size, angle, perspective),
+        child: ClipRect(
+          clipper: _Band(hinge, double.infinity),
+          // Its shade as it turns (lite: left out; it is at most a quarter
+          // black, when edge-on and barely seen) costs a layer.
+          child: lite
+              ? face
+              : ColorFiltered(
+                  colorFilter: ColorFilter.mode(
+                    Colors.black.withValues(alpha: 0.25 * lift),
+                    BlendMode.srcATop,
+                  ),
+                  child: face,
                 ),
-                child: face,
-              ),
-            ),
-          ),
         ),
+      );
+      children.add(
+        lite ? turning : Opacity(opacity: 1 - logIn, child: turning),
       );
     }
     if (logIn > 0) {
@@ -242,22 +250,35 @@ class RollStep implements AnimStep {
         log.right / size.width,
         log.bottom / size.height,
       );
-      children.add(
-        Opacity(
-          opacity: logIn,
-          child: RolledLog(
-            rect: at,
-            product: baked,
-            back: back,
-            contents: shape.contents,
-            // Its paper comes on as it is lifted off to be served.
-            sleeve: served.sleeve,
-            sleeveOpacity: lifted,
-            turn: roll,
-            open: open,
-          ),
-        ),
+      final rolled = RolledLog(
+        rect: at,
+        // Lite: the baked product (filters, a shader mask) drawn once as an
+        // image, which the filling at the open end moves.
+        product: lite
+            ? Still(
+                share: input.product,
+                inputs: const ['roll baked'],
+                child: Kept(
+                  inputs: ['roll baked', input.product],
+                  child: baked,
+                ),
+              )
+            : baked,
+        back: back,
+        contents: shape.contents,
+        // Its paper comes on as it is lifted off to be served.
+        sleeve: served.sleeve,
+        sleeveOpacity: lifted,
+        turn: roll,
+        open: open,
+        lite: lite,
       );
+      // Lite: under the turning strip until that goes, halfway.
+      if (lite) {
+        children.insert(flat, rolled);
+      } else {
+        children.add(Opacity(opacity: logIn, child: rolled));
+      }
     }
     return Stack(fit: StackFit.expand, children: children);
   }

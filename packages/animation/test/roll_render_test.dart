@@ -170,6 +170,7 @@ void main() {
     Widget? contents,
     String backOf = backUrl,
     bool reduceMotion = false,
+    bool lite = false,
   }) {
     final key = step.startsWith('Fold') ? 'Fold' : step;
     final s = of ?? foodScene;
@@ -191,6 +192,7 @@ void main() {
             'back': [backOf],
           },
           reduceMotion: reduceMotion,
+          lite: lite,
         ),
       ),
     );
@@ -261,6 +263,11 @@ void main() {
         for (final t in tFold) await snapshot(tester, stepAt('Fold2', t)),
       ],
       [for (final t in tRoll) await snapshot(tester, stepAt('Roll', t))],
+      // The same roll, lite (a phone).
+      [
+        for (final t in tRoll)
+          await snapshot(tester, stepAt('Roll', t, lite: true)),
+      ],
       [
         for (final t in [0.0, 0.2, 0.5, 1.0])
           await snapshot(tester, stepAt('Swap', t)),
@@ -294,100 +301,204 @@ void main() {
     File(sheet).writeAsBytesSync(png!);
   });
 
-  testWidgets('the filling stays in sight through the folds and the roll', (
+  // Each as drawn on a desktop and lite (a phone: no blur, no layer).
+  String named(String name, bool lite) => lite ? '$name (lite)' : name;
+  for (final lite in [false, true]) {
+    testWidgets(
+      named('the filling stays in sight through the folds and the roll', lite),
+      (tester) async {
+        cacheNetworkImages();
+        final least = <String, double>{};
+        for (final (step, frames) in [
+          ('Fold1', 20),
+          ('Fold2', 20),
+          ('Roll', 40),
+        ]) {
+          for (var f = 0; f <= frames; f++) {
+            final shown = blueShare(
+              await render(
+                tester,
+                stepAt(step, f / frames, of: blueScene, lite: lite),
+              ),
+            );
+            // On the part still flat, then at the log's open end: never gone.
+            expect(shown, greaterThan(0.001), reason: '$step at ${f / frames}');
+            least[step] = min(least[step] ?? 1, shown);
+          }
+        }
+        debugPrint(
+          'filling in sight, at least (% of the scene): '
+          '${least.map((k, v) => MapEntry(k, (v * 100).toStringAsFixed(2)))}',
+        );
+      },
+    );
+
+    testWidgets(
+      named('the folding sides and the rolling part cover the filling', lite),
+      (tester) async {
+        cacheNetworkImages();
+        // The back (the sides' and the log's outside) in a colour nothing else
+        // has; the filling drawn or not over it must not change it.
+        bool isBack(Uint8List px, int i) =>
+            px[i] > px[i + 1] + 60 && px[i + 2] > px[i + 1] + 60;
+        var checked = 0;
+        for (final (step, frames) in [
+          ('Fold1', 8),
+          ('Fold2', 8),
+          ('Roll', 20),
+        ]) {
+          for (var f = 0; f <= frames; f++) {
+            Future<Uint8List> at(Widget contents) => render(
+              tester,
+              stepAt(
+                step,
+                f / frames,
+                of: blueScene,
+                contents: contents,
+                backOf: magentaUrl,
+                lite: lite,
+              ),
+            );
+            final bare = await at(const SizedBox());
+            final full = await at(blueScene.contents);
+            var over = 0, back = 0;
+            for (var i = 0; i < bare.length; i += 4) {
+              if (!isBack(bare, i)) continue;
+              back++;
+              var d = 0;
+              for (var c = 0; c < 3; c++) {
+                d = max(d, (bare[i + c] - full[i + c]).abs());
+              }
+              if (d > 3) over++;
+            }
+            checked += back;
+            expect(
+              over,
+              // (its anti-aliased edges aside)
+              lessThanOrEqualTo(max(4, back ~/ 200)),
+              reason: '$step at ${f / frames}: $over of $back',
+            );
+          }
+        }
+        expect(checked, greaterThan(10000));
+      },
+    );
+
+    testWidgets(
+      named('the folds flow into the roll and the roll into Swap', lite),
+      (tester) async {
+        cacheNetworkImages();
+        final foldEnd = await render(tester, stepAt('Fold2', 1, lite: lite));
+        // Every frame of the roll at 60 fps (1 s), then Swap's first frame.
+        final frames = [
+          for (var f = 0; f <= 60; f++)
+            await render(tester, stepAt('Roll', f / 60, lite: lite)),
+          await render(tester, stepAt('Swap', 0, lite: lite)),
+        ];
+        var most = 0.0;
+        for (var i = 1; i < frames.length - 1; i++) {
+          most = max(most, change(frames[i - 1], frames[i]));
+        }
+        final into = change(foldEnd, frames.first);
+        final handover = change(frames[frames.length - 2], frames.last);
+        debugPrint(
+          'fold to roll ${into.toStringAsFixed(3)}/255, largest frame-to-frame '
+          'change ${most.toStringAsFixed(2)}/255, roll to Swap '
+          '${handover.toStringAsFixed(3)}/255',
+        );
+        // The roll starts with the filling where the folds left it.
+        expect(into, lessThan(1));
+        // No frame jumps.
+        expect(most, lessThan(6));
+        // The roll ends on the frame Swap begins with.
+        expect(handover, lessThan(0.5));
+      },
+    );
+  }
+
+  testWidgets('lite looks like the full roll and the steps after it', (
     tester,
   ) async {
     cacheNetworkImages();
-    final least = <String, double>{};
-    for (final (step, frames) in [('Fold1', 20), ('Fold2', 20), ('Roll', 40)]) {
+    final most = <String, double>{};
+    for (final (step, frames) in [
+      ('Griddle', 10),
+      ('Roll', 30),
+      ('Swap', 4),
+      ('Shrink', 4),
+      ('FlyToCart', 4),
+    ]) {
       for (var f = 0; f <= frames; f++) {
-        final shown = blueShare(
-          await render(tester, stepAt(step, f / frames, of: blueScene)),
+        final d = change(
+          await render(tester, stepAt(step, f / frames)),
+          await render(tester, stepAt(step, f / frames, lite: true)),
         );
-        // On the part still flat, then at the log's open end: never gone.
-        expect(shown, greaterThan(0.001), reason: '$step at ${f / frames}');
-        least[step] = min(least[step] ?? 1, shown);
+        most[step] = max(most[step] ?? 0, d);
       }
     }
     debugPrint(
-      'filling in sight, at least (% of the scene): '
-      '${least.map((k, v) => MapEntry(k, (v * 100).toStringAsFixed(2)))}',
+      'lite against full, largest mean difference (/255): '
+      '${most.map((k, v) => MapEntry(k, v.toStringAsFixed(2)))}',
     );
+    for (final MapEntry(:key, :value) in most.entries) {
+      expect(value, lessThan(3), reason: key);
+    }
   });
 
-  testWidgets('the folding sides and the rolling part cover the filling', (
+  testWidgets('lite draws the product into images, not every frame', (
     tester,
   ) async {
     cacheNetworkImages();
-    // The back (the sides' and the log's outside) in a colour nothing else
-    // has; the filling drawn or not over it must not change it.
-    bool isBack(Uint8List px, int i) =>
-        px[i] > px[i + 1] + 60 && px[i + 2] > px[i + 1] + 60;
-    var checked = 0;
-    for (final (step, frames) in [('Fold1', 8), ('Fold2', 8), ('Roll', 20)]) {
-      for (var f = 0; f <= frames; f++) {
-        Future<Uint8List> at(Widget contents) => render(
+    // The product counts its paints: lite, it is painted only into the
+    // images the steps then move (a capture each).
+    Future<int> paints(String step, Map<String, Object?> params) async {
+      final counter = _PaintCounter();
+      final product = Stack(
+        fit: StackFit.expand,
+        children: [
+          foodScene.product,
+          CustomPaint(painter: counter),
+        ],
+      );
+      for (var f = 0; f <= 30; f++) {
+        await render(
           tester,
-          stepAt(
-            step,
-            f / frames,
-            of: blueScene,
-            contents: contents,
-            backOf: magentaUrl,
+          Builder(
+            builder: (context) => animSteps[step]!.build(
+              context,
+              AnimFrame(
+                t: f / 30,
+                elapsed: Duration(milliseconds: f * 33),
+              ),
+              AnimStepInput(
+                product: product,
+                contents: foodScene.contents,
+                productRect: rect,
+                cartTarget: const Offset(340, 20),
+                params: params,
+                images: const {
+                  'surface': [surfaceUrl],
+                  'back': [backUrl],
+                },
+                lite: true,
+              ),
+            ),
           ),
         );
-        final bare = await at(const SizedBox());
-        final full = await at(blueScene.contents);
-        var over = 0, back = 0;
-        for (var i = 0; i < bare.length; i += 4) {
-          if (!isBack(bare, i)) continue;
-          back++;
-          var d = 0;
-          for (var c = 0; c < 3; c++) {
-            d = max(d, (bare[i + c] - full[i + c]).abs());
-          }
-          if (d > 3) over++;
-        }
-        checked += back;
-        expect(
-          over,
-          // (its anti-aliased edges aside)
-          lessThanOrEqualTo(max(4, back ~/ 200)),
-          reason: '$step at ${f / frames}: $over of $back',
-        );
       }
+      return counter.paints;
     }
-    expect(checked, greaterThan(10000));
-  });
 
-  testWidgets('the folds flow into the roll and the roll into Swap', (
-    tester,
-  ) async {
-    cacheNetworkImages();
-    final foldEnd = await render(tester, stepAt('Fold2', 1));
-    // Every frame of the roll at 60 fps (1 s), then Swap's first frame.
-    final frames = [
-      for (var f = 0; f <= 60; f++)
-        await render(tester, stepAt('Roll', f / 60)),
-      await render(tester, stepAt('Swap', 0)),
-    ];
-    var most = 0.0;
-    for (var i = 1; i < frames.length - 1; i++) {
-      most = max(most, change(frames[i - 1], frames[i]));
+    // The roll: the sheet, the filling's image, the served log.
+    expect(await paints('Roll', params('Roll')), lessThanOrEqualTo(3));
+    // Cooking in eight steps, each drawn once; before it starts to brown
+    // (about the first third) it is the product as it is, no layer.
+    expect(await paints('Griddle', const {}), lessThanOrEqualTo(20));
+    // Moved as one image (a flat product too).
+    for (final step in ['Swap', 'Shrink', 'FlyToCart']) {
+      expect(await paints(step, params(step)), lessThanOrEqualTo(1));
+      expect(await paints(step, const {}), lessThanOrEqualTo(1));
     }
-    final into = change(foldEnd, frames.first);
-    final handover = change(frames[frames.length - 2], frames.last);
-    debugPrint(
-      'fold to roll ${into.toStringAsFixed(3)}/255, largest frame-to-frame '
-      'change ${most.toStringAsFixed(2)}/255, roll to Swap '
-      '${handover.toStringAsFixed(3)}/255',
-    );
-    // The roll starts with the filling where the folds left it.
-    expect(into, lessThan(1));
-    // No frame jumps.
-    expect(most, lessThan(6));
-    // The roll ends on the frame Swap begins with.
-    expect(handover, lessThan(0.5));
   });
 
   testWidgets('the rolling sheet and the served log are captured once', (

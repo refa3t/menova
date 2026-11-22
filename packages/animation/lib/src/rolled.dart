@@ -74,7 +74,13 @@ class RollShape {
 Widget rolledProduct(AnimStepInput input, RollShape roll, Widget baked) {
   // Rolled, it no longer changes: one image while the steps move it (kept,
   // so it is not laid out, and captured, again every frame).
-  final inputs = ['rolled', roll.settled, roll.contents, roll.sleeve];
+  final inputs = [
+    'rolled',
+    roll.settled,
+    roll.contents,
+    roll.sleeve,
+    if (input.lite) 'lite',
+  ];
   return Still(
     bleed: input.productRect.shortestSide * 0.1,
     share: input.product,
@@ -87,6 +93,7 @@ Widget rolledProduct(AnimStepInput input, RollShape roll, Widget baked) {
         back: backImage(input),
         contents: roll.contents,
         sleeve: roll.sleeve,
+        lite: input.lite,
       ),
     ),
   );
@@ -99,7 +106,9 @@ Widget rolledProduct(AnimStepInput input, RollShape roll, Widget baked) {
 /// and the right end open on the rolled layers with the filling ([contents]
 /// of [product]) inside: [open] (0 to 1) is how much of it is rolled in,
 /// the filling there growing with it. An optional paper [sleeve] wraps its
-/// left half.
+/// left half. With [lite] (a phone), the same log without a blur or an
+/// offscreen layer: soft shadows drawn as a few stacked shapes, fades folded
+/// into the colours (see [AnimStepInput.lite]).
 class RolledLog extends StatelessWidget {
   const RolledLog({
     super.key,
@@ -111,6 +120,7 @@ class RolledLog extends StatelessWidget {
     this.turn = 1,
     this.open = 1,
     this.sleeveOpacity = 1,
+    this.lite = false,
   });
 
   final Rect rect;
@@ -123,6 +133,9 @@ class RolledLog extends StatelessWidget {
 
   /// How far the [sleeve] has come on (0 to 1), as it is put on.
   final double sleeveOpacity;
+
+  /// Drawn for a phone's GPU (no blur, no layer).
+  final bool lite;
 
   /// The tortilla's colour where no image shows (and under its outside).
   static const _sheet = Color(0xFFE9D3A2);
@@ -238,23 +251,34 @@ class RolledLog extends StatelessWidget {
         };
         final show = open.clamp(0.0, 1.0);
         Widget? filling;
+        // Lite: the filling fades in under the inside's colour (the same
+        // look over that solid colour) instead of in a layer of its own.
+        Widget? veil;
         if (region != null && !region.isEmpty && show > 0) {
           // As more of it is rolled in, the filling at the end grows from
           // a little in the middle to filling the layers.
           final k = h * 0.8 / region.height * (0.3 + 0.7 * show);
           final c = rightEnd.center;
           final fade = interval(show, 0, 0.25);
-          filling = Opacity(
-            opacity: fade,
-            child: Transform(
-              transform: Matrix4.identity()
-                ..translateByDouble(c.dx, c.dy, 0, 1)
-                // Seen end-on, the filling is narrow (like the end itself).
-                ..scaleByDouble(k * 0.55, k, 1, 1)
-                ..translateByDouble(-region.center.dx, -region.center.dy, 0, 1),
-              child: SizedBox.fromSize(size: size, child: product),
-            ),
+          final moved = Transform(
+            transform: Matrix4.identity()
+              ..translateByDouble(c.dx, c.dy, 0, 1)
+              // Seen end-on, the filling is narrow (like the end itself).
+              ..scaleByDouble(k * 0.55, k, 1, 1)
+              ..translateByDouble(-region.center.dx, -region.center.dy, 0, 1),
+            child: SizedBox.fromSize(size: size, child: product),
           );
+          if (lite) {
+            filling = moved;
+            if (fade < 1) {
+              veil = Positioned.fromRect(
+                rect: rightEnd,
+                child: ColoredBox(color: _inside.withValues(alpha: 1 - fade)),
+              );
+            }
+          } else {
+            filling = Opacity(opacity: fade, child: moved);
+          }
         }
         final end = ClipPath(
           clipper: _PathClip((_) => Path()..addOval(rightEnd), geometry),
@@ -266,6 +290,7 @@ class RolledLog extends StatelessWidget {
                 child: const ColoredBox(color: _inside),
               ),
               ?filling,
+              ?veil,
               IgnorePointer(child: CustomPaint(painter: _EndPainter(rightEnd))),
             ],
           ),
@@ -280,6 +305,27 @@ class RolledLog extends StatelessWidget {
           Offset(r.left - e * 0.25, r.bottom + h * 0.1),
         ];
 
+        // The paper: shaded along the log, lit across its middle.
+        final paperColors = paper == null
+            ? const <Color>[]
+            : [
+                Color.lerp(paper, const Color(0xFF000000), 0.25)!,
+                Color.lerp(paper, const Color(0xFFFFFFFF), 0.3)!,
+                paper,
+                Color.lerp(paper, const Color(0xFF000000), 0.4)!,
+              ];
+        final paperStops = [
+          for (final y in [
+            r.top - h * 0.1,
+            r.top + h * 0.3,
+            r.top + h * 0.6,
+            r.bottom + h * 0.1,
+          ])
+            (y / size.height).clamp(0.0, 1.0),
+        ];
+        Path shade(Size _) => Path()
+          ..addPolygon([for (final p in cut) p + Offset(h * 0.06, 0)], true);
+
         return Stack(
           fit: StackFit.expand,
           children: [
@@ -292,16 +338,39 @@ class RolledLog extends StatelessWidget {
                   [...geometry, r.width, h],
                   const Color(0x66000000),
                   7,
+                  lite: lite,
                 ),
               ),
             ),
             outside,
             // The closed end: the sides folded in, a crease where they turn.
             IgnorePointer(
-              child: CustomPaint(painter: _ClosedEndPainter(leftEnd)),
+              child: CustomPaint(painter: _ClosedEndPainter(leftEnd, lite)),
             ),
             end,
-            if (paper != null)
+            // Lite: the paper coming on in its colours, not in a layer.
+            if (paper != null && lite) ...[
+              IgnorePointer(
+                child: CustomPaint(
+                  painter: _SoftShape(
+                    shade,
+                    [...geometry, h],
+                    const Color(0x59000000).withValues(alpha: 0.35 * paperOn),
+                    3,
+                    lite: true,
+                    along: const Offset(1, 0),
+                  ),
+                ),
+              ),
+              IgnorePointer(
+                child: CustomPaint(
+                  painter: _PaperPainter(cut, [
+                    for (final c in paperColors)
+                      c.withValues(alpha: c.a * paperOn),
+                  ], paperStops),
+                ),
+              ),
+            ] else if (paper != null)
               Opacity(
                 opacity: paperOn,
                 child: Stack(
@@ -311,10 +380,7 @@ class RolledLog extends StatelessWidget {
                     IgnorePointer(
                       child: CustomPaint(
                         painter: _SoftShape(
-                          (_) => Path()
-                            ..addPolygon([
-                              for (final p in cut) p + Offset(h * 0.06, 0),
-                            ], true),
+                          shade,
                           [...geometry, h],
                           const Color(0x59000000),
                           3,
@@ -331,21 +397,8 @@ class RolledLog extends StatelessWidget {
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [
-                              Color.lerp(paper, const Color(0xFF000000), 0.25)!,
-                              Color.lerp(paper, const Color(0xFFFFFFFF), 0.3)!,
-                              paper,
-                              Color.lerp(paper, const Color(0xFF000000), 0.4)!,
-                            ],
-                            stops: [
-                              for (final y in [
-                                r.top - h * 0.1,
-                                r.top + h * 0.3,
-                                r.top + h * 0.6,
-                                r.bottom + h * 0.1,
-                              ])
-                                (y / size.height).clamp(0.0, 1.0),
-                            ],
+                            colors: paperColors,
+                            stops: paperStops,
                           ),
                         ),
                       ),
@@ -424,52 +477,112 @@ class _EndPainter extends CustomPainter {
   bool shouldRepaint(_EndPainter oldDelegate) => oldDelegate.end != end;
 }
 
-/// The closed end: shade where the folded-in side turns under.
+/// The closed end: shade where the folded-in side turns under (lite: the
+/// same line, unblurred and a little fainter).
 class _ClosedEndPainter extends CustomPainter {
-  const _ClosedEndPainter(this.end);
+  const _ClosedEndPainter(this.end, [this.lite = false]);
 
   final Rect end;
+  final bool lite;
 
   @override
   void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = max(1.0, end.height * 0.03)
+      ..color = lite ? const Color(0x443A2410) : const Color(0x553A2410);
+    if (!lite) paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.5);
     canvas.drawArc(
       end.deflate(end.width * 0.18),
       pi * 0.6,
       pi * 0.8,
       false,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = max(1.0, end.height * 0.03)
-        ..color = const Color(0x553A2410)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.5),
+      paint,
     );
   }
 
   @override
-  bool shouldRepaint(_ClosedEndPainter oldDelegate) => oldDelegate.end != end;
+  bool shouldRepaint(_ClosedEndPainter oldDelegate) =>
+      oldDelegate.end != end || oldDelegate.lite != lite;
 }
 
 /// A shape filled with [color] and blurred by [sigma] (a soft shadow), drawn
 /// again only when [inputs] (all [build] reads besides the size) change.
+/// With [lite], no blur: the shape stacked a few times, shifted along
+/// [along] across about three sigma, so its edge that way fades in steps.
 class _SoftShape extends CustomPainter {
-  const _SoftShape(this.build, this.inputs, this.color, this.sigma);
+  const _SoftShape(
+    this.build,
+    this.inputs,
+    this.color,
+    this.sigma, {
+    this.lite = false,
+    this.along = const Offset(0, 1),
+  });
 
   final Path Function(Size size) build;
   final List<Object?> inputs;
   final Color color;
   final double sigma;
+  final bool lite;
+  final Offset along;
+
+  static const _steps = 5;
 
   @override
-  void paint(Canvas canvas, Size size) => canvas.drawPath(
-    build(size),
-    Paint()
-      ..color = color
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, sigma),
-  );
+  void paint(Canvas canvas, Size size) {
+    final path = build(size);
+    if (!lite) {
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = color
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, sigma),
+      );
+      return;
+    }
+    // Each copy's share, so all of them overlapping make [color].
+    final a = 1 - pow(1 - color.a, 1 / _steps).toDouble();
+    final paint = Paint()..color = color.withValues(alpha: a);
+    for (var i = 0; i < _steps; i++) {
+      final k = (i / (_steps - 1) - 0.5) * 3 * sigma;
+      canvas.drawPath(path.shift(along * k), paint);
+    }
+  }
 
   @override
   bool shouldRepaint(_SoftShape oldDelegate) =>
       oldDelegate.color != color ||
       oldDelegate.sigma != sigma ||
+      oldDelegate.lite != lite ||
+      oldDelegate.along != along ||
       !listEquals(oldDelegate.inputs, inputs);
+}
+
+/// The paper (lite): the [cut] polygon filled with the vertical gradient
+/// [colors] at [stops] of the box, no clip.
+class _PaperPainter extends CustomPainter {
+  const _PaperPainter(this.cut, this.colors, this.stops);
+
+  final List<Offset> cut;
+  final List<Color> colors;
+  final List<double> stops;
+
+  @override
+  void paint(Canvas canvas, Size size) => canvas.drawPath(
+    Path()..addPolygon(cut, true),
+    Paint()
+      ..shader = ui.Gradient.linear(
+        Offset.zero,
+        Offset(0, size.height),
+        colors,
+        stops,
+      ),
+  );
+
+  @override
+  bool shouldRepaint(_PaperPainter oldDelegate) =>
+      !listEquals(oldDelegate.cut, cut) ||
+      !listEquals(oldDelegate.colors, colors) ||
+      !listEquals(oldDelegate.stops, stops);
 }
