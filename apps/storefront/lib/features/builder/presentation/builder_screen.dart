@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:animation/animation.dart';
 import 'package:core/core.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -145,6 +146,10 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
     // This one setting only: a MediaQuery.of here would rebuild the whole
     // screen on every later change (e.g. the keyboard's insets).
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    // A phone (or tablet) browser: its GPU pays for every blur and layer.
+    final isPhone =
+        defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS;
     final sequence = StepSequence.fromDefinition(def);
     final total = sequenceDuration(
       sequence,
@@ -211,6 +216,7 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
           cartTarget: cartBox == null ? null : rectOf(cartBox).center,
           images: images,
           reduceMotion: reduceMotion || raster == null,
+          lite: isPhone,
           baseScale: state.sizeScale,
           // Captured inside the canvas's size and surface scales, which the
           // capture leaves out (the full raster has them): scaled again.

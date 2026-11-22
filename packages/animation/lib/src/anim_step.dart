@@ -32,6 +32,7 @@ class AnimStepInput {
     this.reduceMotion = false,
     this.contents,
     this.baseScale = 1,
+    this.lite = false,
   });
 
   /// The customer's product as drawn when "add" was pressed (snapshot).
@@ -56,6 +57,11 @@ class AnimStepInput {
   final Map<String, List<String>> images;
 
   final bool reduceMotion;
+
+  /// Drawn for a phone's GPU: the same motion, but per-frame effects that
+  /// cost a full extra pass there (blurs, layers) are left out or drawn
+  /// once and reused. The orchestrator sets it on phones.
+  final bool lite;
 
   /// The product's size scale within its box (the chosen size; 1 at the
   /// largest), so a step can size an effect to the drawn product.

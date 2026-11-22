@@ -78,9 +78,17 @@ async function record(page, ms, action) {
 async function open(browser, path, cart) {
   const page = await browser.newPage();
   await page.emulate({
-    viewport: { width: 375, height: 812, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
+    viewport: { width: 375, height: 812, deviceScaleFactor: Number(process.env.DPR ?? 2), isMobile: true, hasTouch: true },
     userAgent: 'Mozilla/5.0 (Linux; Android 13; Pixel 6a) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36',
   });
+  // DPRCAP=2: what capping the page's pixel ratio (as index.html does on
+  // phones) changes on a 3x screen.
+  if (process.env.DPRCAP) {
+    await page.evaluateOnNewDocument((cap) => {
+      const real = window.devicePixelRatio;
+      Object.defineProperty(window, 'devicePixelRatio', { get: () => Math.min(real, cap) });
+    }, Number(process.env.DPRCAP));
+  }
   if (cart) {
     await page.evaluateOnNewDocument((raw) => {
       localStorage.setItem('flutter.cart.v1', raw);
@@ -126,7 +134,11 @@ const tapAdd = (page) => () => page.touchscreen.tap(187, 773);
 const browser = await puppeteer.launch({
   executablePath: chrome,
   headless: true,
-  args: ['--enable-gpu-rasterization', '--ignore-gpu-blocklist'],
+  // GPU=soft: software WebGL (SwiftShader), so drawing costs (blurs,
+  // layers, big images) show as they do on a weak phone GPU.
+  args: process.env.GPU === 'soft'
+    ? ['--disable-gpu', '--enable-unsafe-swiftshader']
+    : ['--enable-gpu-rasterization', '--ignore-gpu-blocklist'],
 });
 try {
   const results = {};
@@ -153,6 +165,7 @@ try {
   await twice('crepe fruit (even fillings + poured Nutella)', '/product/crepe_fruit');
   await twice('crepe tuna (even fillings + band cheese)', '/product/crepe_tuna');
   await twice('tortilla chicken', '/product/tortilla_chicken');
+  await twice('cheese pan', '/product/cheese_pan_chicken');
 
   console.log(JSON.stringify({ site, cpuThrottle: `${cpu}x`, results }, null, 2));
 } finally {

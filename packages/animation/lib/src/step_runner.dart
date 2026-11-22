@@ -167,6 +167,7 @@ class _StepRunnerState extends State<StepRunner>
       },
       reduceMotion: widget.input.reduceMotion,
       baseScale: widget.input.baseScale,
+      lite: widget.input.lite,
     );
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
