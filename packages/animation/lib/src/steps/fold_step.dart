@@ -51,8 +51,10 @@ class FoldStep implements AnimStep {
     double t,
     double time,
     WrapOpening? opening,
-    Size size,
-  ) {
+    Size size, {
+    Widget Function(double opacity)? fade,
+    Widget Function(double opacity)? fadeShaded,
+  }) {
     if (size.isEmpty) return null;
     final region = opening?.contents;
     final heaped =
@@ -113,24 +115,35 @@ class FoldStep implements AnimStep {
       fit: StackFit.expand,
       children: [
         // The heap's second layer, behind and higher in its shade.
-        Opacity(
-          opacity: interval(h, 0.4, 1),
-          child: Transform(
+        if (fadeShaded != null)
+          Transform(
             transform: o.filling(
               size,
               grow: 0.92,
               lift: o.ellipse.height * size.height * 0.14,
               flip: true,
             ),
-            child: ColorFiltered(
-              colorFilter: const ColorFilter.mode(
-                Color(0x47000000),
-                BlendMode.srcATop,
+            child: fadeShaded(interval(h, 0.4, 1)),
+          )
+        else
+          Opacity(
+            opacity: interval(h, 0.4, 1),
+            child: Transform(
+              transform: o.filling(
+                size,
+                grow: 0.92,
+                lift: o.ellipse.height * size.height * 0.14,
+                flip: true,
               ),
-              child: pieces,
+              child: ColorFiltered(
+                colorFilter: const ColorFilter.mode(
+                  Color(0x47000000),
+                  BlendMode.srcATop,
+                ),
+                child: pieces,
+              ),
             ),
           ),
-        ),
         Transform(
           transform: lifted,
           child: Stack(
@@ -138,13 +151,19 @@ class FoldStep implements AnimStep {
             children: [
               layer,
               // What went inside the sides comes up into the heap too.
-              Opacity(
-                opacity: h,
-                child: ClipPath(
+              if (fade != null)
+                ClipPath(
                   clipper: _RestClip(active, invert: true),
-                  child: pieces,
+                  child: fade(h),
+                )
+              else
+                Opacity(
+                  opacity: h,
+                  child: ClipPath(
+                    clipper: _RestClip(active, invert: true),
+                    child: pieces,
+                  ),
                 ),
-              ),
             ],
           ),
         ),
@@ -192,7 +211,11 @@ class FoldStep implements AnimStep {
     // off to be served (the last moments of the last fold).
     final served = WrapOpening.from(p['opening']);
     final opening = served?.unwrapped;
-    final baked = Cooked(amount: 1, child: input.product);
+    // On a phone, the effects that cost a pass of their own each frame
+    // (filter layers, shader masks, blurs) are drawn once into images and
+    // faded, with the same motion.
+    final lite = input.lite;
+    final baked = Cooked(amount: 1, lite: lite, child: input.product);
     if (lines.isEmpty) {
       return Stack(
         children: [Positioned.fromRect(rect: rect, child: baked)],
@@ -228,14 +251,31 @@ class FoldStep implements AnimStep {
         : 0.0;
     // The pieces do not change: one image, however often a fold draws
     // them (each side's band draws them again).
-    final pieces = switch (bakedContents(input)) {
-      final c? => Still(
-        share: input.product,
-        inputs: const ['pieces'],
-        child: c,
+    final contents = bakedContents(input);
+    Widget piecesAt(double opacity) => Still(
+      share: input.product,
+      inputs: const ['pieces'],
+      opacity: opacity,
+      child: contents!,
+    );
+    final pieces = contents == null ? null : piecesAt(1);
+    // On a phone, the pieces faded and the heap's shaded layer are the same
+    // images, drawn fainter (no layers).
+    Widget shadedPiecesAt(double opacity) => Still(
+      share: input.product,
+      inputs: const ['pieces', 'shaded'],
+      opacity: opacity,
+      child: Kept(
+        inputs: ['pieces', 'shaded', input.product],
+        child: ColorFiltered(
+          colorFilter: const ColorFilter.mode(
+            Color(0x47000000),
+            BlendMode.srcATop,
+          ),
+          child: pieces!,
+        ),
       ),
-      null => null,
-    };
+    );
     // Lifted off, it ends as Swap begins: its paper on, a little smaller
     // (Swap pops it from there) and the background as dark.
     // The paper fades in over the wrap as it was (two still images).
@@ -252,10 +292,9 @@ class FoldStep implements AnimStep {
     final towardFree = Offset(u.dy, -u.dx) * 0.45; // folding side
     // With it, darker as it turns away from the light: both in one layer
     // (each tint over the darkening; srcATop shades only its own pixels).
-    final shade = Colors.black.withValues(alpha: 0.2 * lift);
-    final bent = ShaderMask(
-      blendMode: BlendMode.srcATop,
-      shaderCallback: (b) => LinearGradient(
+    LinearGradient bend(double lift) {
+      final shade = Colors.black.withValues(alpha: 0.2 * lift);
+      return LinearGradient(
         begin: at(mid),
         end: at(mid + towardFree),
         colors: [
@@ -267,58 +306,114 @@ class FoldStep implements AnimStep {
             Color.alphaBlend(c, shade),
         ],
         stops: const [0, 0.35, 1],
-      ).createShader(b),
-      child: face,
+      );
+    }
+
+    // On a phone: [child] with [tint] (srcATop, as at full strength) drawn
+    // once into an image and faded in over it by [amount]; a srcATop tint
+    // scales with its alpha, so the fade gives (nearly) the tint at
+    // [amount].
+    Widget tintedOver(
+      Widget child,
+      double amount,
+      Shader Function(Rect) tint,
+      List<Object?> inputs,
+    ) => Stack(
+      fit: StackFit.expand,
+      children: [
+        child,
+        if (amount > 0)
+          Still(
+            share: input.product,
+            opacity: amount,
+            inputs: inputs,
+            child: Kept(
+              inputs: [...inputs, input.product],
+              child: ShaderMask(
+                blendMode: BlendMode.srcATop,
+                shaderCallback: tint,
+                child: child,
+              ),
+            ),
+          ),
+      ],
+    );
+
+    final bent = lite
+        ? tintedOver(face, lift, (b) => bend(1).createShader(b), [
+            'bent',
+            stage,
+            ...lines,
+            identical(face, back),
+          ])
+        : ShaderMask(
+            blendMode: BlendMode.srcATop,
+            shaderCallback: (b) => bend(lift).createShader(b),
+            child: face,
+          );
+
+    LinearGradient rounding(double progress) => LinearGradient(
+      colors: [
+        Colors.black.withValues(alpha: 0.6 * progress),
+        Colors.black.withValues(alpha: 0.13 * progress),
+        Colors.white.withValues(alpha: 0.2 * progress),
+        Colors.black.withValues(alpha: 0.13 * progress),
+        Colors.black.withValues(alpha: 0.63 * progress),
+      ],
+      stops: const [0.2, 0.36, 0.5, 0.64, 0.8],
     );
 
     // Rounding across the wrap, growing with the folds (none on a sheet
-    // kept flat: no layer for it).
-    Widget rounded(Widget child) => progress <= 0
+    // kept flat: no layer for it). [part] and [size] tell apart, on a
+    // phone, the images of the parts it rounds.
+    Widget rounded(Widget child, String part, Size size) => progress <= 0
         ? child
+        : lite
+        ? tintedOver(
+            child,
+            progress / volume,
+            (b) => rounding(volume).createShader(b),
+            ['round', part, size, stage, volume, ...lines, back != null],
+          )
         : ShaderMask(
             blendMode: BlendMode.srcATop,
-            shaderCallback: (b) => LinearGradient(
-              colors: [
-                Colors.black.withValues(alpha: 0.6 * progress),
-                Colors.black.withValues(alpha: 0.13 * progress),
-                Colors.white.withValues(alpha: 0.2 * progress),
-                Colors.black.withValues(alpha: 0.13 * progress),
-                Colors.black.withValues(alpha: 0.63 * progress),
-              ],
-              stops: const [0.2, 0.36, 0.5, 0.64, 0.8],
-            ).createShader(b),
+            shaderCallback: (b) => rounding(progress).createShader(b),
             child: child,
           );
 
     // A soft dark copy of [child], for shadows: blurred once (an image),
-    // its strength animated.
+    // its strength animated (on a phone, a spread without a blur, and its
+    // strength on the image, without a layer).
     Widget shadowOf(
       Widget child,
       double opacity,
       double blur,
       List<Object?> inputs,
-    ) => Opacity(
-      opacity: opacity.clamp(0.0, 1.0),
-      child: Still(
+    ) {
+      final dark = ColorFiltered(
+        colorFilter: const ColorFilter.mode(Color(0xFF000000), BlendMode.srcIn),
+        child: child,
+      );
+      final image = Still(
         bleed: blur * 3,
         share: input.product,
+        opacity: lite ? opacity : 1,
         inputs: ['shadow', blur, ...inputs],
         // Kept, so not laid out and captured again every frame.
         child: Kept(
           inputs: ['shadow', blur, ...inputs, input.product, back != null],
-          child: ImageFiltered(
-            imageFilter: ui.ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-            child: ColorFiltered(
-              colorFilter: const ColorFilter.mode(
-                Color(0xFF000000),
-                BlendMode.srcIn,
-              ),
-              child: child,
-            ),
-          ),
+          child: lite
+              ? spreadShadow(blur, dark)
+              : ImageFiltered(
+                  imageFilter: ui.ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+                  child: dark,
+                ),
         ),
-      ),
-    );
+      );
+      return lite
+          ? image
+          : Opacity(opacity: opacity.clamp(0.0, 1.0), child: image);
+    }
 
     return Stack(
       children: [
@@ -342,6 +437,7 @@ class FoldStep implements AnimStep {
                 product: baked,
                 back: back,
                 without: line,
+                lite: lite,
               );
               final movingShape = ClipPath(
                 clipper: _MovingClip(line, done),
@@ -349,7 +445,17 @@ class FoldStep implements AnimStep {
               );
               final filling = pieces == null
                   ? null
-                  : _filling(pieces, lines, stage, t, time, opening, size);
+                  : _filling(
+                      pieces,
+                      lines,
+                      stage,
+                      t,
+                      time,
+                      opening,
+                      size,
+                      fade: lite ? piecesAt : null,
+                      fadeShaded: lite ? shadedPiecesAt : null,
+                    );
               final flat = Stack(
                 fit: StackFit.expand,
                 children: [
@@ -362,7 +468,7 @@ class FoldStep implements AnimStep {
                     ]),
                   ),
                   if (pieces == null)
-                    rounded(resting)
+                    rounded(resting, 'resting', size)
                   else ...[
                     // The unfolded part, the filling on it, then the sides
                     // folded over it.
@@ -371,6 +477,8 @@ class FoldStep implements AnimStep {
                         clipper: _RestClip([...done, line]),
                         child: baked,
                       ),
+                      'rest',
+                      size,
                     ),
                     if (filling != null)
                       ClipPath(clipper: _RestClip(active), child: filling),
@@ -392,6 +500,8 @@ class FoldStep implements AnimStep {
                               ),
                           ],
                         ),
+                        'done',
+                        size,
                       ),
                   ],
                   // The lifted part casts a shadow on what is under it:
@@ -437,7 +547,35 @@ class FoldStep implements AnimStep {
                     zoom > 0 ? Opacity(opacity: 1 - zoom, child: flat) : flat,
                   // The last fold closes the wrap: it settles into its
                   // finished look (outside all round, contents inside).
-                  if (settle > 0)
+                  if (settle > 0 && lite)
+                    // On a phone, each wrap's image takes its opacity: no
+                    // layers.
+                    Transform.scale(
+                      scale: servedScale,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          for (final (o, shown) in [
+                            (opening, !paper || lifted < 1 ? 1.0 : 0.0),
+                            (served, paper ? lifted : 0.0),
+                          ])
+                            if (shown > 0)
+                              Folded(
+                                key: ValueKey(identical(o, served)),
+                                lines: lines,
+                                count: lines.length,
+                                product: baked,
+                                back: back,
+                                opening: o,
+                                zoom: zoom,
+                                contents: pieces,
+                                lite: true,
+                                opacity: settle * shown,
+                              ),
+                        ],
+                      ),
+                    )
+                  else if (settle > 0)
                     Opacity(
                       opacity: settle,
                       child: Transform.scale(
