@@ -22,6 +22,13 @@ import '../anim_step.dart';
 /// once back, where the next step takes over), `bubbles` (0: how many
 /// bubbles rise on it while it bakes, within `bubbleArea` (0.7) of its
 /// radius), `melt` (none).
+///
+/// With [AnimStepInput.lite] (a phone's GPU) it looks the same but costs
+/// less a frame: the product crossfades to its baked (and melted) look
+/// painted once ([LiteBaked]) instead of being baked, blurred and tinted
+/// every frame, the front wall is painted once into an image and only
+/// moved, the opening is cut by a rounded rectangle instead of a path, and
+/// the melted top's shine does not drift.
 class SlideIntoOvenStep implements AnimStep {
   const SlideIntoOvenStep();
 
@@ -58,6 +65,7 @@ class SlideIntoOvenStep implements AnimStep {
     final bubbleArea = param('bubbleArea', 0.7, 0, 1);
     final melt = MeltSpec.from(p['melt']);
     final still = input.reduceMotion;
+    final lite = input.lite;
     final ms = frame.elapsed.inMilliseconds;
     final baseScale = input.baseScale.isFinite
         ? input.baseScale.clamp(0.0, 1.0)
@@ -116,13 +124,15 @@ class SlideIntoOvenStep implements AnimStep {
     final steamUrl = first('steam');
     final embersUrl = first('embers');
 
-    Widget product = Cooked(
-      amount: cook,
-      saturation: saturation,
-      bubble: bubbling,
-      child: input.product,
-    );
-    if (melt != null) {
+    Widget product = lite
+        ? _liteProduct(input, cook, saturation, melt, baseScale)
+        : Cooked(
+            amount: cook,
+            saturation: saturation,
+            bubble: bubbling,
+            child: input.product,
+          );
+    if (melt != null && !lite) {
       product = Melted(
         amount: cook,
         spec: melt,
@@ -132,7 +142,9 @@ class SlideIntoOvenStep implements AnimStep {
         child: product,
       );
     }
-    if (bubbles > 0 && cook > 0) {
+    // On a phone always in the same place in the tree, so what is painted
+    // once is kept.
+    if (bubbles > 0 && (cook > 0 || lite)) {
       product = Stack(
         fit: StackFit.expand,
         children: [
@@ -149,7 +161,10 @@ class SlideIntoOvenStep implements AnimStep {
       );
     }
 
+    // Keyed (as the wall is) so moving behind or in front of the wall
+    // keeps what is drawn, an image painted once among it.
     final moving = Positioned.fromRect(
+      key: const ValueKey(_Part.product),
       rect: Rect.fromCenter(center: at, width: rect.width, height: rect.height),
       child: Transform(
         alignment: Alignment.center,
@@ -176,6 +191,7 @@ class SlideIntoOvenStep implements AnimStep {
                     opacity: oven,
                     glow: glow,
                     flicker: still ? 0 : ms / 1000,
+                    lite: lite,
                   ),
                 ),
               ),
@@ -184,9 +200,10 @@ class SlideIntoOvenStep implements AnimStep {
         if (embersUrl != null && oven > 0 && !geo.arch.isEmpty)
           Positioned.fromRect(
             rect: geo.arch.shift(Offset(0, drop)),
-            child: ClipPath(
-              clipper: _ArchClip(geo.arch.size),
-              child: Image.network(
+            child: _clipArch(
+              lite,
+              geo.arch.size,
+              Image.network(
                 embersUrl,
                 fit: BoxFit.cover,
                 opacity: AlwaysStoppedAnimation((oven * glow).clamp(0.0, 1.0)),
@@ -197,7 +214,8 @@ class SlideIntoOvenStep implements AnimStep {
           ),
         if (behindWall) moving,
         // The front wall: over the product while it is in the oven.
-        if (oven > 0)
+        if (oven > 0 && lite && !geo.wall.isEmpty) _liteWall(geo, oven, drop),
+        if (oven > 0 && !lite)
           Positioned.fill(
             child: IgnorePointer(
               child: Transform.translate(
@@ -237,6 +255,80 @@ class SlideIntoOvenStep implements AnimStep {
       ],
     );
   }
+
+  /// The product baking, for a phone: its baked look painted once into an
+  /// image, faded in over the raw product as it cooks (by the image itself,
+  /// no layer). Shown faintly from the first frame, so that image is
+  /// painted (its one costly frame) as "add" is pressed, not halfway
+  /// through the motion. Without a melt it is [Cooked]'s own image, which
+  /// the next steps (Box, Swap) share.
+  static Widget _liteProduct(
+    AnimStepInput input,
+    double cook,
+    double saturation,
+    MeltSpec? melt,
+    double baseScale,
+  ) {
+    // Invisible (no pixel of it drawn) but painted, so captured.
+    final a = max(cook, 1e-3);
+    if (melt == null) {
+      return Cooked(
+        amount: a,
+        saturation: saturation,
+        lite: true,
+        child: input.product,
+      );
+    }
+    final baked = LiteBaked(
+      key: const ValueKey(_Part.baked),
+      product: input.product,
+      share: input.product,
+      saturation: saturation,
+      melt: melt,
+      baseScale: baseScale,
+      contents: bakedContents(input),
+      opacity: a,
+    );
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (a < 1)
+          KeyedSubtree(key: const ValueKey(_Part.raw), child: input.product),
+        baked,
+      ],
+    );
+  }
+
+  /// The front wall, for a phone: painted once into an image the size of
+  /// the wall, then only moved (and faded while it appears and goes).
+  static Widget _liteWall(_OvenFront geo, double opacity, double drop) {
+    // Room for the stone arch's stroke beyond the wall's edge.
+    final bounds = geo.wall.inflate(2);
+    // Faded by the image itself: no layer, nor painted again.
+    final wall = Still(
+      inputs: [geo.wall, geo.arch],
+      opacity: opacity,
+      child: CustomPaint(
+        painter: _OvenWallPainter(
+          geo: geo,
+          opacity: 1,
+          glow: 0.75,
+          origin: bounds.topLeft,
+        ),
+      ),
+    );
+    return Positioned.fromRect(
+      key: const ValueKey(_Part.wall),
+      rect: bounds.shift(Offset(0, drop)),
+      child: IgnorePointer(child: wall),
+    );
+  }
+
+  /// [child] cut to the opening's shape: by its path, or for a phone by the
+  /// same shape as a rounded rectangle.
+  static Widget _clipArch(bool lite, Size size, Widget child) => lite
+      ? ClipRRect(borderRadius: _archRadius(size), child: child)
+      : ClipPath(clipper: _ArchClip(size), child: child);
 
   /// The oven's front wall for a product at [productRect] on [screen].
   @visibleForTesting
@@ -345,6 +437,16 @@ Path _archPath(Size size, [Offset at = Offset.zero]) {
     ..close();
 }
 
+/// The opening's round top as the corners of a rounded rectangle: the same
+/// outline as [_archPath].
+BorderRadius _archRadius(Size size) {
+  final top = Radius.elliptical(
+    max(size.width / 2, 1e-3),
+    max(min(size.width / 2, size.height), 1e-3),
+  );
+  return BorderRadius.only(topLeft: top, topRight: top);
+}
+
 class _ArchClip extends CustomClipper<Path> {
   const _ArchClip(this.size);
 
@@ -357,6 +459,9 @@ class _ArchClip extends CustomClipper<Path> {
   bool shouldReclip(_ArchClip oldClipper) => oldClipper.size != size;
 }
 
+/// Keys of the parts that change places in the stack.
+enum _Part { product, wall, raw, baked }
+
 Color _fade(Color c, double opacity) =>
     c.withValues(alpha: (c.a * opacity).clamp(0.0, 1.0));
 
@@ -368,6 +473,7 @@ class _OvenInsidePainter extends CustomPainter {
     required this.opacity,
     required this.glow,
     required this.flicker,
+    this.lite = false,
   });
 
   final _OvenFront geo;
@@ -375,13 +481,19 @@ class _OvenInsidePainter extends CustomPainter {
   final double glow;
   final double flicker;
 
+  /// Cut by a rounded rectangle (the same outline) instead of a path.
+  final bool lite;
+
   @override
   void paint(Canvas canvas, Size size) {
     final arch = geo.arch;
     if (arch.isEmpty) return;
-    final path = geo.archPath();
     canvas.save();
-    canvas.clipPath(path);
+    if (lite) {
+      canvas.clipRRect(_archRadius(arch.size).toRRect(arch));
+    } else {
+      canvas.clipPath(geo.archPath());
+    }
     canvas.drawRect(
       arch,
       Paint()
@@ -445,7 +557,8 @@ class _OvenInsidePainter extends CustomPainter {
       old.geo.arch != geo.arch ||
       old.opacity != opacity ||
       old.glow != glow ||
-      old.flicker != flicker;
+      old.flicker != flicker ||
+      old.lite != lite;
 }
 
 /// The oven's front wall: brick, domed on top, with the arched opening cut
@@ -455,16 +568,32 @@ class _OvenWallPainter extends CustomPainter {
     required this.geo,
     required this.opacity,
     required this.glow,
+    this.origin = Offset.zero,
   });
 
   final _OvenFront geo;
   final double opacity;
   final double glow;
 
+  /// Where its canvas starts, in the overlay's coordinates (the geometry's).
+  final Offset origin;
+
   @override
   void paint(Canvas canvas, Size size) {
     final wall = geo.wall;
     if (wall.isEmpty) return;
+    if (origin != Offset.zero) {
+      canvas.save();
+      canvas.translate(-origin.dx, -origin.dy);
+      _paint(canvas);
+      canvas.restore();
+    } else {
+      _paint(canvas);
+    }
+  }
+
+  void _paint(Canvas canvas) {
+    final wall = geo.wall;
     final dome = RRect.fromRectAndCorners(
       wall,
       topLeft: Radius.circular(wall.width * 0.45),
@@ -549,7 +678,8 @@ class _OvenWallPainter extends CustomPainter {
       old.geo.wall != geo.wall ||
       old.geo.arch != geo.arch ||
       old.opacity != opacity ||
-      old.glow != glow;
+      old.glow != glow ||
+      old.origin != origin;
 }
 
 /// Bubbles rising and popping on a baking product (melted cheese), spread

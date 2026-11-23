@@ -153,6 +153,9 @@ try {
       results[`${label}: idle`] = await record(page, 2000);
     }
     results[`${label}: add #1 (cold)`] = await record(page, 5000, tapAdd(page));
+    // The longest sequence (cheese pan, 4.8 s) and the button's "added"
+    // state (1.2 s) outlast the recording: a tap before they end is ignored.
+    await sleep(2500);
     results[`${label}: add #2 (warm)`] = await record(page, 5000, tapAdd(page));
     if (setup) {
       await page.screenshot({ path: process.env.SHOT ?? 'heavy.png' });

@@ -74,6 +74,7 @@ class Boxed extends StatelessWidget {
     this.productScale = 1,
     this.opacity = 1,
     this.baseScale = 1,
+    this.lite = false,
   });
 
   final BoxSpec spec;
@@ -83,10 +84,15 @@ class Boxed extends StatelessWidget {
   final double opacity;
   final double baseScale;
 
+  /// For a phone's GPU: the shadow and tray, and each side of the lid, are
+  /// painted once into images at full strength and faded by those images
+  /// (no layers), so a frame draws a few images, the lid's in perspective,
+  /// instead of replaying its painting.
+  final bool lite;
+
   /// The lid's turn about its hinge, for [angle] radians open.
   static Matrix4 lidTurn(String hinge, double angle, double side) {
-    final m = Matrix4.identity()
-      ..setEntry(3, 2, side > 0 ? 1 / (side * 5) : 0);
+    final m = Matrix4.identity()..setEntry(3, 2, side > 0 ? 1 / (side * 5) : 0);
     return switch (hinge) {
       'bottom' => m..rotateX(angle),
       'left' => m..rotateY(angle),
@@ -126,6 +132,9 @@ class Boxed extends StatelessWidget {
         );
         final angle = spec.openDeg * pi / 180 * open;
         final inside = angle > pi / 2;
+        if (lite) {
+          return _lite(tray, side, open, angle, inside, ps, a);
+        }
         return Stack(
           clipBehavior: Clip.none,
           children: [
@@ -163,6 +172,65 @@ class Boxed extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+extension on Boxed {
+  Widget _lite(
+    Rect tray,
+    double side,
+    double open,
+    double angle,
+    bool inside,
+    double ps,
+    double a,
+  ) {
+    final under = tray.inflate(side * 0.06);
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned.fromRect(
+          rect: under,
+          child: Still(
+            inputs: ['tray', spec.color],
+            opacity: a,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                const CustomPaint(painter: _BoxShadowPainter(1)),
+                Padding(
+                  padding: EdgeInsets.all(side * 0.06),
+                  child: CustomPaint(painter: _TrayPainter(spec.color, 1)),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (open > 0)
+          Positioned.fill(
+            child: Transform.scale(scale: ps, child: product),
+          ),
+        if (angle < pi)
+          Positioned.fromRect(
+            rect: tray,
+            child: Transform(
+              alignment: Boxed._hingeAlignment(spec.hinge),
+              transform: Boxed.lidTurn(spec.hinge, angle, side),
+              child: Still(
+                // Keyed by side so each keeps its own image.
+                key: ValueKey(inside),
+                inputs: ['lid', spec, inside],
+                opacity: a,
+                child: CustomPaint(
+                  painter: inside
+                      ? _LidInsidePainter(spec.color, 1)
+                      : _LidPainter(spec, 1),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

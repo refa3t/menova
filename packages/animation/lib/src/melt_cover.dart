@@ -151,6 +151,71 @@ class Melted extends StatelessWidget {
   }
 }
 
+/// For a phone's GPU ([AnimStepInput.lite]): [product] fully baked
+/// ([Cooked] at [saturation]) and, with a [melt], fully melted with its
+/// [contents] sunk in, painted once into an image and that image drawn from
+/// then on, so its blurs, colour filter and shader masks cost once, not
+/// every frame. Steps crossfade to it ([opacity], drawn by the image
+/// without a layer) instead of baking and melting it frame by frame.
+///
+/// [share] (the step input's product) lets every step of a sequence use one
+/// capture of the same look.
+class LiteBaked extends StatelessWidget {
+  const LiteBaked({
+    super.key,
+    required this.product,
+    required this.share,
+    this.saturation = 1.45,
+    this.melt,
+    this.contents,
+    this.baseScale = 1,
+    this.opacity = 1,
+  });
+
+  final Widget product;
+  final Object share;
+  final double saturation;
+  final MeltSpec? melt;
+  final Widget? contents;
+  final double baseScale;
+
+  /// How opaque its image is drawn (changing it does not paint it again).
+  final double opacity;
+
+  @override
+  Widget build(BuildContext context) {
+    final inputs = <Object?>[
+      'liteBaked',
+      saturation,
+      melt,
+      melt == null ? null : baseScale,
+      melt != null && contents != null,
+    ];
+    final spec = melt;
+    final baked = Cooked(amount: 1, saturation: saturation, child: product);
+    // At most a 2x screen's sharpness, like the product's own snapshot.
+    final dpr = MediaQuery.maybeDevicePixelRatioOf(context) ?? 1;
+    return Still(
+      scale: dpr > 2 ? 2 / dpr : 1,
+      share: share,
+      inputs: inputs,
+      opacity: opacity,
+      child: Kept(
+        inputs: inputs,
+        child: spec == null
+            ? baked
+            : Melted(
+                amount: 1,
+                spec: spec,
+                baseScale: baseScale,
+                contents: contents,
+                child: baked,
+              ),
+      ),
+    );
+  }
+}
+
 class _CircleClip extends CustomClipper<Path> {
   const _CircleClip(this.circle);
 
@@ -280,12 +345,19 @@ class Covered extends StatelessWidget {
     required this.spec,
     required this.child,
     this.baseScale = 1,
+    this.lite = false,
   });
 
   final double progress;
   final CoverSpec spec;
   final Widget child;
   final double baseScale;
+
+  /// For a phone's GPU: the film is cut to the pulled part by a rectangle
+  /// (the pull is along an axis) instead of a path, its gloss kept inside
+  /// it by drawing ovals. The same film, without an antialiased path clip
+  /// every frame.
+  final bool lite;
 
   @override
   Widget build(BuildContext context) {
@@ -301,7 +373,12 @@ class Covered extends StatelessWidget {
         child,
         IgnorePointer(
           child: CustomPaint(
-            painter: _FilmPainter(spec: spec, area: area, progress: p),
+            painter: _FilmPainter(
+              spec: spec,
+              area: area,
+              progress: p,
+              lite: lite,
+            ),
           ),
         ),
       ],
@@ -314,11 +391,13 @@ class _FilmPainter extends CustomPainter {
     required this.spec,
     required this.area,
     required this.progress,
+    this.lite = false,
   });
 
   final CoverSpec spec;
   final double area;
   final double progress;
+  final bool lite;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -337,13 +416,28 @@ class _FilmPainter extends CustomPainter {
       ..lineTo((lead - normal * far).dx, (lead - normal * far).dy)
       ..lineTo((lead + normal * far).dx, (lead + normal * far).dy)
       ..close();
-    final film = Path.combine(
-      PathOperation.intersect,
-      Path()..addOval(circle.inflate(r * 0.02)),
-      pulled,
-    );
     canvas.save();
-    canvas.clipPath(film);
+    if (lite) {
+      // Everything below lies inside the film's oval but the gloss
+      // streaks, drawn as ovals here: only the pulled side is cut off.
+      final b = circle.inflate(r);
+      canvas.clipRect(
+        Rect.fromLTRB(
+          d.dx < 0 ? lead.dx : b.left,
+          d.dy < 0 ? lead.dy : b.top,
+          d.dx > 0 ? lead.dx : b.right,
+          d.dy > 0 ? lead.dy : b.bottom,
+        ),
+      );
+    } else {
+      canvas.clipPath(
+        Path.combine(
+          PathOperation.intersect,
+          Path()..addOval(circle.inflate(r * 0.02)),
+          pulled,
+        ),
+      );
+    }
     canvas.drawOval(
       circle.inflate(r * 0.02),
       Paint()..color = spec.color.withValues(alpha: spec.opacity),
@@ -351,24 +445,26 @@ class _FilmPainter extends CustomPainter {
     // Gloss: two soft diagonal streaks and a bright spot.
     final g = spec.gloss;
     for (final (x, w, a) in [(-0.35, 0.16, 0.5), (0.1, 0.08, 0.35)]) {
-      canvas.drawRect(
-        circle,
-        Paint()
-          ..shader = LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0x00FFFFFF),
-              _white.withValues(alpha: a * g),
-              const Color(0x00FFFFFF),
-            ],
-            stops: [
-              (0.5 + x - w).clamp(0.0, 1.0),
-              (0.5 + x).clamp(0.0, 1.0),
-              (0.5 + x + w).clamp(0.0, 1.0),
-            ],
-          ).createShader(circle),
-      );
+      final streak = Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0x00FFFFFF),
+            _white.withValues(alpha: a * g),
+            const Color(0x00FFFFFF),
+          ],
+          stops: [
+            (0.5 + x - w).clamp(0.0, 1.0),
+            (0.5 + x).clamp(0.0, 1.0),
+            (0.5 + x + w).clamp(0.0, 1.0),
+          ],
+        ).createShader(circle);
+      if (lite) {
+        canvas.drawOval(circle.inflate(r * 0.02), streak);
+      } else {
+        canvas.drawRect(circle, streak);
+      }
     }
     canvas.drawCircle(
       c + Offset(-r * 0.45, -r * 0.45),
@@ -435,5 +531,8 @@ class _FilmPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_FilmPainter old) =>
-      old.spec != spec || old.area != area || old.progress != progress;
+      old.spec != spec ||
+      old.area != area ||
+      old.progress != progress ||
+      old.lite != lite;
 }
