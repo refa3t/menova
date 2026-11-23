@@ -176,6 +176,7 @@ void main() {
     Widget? product,
     Widget? contents,
     String backOf = backUrl,
+    bool lite = false,
   }) {
     final key = step.startsWith('Fold') ? 'Fold' : step;
     return Builder(
@@ -196,6 +197,7 @@ void main() {
             'back': [backOf],
           },
           reduceMotion: reduceMotion,
+          lite: lite,
         ),
       ),
     );
@@ -605,6 +607,136 @@ void main() {
   // flutter test test/cone_render_test.dart --plain-name 'contact sheet'
   //   --dart-define=CONTACT_SHEET=<file.png>
   const sheet = String.fromEnvironment('CONTACT_SHEET');
+  // On a phone (lite): the same motion with no blur, and every filter or
+  // shader layer drawn once into an image, not again each frame.
+  const liteFrames = [
+    ('Fold1', 0.2),
+    ('Fold1', 0.6),
+    ('Fold2', 0.3),
+    ('Fold2', 0.55),
+    ('Fold2', 0.7),
+    ('Fold2', 0.9),
+    ('Fold2', 1.0),
+    ('Swap', 0.5),
+    ('Shrink', 0.5),
+    ('FlyToCart', 0.6),
+  ];
+
+  bool insideStill(WidgetTester tester, Element e) {
+    var found = false;
+    e.visitAncestorElements((a) {
+      if (a.widget is Still) found = true;
+      return !found;
+    });
+    return found;
+  }
+
+  testWidgets('on a phone no blur is drawn and no layer each frame', (
+    tester,
+  ) async {
+    for (final (step, t) in liteFrames) {
+      cacheNetworkImages();
+      await render(tester, stepAt(step, params(step), t, lite: true));
+      expect(find.byType(ImageFiltered), findsNothing, reason: '$step $t');
+      expect(find.byType(BackdropFilter), findsNothing, reason: '$step $t');
+      // Filters and shader masks only inside an image painted once.
+      for (final type in [ShaderMask, ColorFiltered]) {
+        for (final e in find.byType(type).evaluate()) {
+          expect(insideStill(tester, e), isTrue, reason: '$type $step $t');
+        }
+      }
+      // And with it off (desktop), the blurs are still there.
+      await render(tester, stepAt(step, params(step), t));
+      expect(find.byType(ImageFiltered), findsWidgets, reason: '$step $t');
+    }
+  });
+
+  testWidgets('on a phone it looks nearly the same', (tester) async {
+    var worstMean = 0.0, worstShare = 0.0;
+    for (final (step, t) in liteFrames) {
+      cacheNetworkImages();
+      final lite = await render(
+        tester,
+        stepAt(step, params(step), t, lite: true),
+      );
+      await tester.pumpWidget(const SizedBox());
+      final full = await render(tester, stepAt(step, params(step), t));
+      await tester.pumpWidget(const SizedBox());
+      var sum = 0, pixels = 0;
+      for (var i = 0; i < full.length; i += 4) {
+        var px = 0;
+        for (var c = 0; c < 4; c++) {
+          final d = (lite[i + c] - full[i + c]).abs();
+          px = max(px, d);
+          sum += d;
+        }
+        if (px > 24) pixels++;
+      }
+      final mean = sum / full.length;
+      final share = pixels / (full.length / 4);
+      expect(mean, lessThan(2), reason: '$step at $t');
+      expect(share, lessThan(0.03), reason: '$step at $t');
+      worstMean = max(worstMean, mean);
+      worstShare = max(worstShare, share);
+    }
+    debugPrint(
+      'lite vs full: mean ${worstMean.toStringAsFixed(3)}/255, '
+      '${(worstShare * 100).toStringAsFixed(2)}% of pixels over 24',
+    );
+  });
+
+  testWidgets('on a phone a fold captures its images once', (tester) async {
+    cacheNetworkImages();
+    for (final step in ['Fold1', 'Fold2']) {
+      await tester.pumpWidget(const SizedBox());
+      Widget at(double t) => Directionality(
+        textDirection: TextDirection.ltr,
+        child: SizedBox.square(
+          dimension: 360,
+          child: stepAt(step, params(step), t, lite: true),
+        ),
+      );
+      // Its front shows until edge-on (t 0.5): the same images throughout.
+      await tester.pumpWidget(at(0.1));
+      final first = debugStillCaptures;
+      for (var t = 0.12; t < 0.42; t += 0.02) {
+        await tester.pumpWidget(at(t));
+      }
+      expect(debugStillCaptures, first, reason: step);
+    }
+  });
+
+  testWidgets('cooked on a phone: one image faded in, no layer', (
+    tester,
+  ) async {
+    for (final a in [0.4, 1.0]) {
+      final lite = await render(
+        tester,
+        Cooked(amount: a, lite: true, child: productWidget),
+      );
+      expect(
+        find
+            .byType(ShaderMask)
+            .evaluate()
+            .where((e) => !insideStill(tester, e)),
+        isEmpty,
+      );
+      await tester.pumpWidget(const SizedBox());
+      final full = await render(
+        tester,
+        Cooked(amount: a, child: productWidget),
+      );
+      var sum = 0;
+      for (var i = 0; i < full.length; i++) {
+        sum += (lite[i] - full[i]).abs();
+      }
+      debugPrint(
+        'cooked $a lite vs full: ${(sum / full.length).toStringAsFixed(3)}/255',
+      );
+      expect(sum / full.length, lessThan(1.5), reason: 'amount $a');
+    }
+  });
+
   testWidgets('contact sheet', skip: sheet.isEmpty, (tester) async {
     cacheNetworkImages();
     const ms = [0, 100, 200, 300, 400, 500, 600, 650];
