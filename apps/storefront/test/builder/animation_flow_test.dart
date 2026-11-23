@@ -154,6 +154,22 @@ void main() {
     expect(c.read(cartProvider).lines, hasLength(1));
   });
 
+  test('only the image roles the steps declare are resolved', () {
+    final menu = Menu.assemble(
+      definitions: {'cat': def},
+      contents: const [],
+      products: const [],
+      ingredients: const [],
+      assets: [
+        asset('oven_hearth', 'animation'),
+        asset('oven_fire_back', 'animation'),
+      ],
+    );
+    expect(animationImages(def, menu), {
+      'hearth': ['https://invalid.test/oven_hearth.webp'],
+    });
+  });
+
   testWidgets('AC-15: reduced motion runs a short sequence (≤ 600ms)', (
     tester,
   ) async {

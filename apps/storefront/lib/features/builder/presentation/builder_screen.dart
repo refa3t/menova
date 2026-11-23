@@ -27,6 +27,22 @@ import 'widgets/choice_selectors.dart';
 import 'widgets/ingredient_grid.dart';
 import 'widgets/notes_field.dart';
 
+/// Pixel ratio of the product's capture on a phone (`AnimStepInput.lite`).
+const liteCaptureRatio = 1.5;
+
+/// The images the category's animation steps declare (each step's `images`
+/// roles), resolved to their files: all the sequence can draw, so all that
+/// is worth decoding ahead. An animation asset no step names (e.g. a
+/// retired step's frames) is left out.
+Map<String, List<String>> animationImages(CategoryDefinition def, Menu menu) =>
+    {
+      for (final s in def.animation)
+        if (s.params['images'] case final Map roles)
+          for (final e in roles.entries)
+            if (menu.assets[e.value] case final a?)
+              '${e.key}': [a.secureUrl, ...a.variants],
+    };
+
 /// The orchestrator screen: wires the builder, pricing and animation
 /// engines to the UI and the cart, with no category logic (ARC-03).
 class BuilderScreen extends ConsumerStatefulWidget {
@@ -167,7 +183,7 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
     // The customer's product exactly as built, frozen at the press: one
     // raster of the canvas, so the per-frame cooking filter recolours a
     // single image instead of every piece (P1-B06).
-    final raster = _rasterize(canvasBox);
+    final raster = _rasterize(canvasBox, lite: isPhone);
     _snapshot?.dispose();
     _snapshot = raster;
     // Without it (not capturable here) the selection is drawn again every
@@ -188,7 +204,9 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
     final piecesBox = raster != null && plan.steps.any(_showsContents)
         ? _piecesKey.currentContext?.findRenderObject()
         : null;
-    final pieces = piecesBox is RenderBox ? _rasterize(piecesBox) : null;
+    final pieces = piecesBox is RenderBox
+        ? _rasterize(piecesBox, lite: isPhone)
+        : null;
     _pieces?.dispose();
     _pieces = pieces;
     final Widget snapshot = raster != null
@@ -199,13 +217,7 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
             product: state.product,
             selection: state.selection,
           );
-    final images = <String, List<String>>{
-      for (final s in def.animation)
-        if (s.params['images'] case final Map roles)
-          for (final e in roles.entries)
-            if (menu.assets[e.value] case final a?)
-              '${e.key}': [a.secureUrl, ...a.variants],
-    };
+    final images = animationImages(def, menu);
     final entry = OverlayEntry(
       builder: (_) => StepRunner(
         steps: plan.steps,
@@ -254,13 +266,19 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
 
   /// The canvas as an image at screen resolution, or null when it cannot
   /// be captured (e.g. not painted yet).
-  ui.Image? _rasterize(RenderBox canvasBox) {
+  ui.Image? _rasterize(RenderBox canvasBox, {required bool lite}) {
     if (canvasBox is! RenderRepaintBoundary) return null;
     try {
       // As sharp as a 2x screen: a 3x phone's full resolution costs more
       // than twice the pixels to capture and to draw every frame, unseen.
+      // A phone captures at [liteCaptureRatio]: the product moves, shrinks
+      // and is recoloured all along, so the difference does not show,
+      // while the capture (on the tap's frame) and every frame cost less.
       return canvasBox.toImageSync(
-        pixelRatio: min(MediaQuery.devicePixelRatioOf(context), 2),
+        pixelRatio: min(
+          MediaQuery.devicePixelRatioOf(context),
+          lite ? liteCaptureRatio : 2,
+        ),
       );
     } on Object {
       return null;
@@ -334,8 +352,10 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Precache every asset of the category when the product opens (5.6), so
-    // added ingredients appear without a loading gap.
+    // Precache the category's assets when the product opens (5.6), so
+    // added ingredients appear without a loading gap. Of the animation
+    // assets, only those its steps declare: every decoded image stays in
+    // (GPU) memory, and a phone has little of it.
     final def = ref.read(builderProvider(widget.builderKey)).definition;
     final urls = <String>{
       for (final id in def.allowedIngredientIds)
@@ -345,11 +365,11 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
             ...a.variants,
           ],
       for (final a in widget.menu.assets.values)
-        if ((a.kind == 'base' || a.kind == 'animation') &&
-            a.allowedCategoryIds.contains(def.id)) ...[
+        if (a.kind == 'base' && a.allowedCategoryIds.contains(def.id)) ...[
           a.secureUrl,
           ...a.variants,
         ],
+      for (final files in animationImages(def, widget.menu).values) ...files,
     };
     for (final url in urls) {
       precacheImage(NetworkImage(url), context, onError: (_, _) {});
