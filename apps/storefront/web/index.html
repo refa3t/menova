@@ -31,6 +31,34 @@
 
   <title>Menova</title>
   <link rel="manifest" href="manifest.json">
+
+  <!--
+    Phone performance (docs/PERF_ON_PHONE.md), before Flutter loads:
+    - menovaPhone tells flutter_bootstrap.js to use the multi-surface
+      rasterizer on phones.
+    - Phones render at most 2 physical pixels per CSS pixel. On 3x screens
+      this draws 2.25x fewer pixels per frame (the engine reads
+      window.devicePixelRatio); text stays sharp at 2x.
+  -->
+  <script>
+    (function () {
+      var ua = navigator.userAgent;
+      var phone = (navigator.userAgentData && navigator.userAgentData.mobile) ||
+        /Android|iPhone|iPad|iPod|Mobi/i.test(ua);
+      window.menovaPhone = !!phone;
+      if (!phone) return;
+      try {
+        var desc = Object.getOwnPropertyDescriptor(window, 'devicePixelRatio') ||
+          Object.getOwnPropertyDescriptor(Window.prototype, 'devicePixelRatio');
+        Object.defineProperty(window, 'devicePixelRatio', {
+          configurable: true,
+          get: function () { return Math.min(desc.get.call(window), 2); },
+        });
+      } catch (e) {
+        // Keep the real ratio if the browser does not allow overriding it.
+      }
+    })();
+  </script>
 </head>
 <body>
   <!--
