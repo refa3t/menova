@@ -85,9 +85,9 @@ class Boxed extends StatelessWidget {
   final double baseScale;
 
   /// For a phone's GPU: the shadow and tray, and each side of the lid, are
-  /// painted once into images at full strength and faded by an [Opacity]
-  /// (no layer once it has faded in), so a frame draws a few images, the
-  /// lid's in perspective, instead of replaying its painting.
+  /// painted once into images at full strength and faded by those images
+  /// (no layers), so a frame draws a few images, the lid's in perspective,
+  /// instead of replaying its painting.
   final bool lite;
 
   /// The lid's turn about its hinge, for [angle] radians open.
@@ -192,20 +192,18 @@ extension on Boxed {
       children: [
         Positioned.fromRect(
           rect: under,
-          child: Opacity(
+          child: Still(
+            inputs: ['tray', spec.color],
             opacity: a,
-            child: Still(
-              inputs: ['tray', spec.color],
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  const CustomPaint(painter: _BoxShadowPainter(1)),
-                  Padding(
-                    padding: EdgeInsets.all(side * 0.06),
-                    child: CustomPaint(painter: _TrayPainter(spec.color, 1)),
-                  ),
-                ],
-              ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                const CustomPaint(painter: _BoxShadowPainter(1)),
+                Padding(
+                  padding: EdgeInsets.all(side * 0.06),
+                  child: CustomPaint(painter: _TrayPainter(spec.color, 1)),
+                ),
+              ],
             ),
           ),
         ),
@@ -219,17 +217,15 @@ extension on Boxed {
             child: Transform(
               alignment: Boxed._hingeAlignment(spec.hinge),
               transform: Boxed.lidTurn(spec.hinge, angle, side),
-              child: Opacity(
+              child: Still(
+                // Keyed by side so each keeps its own image.
+                key: ValueKey(inside),
+                inputs: ['lid', spec, inside],
                 opacity: a,
-                child: Still(
-                  // Keyed by side so each keeps its own image.
-                  key: ValueKey(inside),
-                  inputs: ['lid', spec, inside],
-                  child: CustomPaint(
-                    painter: inside
-                        ? _LidInsidePainter(spec.color, 1)
-                        : _LidPainter(spec, 1),
-                  ),
+                child: CustomPaint(
+                  painter: inside
+                      ? _LidInsidePainter(spec.color, 1)
+                      : _LidPainter(spec, 1),
                 ),
               ),
             ),

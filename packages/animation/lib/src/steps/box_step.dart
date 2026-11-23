@@ -11,7 +11,8 @@ import '../anim_step.dart';
 /// a `box` param it only holds the baked product.
 ///
 /// With [AnimStepInput.lite] (a phone's GPU) the baked product is painted
-/// once ([LiteBaked]) and the box's faces are images ([Boxed.lite]).
+/// once ([Cooked.lite], the oven's image) and the box's faces are images
+/// ([Boxed.lite]).
 class BoxStep implements AnimStep {
   const BoxStep();
 
@@ -27,9 +28,7 @@ class BoxStep implements AnimStep {
     final scale = param('scale', 0.9, 0.1, 1.5);
     final scrim = param('scrimMaxPct', 35, 0, 100) / 100;
     final spec = BoxSpec.from(p['box']);
-    final Widget baked = input.lite
-        ? LiteBaked(product: input.product, share: input.product)
-        : Cooked(amount: 1, child: input.product);
+    final baked = Cooked(amount: 1, lite: input.lite, child: input.product);
     final still = input.reduceMotion;
 
     final appear = still ? 1.0 : interval(t, 0, 0.2, Curves.easeOut);

@@ -256,41 +256,58 @@ class SlideIntoOvenStep implements AnimStep {
     );
   }
 
-  /// The product baking, for a phone: its baked look, painted once, under
-  /// the raw product, which fades away as it cooks. Under it from the first
-  /// frame, the baked look is painted (its one costly frame) as "add" is
-  /// pressed, not halfway through the motion; the raw product hides it
-  /// until then.
+  /// The product baking, for a phone: its baked look painted once into an
+  /// image, faded in over the raw product as it cooks (by the image itself,
+  /// no layer). Shown faintly from the first frame, so that image is
+  /// painted (its one costly frame) as "add" is pressed, not halfway
+  /// through the motion. Without a melt it is [Cooked]'s own image, which
+  /// the next steps (Box, Swap) share.
   static Widget _liteProduct(
     AnimStepInput input,
     double cook,
     double saturation,
     MeltSpec? melt,
     double baseScale,
-  ) => Stack(
-    fit: StackFit.expand,
-    children: [
-      LiteBaked(
-        product: input.product,
-        share: input.product,
+  ) {
+    // Invisible (no pixel of it drawn) but painted, so captured.
+    final a = max(cook, 1e-3);
+    if (melt == null) {
+      return Cooked(
+        amount: a,
         saturation: saturation,
-        melt: melt,
-        baseScale: baseScale,
-        contents: melt == null ? null : bakedContents(input),
-      ),
-      Opacity(opacity: 1 - cook, child: input.product),
-    ],
-  );
+        lite: true,
+        child: input.product,
+      );
+    }
+    final baked = LiteBaked(
+      key: const ValueKey(_Part.baked),
+      product: input.product,
+      share: input.product,
+      saturation: saturation,
+      melt: melt,
+      baseScale: baseScale,
+      contents: bakedContents(input),
+      opacity: a,
+    );
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (a < 1)
+          KeyedSubtree(key: const ValueKey(_Part.raw), child: input.product),
+        baked,
+      ],
+    );
+  }
 
   /// The front wall, for a phone: painted once into an image the size of
   /// the wall, then only moved (and faded while it appears and goes).
   static Widget _liteWall(_OvenFront geo, double opacity, double drop) {
     // Room for the stone arch's stroke beyond the wall's edge.
     final bounds = geo.wall.inflate(2);
-    // Always under the same Opacity (no layer of its own at 1), so the
-    // image is not painted again as the fade starts or ends.
+    // Faded by the image itself: no layer, nor painted again.
     final wall = Still(
       inputs: [geo.wall, geo.arch],
+      opacity: opacity,
       child: CustomPaint(
         painter: _OvenWallPainter(
           geo: geo,
@@ -303,9 +320,7 @@ class SlideIntoOvenStep implements AnimStep {
     return Positioned.fromRect(
       key: const ValueKey(_Part.wall),
       rect: bounds.shift(Offset(0, drop)),
-      child: IgnorePointer(
-        child: Opacity(opacity: opacity, child: wall),
-      ),
+      child: IgnorePointer(child: wall),
     );
   }
 
@@ -445,7 +460,7 @@ class _ArchClip extends CustomClipper<Path> {
 }
 
 /// Keys of the parts that change places in the stack.
-enum _Part { product, wall }
+enum _Part { product, wall, raw, baked }
 
 Color _fade(Color c, double opacity) =>
     c.withValues(alpha: (c.a * opacity).clamp(0.0, 1.0));

@@ -114,6 +114,14 @@ void main() {
       // Baking: the raw product crossfades to that image.
       if (t > 0.35 && t < 0.65) expect(find.byType(LiteBaked), findsOneWidget);
     }
+    // Without a melt: the product's own baked image (shared with Box).
+    for (final t in [0.0, 0.5, 1.0]) {
+      await tester.pumpWidget(scene('SlideIntoOven', input(const {}), t));
+      for (final e in find.byType(Cooked).evaluate()) {
+        final c = e.widget as Cooked;
+        expect(c.lite || underStill(tester, find.byWidget(c)), isTrue);
+      }
+    }
     // The full path melts frame by frame.
     await tester.pumpWidget(
       scene('SlideIntoOven', input(const {'melt': melt}, lite: false), 0.4),

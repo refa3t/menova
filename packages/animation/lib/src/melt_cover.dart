@@ -155,8 +155,8 @@ class Melted extends StatelessWidget {
 /// ([Cooked] at [saturation]) and, with a [melt], fully melted with its
 /// [contents] sunk in, painted once into an image and that image drawn from
 /// then on, so its blurs, colour filter and shader masks cost once, not
-/// every frame. Steps crossfade to it (an [Opacity] over the raw product)
-/// instead of baking and melting it frame by frame.
+/// every frame. Steps crossfade to it ([opacity], drawn by the image
+/// without a layer) instead of baking and melting it frame by frame.
 ///
 /// [share] (the step input's product) lets every step of a sequence use one
 /// capture of the same look.
@@ -169,6 +169,7 @@ class LiteBaked extends StatelessWidget {
     this.melt,
     this.contents,
     this.baseScale = 1,
+    this.opacity = 1,
   });
 
   final Widget product;
@@ -177,6 +178,9 @@ class LiteBaked extends StatelessWidget {
   final MeltSpec? melt;
   final Widget? contents;
   final double baseScale;
+
+  /// How opaque its image is drawn (changing it does not paint it again).
+  final double opacity;
 
   @override
   Widget build(BuildContext context) {
@@ -195,6 +199,7 @@ class LiteBaked extends StatelessWidget {
       scale: dpr > 2 ? 2 / dpr : 1,
       share: share,
       inputs: inputs,
+      opacity: opacity,
       child: Kept(
         inputs: inputs,
         child: spec == null
