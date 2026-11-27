@@ -37,6 +37,29 @@ abstract final class AppStrings {
     AdminArea.audit => 'سجل التعديلات',
   };
 
+  // App shell and home (unified look).
+  static const brandName = 'منوفا';
+  static const panelName = 'لوحة الإدارة';
+  static const home = 'الرئيسية';
+  static const openNav = 'فتح القائمة';
+  static const navTitle = 'الأقسام';
+  static const homeIntro = 'اختر القسم الذي تريد إدارته.';
+  static const signedInAs = 'مسجّل الدخول';
+
+  /// One line under each section's card on the home page.
+  static String areaHint(AdminArea a) => switch (a) {
+    AdminArea.products => 'الأسماء والأسعار والمكونات والتوفر',
+    AdminArea.ingredients => 'سعر الإضافة والصورة والتوفر',
+    AdminArea.drafts => 'مراجعة التعديلات المحفوظة ونشرها',
+    AdminArea.assets => 'صور المنتجات وصور المكونات',
+    AdminArea.categories => 'إظهار الأقسام وترتيبها في المتجر',
+    AdminArea.offers => 'العروض التلقائية وأكواد الخصم',
+    AdminArea.catalogCheck => 'اكتشاف المنتجات المخالفة وإيقافها',
+    AdminArea.settings => 'موقع المطعم وأسعار التوصيل',
+    AdminArea.reports => 'المبيعات والأكثر طلباً',
+    AdminArea.audit => 'من غيّر ماذا ومتى',
+  };
+
   // Products (P3-02).
   static const products = 'المنتجات';
   static const newProduct = 'منتج جديد';
