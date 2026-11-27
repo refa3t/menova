@@ -96,6 +96,23 @@ abstract final class AppStrings {
     PaymentStatus.unpaid => 'غير مدفوع',
   };
 
+  // Board by status and wait timers.
+  static const columnIncoming = 'جديدة';
+  static const columnKitchen = 'في المطبخ';
+  static const columnReady = 'جاهزة';
+  static const columnOnTheWay = 'في الطريق';
+  static const emptyColumn = 'لا توجد طلبات هنا';
+  static String withCount(String label, int n) => '$label ($n)';
+  static String minutesWaited(int m) => m < 1 ? 'الآن' : '$m د';
+  static const waitOnTime = 'الوقت منذ وصول الطلب';
+  static const waitWarning = 'الطلب ينتظر منذ فترة';
+  static const waitLate = 'الطلب متأخر';
+  static String lateOrders(int n) => 'متأخر: $n';
+  static const lateOrdersHint = 'طلبات تجاوزت وقت التأخير';
+  static const history = 'السجل';
+  static const showDetails = 'التفاصيل';
+  static const hideDetails = 'إخفاء التفاصيل';
+
   static const noAccess = 'ليس لديك صلاحية لدخول لوحة الطلبات';
   static const credit =
       'تطوير ${DeveloperInfo.nameAr} · ${DeveloperInfo.email} · ${DeveloperInfo.phone}';
