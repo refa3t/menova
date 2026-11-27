@@ -96,6 +96,34 @@ abstract final class AppStrings {
     PaymentStatus.unpaid => 'غير مدفوع',
   };
 
+  static const history = 'سجل الطلبات';
+  static const today = 'اليوم';
+  static const pickDay = 'اختيار يوم';
+  static const historySearch = 'ابحث برقم الطلب أو اسم العميل أو الهاتف';
+  static const clearSearch = 'مسح البحث';
+  static const noOrdersOnDay = 'لا توجد طلبات في هذا اليوم';
+  static const noMatches = 'لا توجد طلبات مطابقة للبحث';
+  static const daySummary = 'ملخص اليوم';
+  static const ordersCount = 'عدد الطلبات';
+  static const sales = 'المبيعات';
+  static const salesNote = 'بدون الملغي والمسترد';
+  static const cashCollected = 'النقدية المحصّلة';
+  static const close = 'إغلاق';
+  static const backToOrders = 'الطلبات الحالية';
+
+  /// A local day as yyyy/mm/dd.
+  static String day(DateTime d) => '${d.year}/${_two(d.month)}/${_two(d.day)}';
+
+  /// A local time as hh:mm (24 hours).
+  static String time(DateTime d) => '${_two(d.hour)}:${_two(d.minute)}';
+
+  static String _two(int n) => n.toString().padLeft(2, '0');
+
+  static String summaryOf(DateTime d, {required bool isToday}) =>
+      isToday ? '$daySummary (${day(d)})' : 'ملخص يوم ${day(d)}';
+
+  static String countOf(String label, int n) => '$label: $n';
+
   static const noAccess = 'ليس لديك صلاحية لدخول لوحة الطلبات';
   static const credit =
       'تطوير ${DeveloperInfo.nameAr} · ${DeveloperInfo.email} · ${DeveloperInfo.phone}';
