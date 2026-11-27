@@ -455,7 +455,9 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(ingName(d.ingredientId)),
-                  subtitle: Row(
+                  // Wraps on a phone instead of overflowing.
+                  subtitle: Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       const Text('${AppStrings.qty}: '),
                       IconButton(

@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/strings/app_strings.dart';
+import '../core/theme/app_theme.dart';
+import '../core/widgets/brand_mark.dart';
+import '../core/widgets/credit_line.dart';
 import '../features/auth/domain/admin_access.dart';
 import '../features/auth/presentation/auth_providers.dart';
 import '../features/auth/presentation/login_screen.dart';
@@ -24,6 +27,7 @@ import '../features/offers/presentation/offer_edit_screen.dart';
 import '../features/offers/presentation/offers_screen.dart';
 import '../features/reports/presentation/reports_screen.dart';
 import '../features/staff/presentation/staff_screen.dart';
+import 'admin_shell.dart';
 import 'area_routes.dart';
 
 /// Only the owner and menu managers get in (P3-01); everyone else is sent to
@@ -56,82 +60,95 @@ final routerProvider = Provider<GoRouter>((ref) {
       };
     },
     routes: [
-      GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
-      GoRoute(
-        path: '/products',
-        builder: (context, state) => const ProductsScreen(),
-      ),
-      GoRoute(path: '/audit', builder: (context, state) => const AuditScreen()),
-      GoRoute(path: '/staff', builder: (context, state) => const StaffScreen()),
-      GoRoute(
-        path: '/reports',
-        builder: (context, state) => const ReportsScreen(),
-      ),
-      GoRoute(
-        path: '/drafts',
-        builder: (context, state) => const DraftsScreen(),
-      ),
-      GoRoute(
-        path: '/offers',
-        builder: (context, state) => const OffersScreen(),
-      ),
-      GoRoute(
-        path: '/offers/new',
-        builder: (context, state) => OfferEditScreen(
-          list: state.uri.queryParameters['coupon'] == '1'
-              ? OfferList.coupons
-              : OfferList.auto,
-        ),
-      ),
-      GoRoute(
-        path: '/offers/auto/:id',
-        builder: (context, state) => OfferEditScreen(
-          list: OfferList.auto,
-          id: state.pathParameters['id'],
-        ),
-      ),
-      GoRoute(
-        path: '/offers/coupon/:id',
-        builder: (context, state) => OfferEditScreen(
-          list: OfferList.coupons,
-          id: state.pathParameters['id'],
-        ),
-      ),
-      GoRoute(
-        path: '/check',
-        builder: (context, state) => const CatalogCheckScreen(),
-      ),
-      GoRoute(
-        path: '/categories',
-        builder: (context, state) => const CategoriesScreen(),
-      ),
-      GoRoute(
-        path: '/settings',
-        builder: (context, state) => const SettingsScreen(),
-      ),
-      GoRoute(
-        path: '/assets',
-        builder: (context, state) => const AssetsScreen(),
-      ),
-      GoRoute(
-        path: '/ingredients',
-        builder: (context, state) => const IngredientsScreen(),
-      ),
-      GoRoute(
-        path: '/ingredients/:id',
-        builder: (context, state) =>
-            IngredientEditScreen(ingredientId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/products/new',
-        builder: (context, state) => ProductEditScreen(
-          categoryId: state.uri.queryParameters['category'],
-        ),
-      ),
-      GoRoute(
-        path: '/products/:id',
-        builder: (context, state) =>
-            ProductEditScreen(productId: state.pathParameters['id']),
+      // Every section sits in the shell: navigation, user and credit.
+      ShellRoute(
+        builder: (context, state, child) =>
+            AdminShell(location: state.uri.path, child: child),
+        routes: [
+          GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+          GoRoute(
+            path: '/products',
+            builder: (context, state) => const ProductsScreen(),
+          ),
+          GoRoute(
+            path: '/audit',
+            builder: (context, state) => const AuditScreen(),
+          ),
+          GoRoute(
+            path: '/staff',
+            builder: (context, state) => const StaffScreen(),
+          ),
+          GoRoute(
+            path: '/reports',
+            builder: (context, state) => const ReportsScreen(),
+          ),
+          GoRoute(
+            path: '/drafts',
+            builder: (context, state) => const DraftsScreen(),
+          ),
+          GoRoute(
+            path: '/offers',
+            builder: (context, state) => const OffersScreen(),
+          ),
+          GoRoute(
+            path: '/offers/new',
+            builder: (context, state) => OfferEditScreen(
+              list: state.uri.queryParameters['coupon'] == '1'
+                  ? OfferList.coupons
+                  : OfferList.auto,
+            ),
+          ),
+          GoRoute(
+            path: '/offers/auto/:id',
+            builder: (context, state) => OfferEditScreen(
+              list: OfferList.auto,
+              id: state.pathParameters['id'],
+            ),
+          ),
+          GoRoute(
+            path: '/offers/coupon/:id',
+            builder: (context, state) => OfferEditScreen(
+              list: OfferList.coupons,
+              id: state.pathParameters['id'],
+            ),
+          ),
+          GoRoute(
+            path: '/check',
+            builder: (context, state) => const CatalogCheckScreen(),
+          ),
+          GoRoute(
+            path: '/categories',
+            builder: (context, state) => const CategoriesScreen(),
+          ),
+          GoRoute(
+            path: '/settings',
+            builder: (context, state) => const SettingsScreen(),
+          ),
+          GoRoute(
+            path: '/assets',
+            builder: (context, state) => const AssetsScreen(),
+          ),
+          GoRoute(
+            path: '/ingredients',
+            builder: (context, state) => const IngredientsScreen(),
+          ),
+          GoRoute(
+            path: '/ingredients/:id',
+            builder: (context, state) =>
+                IngredientEditScreen(ingredientId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: '/products/new',
+            builder: (context, state) => ProductEditScreen(
+              categoryId: state.uri.queryParameters['category'],
+            ),
+          ),
+          GoRoute(
+            path: '/products/:id',
+            builder: (context, state) =>
+                ProductEditScreen(productId: state.pathParameters['id']),
+          ),
+        ],
       ),
       GoRoute(
         path: '/splash',
@@ -160,16 +177,47 @@ class _Denied extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(AppStrings.noAccess),
-            const SizedBox(height: 12),
-            OutlinedButton(
-              onPressed: FirebaseAuth.instance.signOut,
-              child: const Text(AppStrings.signOut),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(AppRadii.card),
+                border: Border.all(color: AppColors.border),
+                boxShadow: AppShadows.soft,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const BrandMark(),
+                    const SizedBox(height: 24),
+                    const Icon(
+                      Icons.lock_outline,
+                      size: 36,
+                      color: AppColors.textMuted,
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      AppStrings.noAccess,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    OutlinedButton.icon(
+                      onPressed: () => FirebaseAuth.instance.signOut(),
+                      icon: const Icon(Icons.logout, size: 18),
+                      label: const Text(AppStrings.signOut),
+                    ),
+                    const SizedBox(height: 20),
+                    const CreditLine(),
+                  ],
+                ),
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );

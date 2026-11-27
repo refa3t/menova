@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/strings/app_strings.dart';
+import '../core/theme/app_theme.dart';
 import 'router.dart';
 
 class App extends ConsumerWidget {
@@ -16,15 +17,8 @@ class App extends ConsumerWidget {
       locale: const Locale('ar'),
       supportedLocales: const [Locale('ar')],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
-      theme: ThemeData(
-        colorSchemeSeed: const Color(0xFF8E2A1F),
-        useMaterial3: true,
-        // UX-01: minimum 44px touch targets.
-        materialTapTargetSize: MaterialTapTargetSize.padded,
-        filledButtonTheme: FilledButtonThemeData(
-          style: FilledButton.styleFrom(minimumSize: const Size(44, 44)),
-        ),
-      ),
+      // The storefront brand (colours, radii, 44px targets).
+      theme: buildAppTheme(),
       routerConfig: ref.watch(routerProvider),
     );
   }
