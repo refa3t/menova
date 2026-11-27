@@ -44,7 +44,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
       body: menu.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) =>
-            MenuErrorView(onRetry: () => ref.invalidate(menuProvider)),
+            MenuErrorView(onRetry: () => reloadMenu(ref.invalidate)),
         data: (menu) {
           final category = menu.categories
               .where((c) => c.definition.id == widget.categoryId)

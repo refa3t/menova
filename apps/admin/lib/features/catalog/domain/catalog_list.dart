@@ -31,20 +31,52 @@ List<List<T>> chunked<T>(List<T> items, [int size = maxChangesPerBatch]) {
   ];
 }
 
-/// The audited saves that set [value] on [products], skipping those already
+/// [record] (a product or ingredient JSON) switched to [isAvailable], and
+/// stopped until [until] (epoch milliseconds) when given. Any earlier
+/// «until» is cleared: the writer replaces the whole document.
+Json withAvailability(Json record, {required bool isAvailable, int? until}) =>
+    {...record, 'isAvailable': isAvailable}
+      ..remove('unavailableUntil')
+      ..addAll({'unavailableUntil': ?until});
+
+/// The audited save of [before] to [after] under [action], or null when
+/// nothing changes.
+AuditedChange? _change(String action, String path, Json before, Json after) =>
+    before['isAvailable'] == after['isAvailable'] &&
+        before['unavailableUntil'] == after['unavailableUntil']
+    ? null
+    : AuditedChange(action: action, path: path, before: before, after: after);
+
+/// The audited saves that set [value] on [products] (start clears a stop
+/// until a time; stop is until switched on again), skipping those already
 /// there (the same write the single switch makes).
 List<AuditedChange> productAvailabilityChanges(
   Iterable<Product> products,
   bool value,
-) => [
+) => _productChanges(products, isAvailable: value);
+
+/// The audited saves that stop [products] until [until] (epoch
+/// milliseconds, «إيقاف لنهاية اليوم»): they stay switched on and come back
+/// by themselves then.
+List<AuditedChange> productStopUntilChanges(
+  Iterable<Product> products,
+  int until,
+) => _productChanges(products, isAvailable: true, until: until);
+
+List<AuditedChange> _productChanges(
+  Iterable<Product> products, {
+  required bool isAvailable,
+  int? until,
+}) => [
   for (final p in products)
-    if (p.isAvailable != value)
-      AuditedChange(
-        action: 'saveProduct',
-        path: 'products/${p.id}',
-        before: p.toJson(),
-        after: Product.fromJson({...p.toJson(), 'isAvailable': value}).toJson(),
-      ),
+    ?_change(
+      'saveProduct',
+      'products/${p.id}',
+      p.toJson(),
+      Product.fromJson(
+        withAvailability(p.toJson(), isAvailable: isAvailable, until: until),
+      ).toJson(),
+    ),
 ];
 
 /// The audited saves that set [value] on [ingredients], skipping those
@@ -52,21 +84,58 @@ List<AuditedChange> productAvailabilityChanges(
 List<AuditedChange> ingredientAvailabilityChanges(
   Iterable<Ingredient> ingredients,
   bool value,
-) => [
+) => _ingredientChanges(ingredients, isAvailable: value);
+
+/// The audited saves that stop [ingredients] until [until], as
+/// [productStopUntilChanges].
+List<AuditedChange> ingredientStopUntilChanges(
+  Iterable<Ingredient> ingredients,
+  int until,
+) => _ingredientChanges(ingredients, isAvailable: true, until: until);
+
+List<AuditedChange> _ingredientChanges(
+  Iterable<Ingredient> ingredients, {
+  required bool isAvailable,
+  int? until,
+}) => [
   for (final i in ingredients)
-    if (i.isAvailable != value)
-      AuditedChange(
-        action: 'saveIngredient',
-        path: 'ingredients/${i.id}',
-        before: i.toJson(),
-        after: {...i.toJson(), 'isAvailable': value},
-      ),
+    ?_change(
+      'saveIngredient',
+      'ingredients/${i.id}',
+      i.toJson(),
+      withAvailability(i.toJson(), isAvailable: isAvailable, until: until),
+    ),
 ];
+
+/// When a record stopped «لنهاية اليوم» at [now] comes back: the next
+/// [dayEndHour]:00 in the device's local time (today if still ahead, else
+/// tomorrow), as epoch milliseconds.
+int dayEndUntil(DateTime now, int dayEndHour) =>
+    nextDayEndAt(now.toLocal(), dayEndHour).millisecondsSinceEpoch;
+
+/// The time a record is stopped until at [now], or null when it is not
+/// stopped until a time (switched off records are stopped, with no time).
+DateTime? pendingUntil({
+  required bool isAvailable,
+  required int? unavailableUntil,
+  required DateTime now,
+}) =>
+    isAvailable &&
+        unavailableUntil != null &&
+        !availableAt(
+          isAvailable: isAvailable,
+          unavailableUntil: unavailableUntil,
+          now: now,
+        )
+    ? DateTime.fromMillisecondsSinceEpoch(unavailableUntil)
+    : null;
 
 /// Status filter of the products and ingredients lists.
 enum StatusFilter { all, available, stopped, drafted }
 
-/// Whether a record passes [status]; [drafted] says it has a pending draft.
+/// Whether a record passes [status]; [isAvailable] is its availability now
+/// (`isAvailableAt`: a record stopped until a time counts as stopped) and
+/// [drafted] says it has a pending draft.
 bool matchesStatus(
   StatusFilter status, {
   required bool isAvailable,
@@ -86,41 +155,45 @@ bool matchesQuery(String query, String name, Map<String, String> names) =>
     name.contains(query) ||
     (names['en'] ?? '').toLowerCase().contains(query.toLowerCase());
 
-/// The products shown for the chosen filters, in their list order.
+/// The products shown for the chosen filters at [now] (default: the current
+/// time), in their list order.
 List<Product> filterProducts(
   List<Product> all, {
   String? categoryId,
   StatusFilter status = StatusFilter.all,
   String query = '',
   Set<String> draftTargets = const {},
+  DateTime? now,
 }) => [
   for (final p in all)
     if ((categoryId == null || p.categoryId == categoryId) &&
         matchesStatus(
           status,
-          isAvailable: p.isAvailable,
+          isAvailable: p.isAvailableAt(now ?? DateTime.now()),
           drafted: draftTargets.contains('products/${p.id}'),
         ) &&
         matchesQuery(query, p.name, p.names))
       p,
 ];
 
-/// The ingredients shown for the chosen filters, by Arabic name. A category
-/// filter keeps the ingredients its definition allows.
+/// The ingredients shown for the chosen filters at [now], by Arabic name. A
+/// category filter keeps the ingredients its definition allows.
 List<Ingredient> filterIngredients(
   Iterable<Ingredient> all, {
   CategoryDefinition? category,
   StatusFilter status = StatusFilter.all,
   String query = '',
   Set<String> draftTargets = const {},
+  DateTime? now,
 }) {
   String ar(Ingredient i) => i.names['ar'] ?? i.name;
+  final at = now ?? DateTime.now();
   return [
     for (final i in all)
       if ((category == null || category.allowedIngredientIds.contains(i.id)) &&
           matchesStatus(
             status,
-            isAvailable: i.isAvailable,
+            isAvailable: i.isAvailableAt(at),
             drafted: draftTargets.contains('ingredients/${i.id}'),
           ) &&
           matchesQuery(query, i.name, i.names))

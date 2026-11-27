@@ -12,6 +12,7 @@ import '../../drafts/domain/draft.dart';
 import '../../drafts/presentation/draft_note.dart';
 import '../data/catalog_providers.dart';
 import '../domain/product_ids.dart';
+import 'catalog_list_widgets.dart';
 
 /// Edits (or creates) one product within its category's definition (P3-02):
 /// names, description, prices, sizes and options the definition offers,
@@ -44,6 +45,12 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
   String? _categoryId;
   String? _groupId;
   bool _available = true;
+
+  /// A stop until a time, shown as loaded. The save keeps the live one
+  /// (a draft applies on top of the live record and must not wipe or
+  /// revive it) unless the switch was used ([_untilCleared]).
+  int? _until;
+  bool _untilCleared = false;
 
   /// The product being edited: the live one with its draft, if any.
   Product? _original;
@@ -108,6 +115,8 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
     _displayOrder.text = '${p?.displayOrder ?? products.length}';
     _groupId = p?.groupId;
     _available = p?.isAvailable ?? true;
+    _until = p?.unavailableUntil;
+    _untilCleared = _draft?.changes.containsKey('unavailableUntil') ?? false;
     _defaults
       ..clear()
       ..addAll(p?.defaults ?? const []);
@@ -181,6 +190,7 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
       imageAssetId: _original?.imageAssetId ?? 'final_$id',
       defaults: List.of(_defaults),
       isAvailable: _available,
+      unavailableUntil: _untilCleared ? null : _live?.unavailableUntil,
       sizeDeltas: sizes,
       optionDeltas: options,
       displayOrder: order ?? 0,
@@ -428,13 +438,14 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
                 ),
               ],
               gap,
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(
-                  _available ? AppStrings.available : AppStrings.unavailable,
-                ),
-                value: _available,
-                onChanged: (v) => setState(() => _available = v),
+              AvailabilitySwitchTile(
+                isAvailable: _available,
+                until: _until,
+                onChanged: (v) => setState(() {
+                  _available = v;
+                  _until = null;
+                  _untilCleared = true;
+                }),
               ),
               SizedBox(
                 width: 160,

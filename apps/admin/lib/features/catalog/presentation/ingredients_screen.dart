@@ -4,9 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/strings/app_strings.dart';
-import '../../auth/domain/admin_access.dart';
-import '../../auth/presentation/auth_providers.dart';
-import '../data/audited_writer.dart';
 import '../data/catalog_providers.dart';
 import '../domain/catalog_list.dart';
 import 'catalog_list_widgets.dart';
@@ -29,35 +26,50 @@ class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
   final _selected = <String>{};
   (int, int)? _progress;
 
-  Future<void> _setAvailable(Ingredient i, bool value) async {
-    final who = ref.read(adminAccessProvider).value;
-    if (who is! Granted) return;
-    try {
-      await ref
-          .read(auditedWriterProvider)
-          .write(
-            who: who,
-            action: 'saveIngredient',
-            path: 'ingredients/${i.id}',
-            before: i.toJson(),
-            after: {...i.toJson(), 'isAvailable': value},
-          );
-    } on Object {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text(AppStrings.saveFailed)));
-      }
-    }
+  /// Start clears a stop until a time; stop lasts until started again.
+  Future<void> _setAvailable(Ingredient i, bool value) =>
+      saveAvailabilityChange(
+        context: context,
+        ref: ref,
+        change: ingredientAvailabilityChanges([i], value).firstOrNull,
+      );
+
+  /// «إيقاف لنهاية اليوم»: back by itself at the end of the business day.
+  Future<void> _stopForDay(Ingredient i) async {
+    final until = await stopForDayUntil(ref);
+    if (!mounted) return;
+    await saveAvailabilityChange(
+      context: context,
+      ref: ref,
+      change: ingredientStopUntilChanges([i], until).firstOrNull,
+      doneMessage: AppStrings.stoppedForDay(
+        DateTime.fromMillisecondsSinceEpoch(until),
+      ),
+    );
   }
 
-  Future<void> _setSelected(Map<String, Ingredient> all, bool value) async {
+  Future<void> _setSelected(
+    Map<String, Ingredient> all,
+    bool value, {
+    bool forDay = false,
+  }) async {
     final chosen = [for (final id in _selected) ?all[id]];
+    final until = forDay ? await stopForDayUntil(ref) : null;
+    if (!mounted) return;
+    final changes = until == null
+        ? ingredientAvailabilityChanges(chosen, value)
+        : ingredientStopUntilChanges(chosen, until);
     final done = await runBulkAvailability(
       context: context,
       ref: ref,
       value: value,
-      changes: ingredientAvailabilityChanges(chosen, value),
+      changes: changes,
+      confirmText: until == null
+          ? null
+          : AppStrings.confirmStopForDay(
+              changes.length,
+              DateTime.fromMillisecondsSinceEpoch(until),
+            ),
       onProgress: (d, t) {
         if (mounted) setState(() => _progress = (d, t));
       },
@@ -83,12 +95,21 @@ class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
         error: (_, _) => const Center(child: Text(AppStrings.loadError)),
         data: (all) {
           String ar(Ingredient i) => i.names['ar'] ?? i.name;
+          // Rebuilt when the next ingredient stopped until a time comes back.
+          final now = ref.watch(
+            availabilityNowProvider(
+              earliestPendingUntil([
+                for (final i in all.values) i.unavailableUntil,
+              ], DateTime.now()),
+            ),
+          );
           final shown = filterIngredients(
             all.values,
             category: _category == null ? null : defs[_category],
             status: _status,
             query: _query,
             draftTargets: drafts,
+            now: now,
           );
           final busy = _progress != null;
           return ListView(
@@ -141,6 +162,7 @@ class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
                         ),
                   onClear: () => setState(_selected.clear),
                   onSet: (v) => _setSelected(all, v),
+                  onStopForDay: () => _setSelected(all, false, forDay: true),
                 ),
               if (shown.isEmpty)
                 const Padding(
@@ -179,19 +201,15 @@ class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
                       '${drafts.contains('ingredients/${i.id}') ? ' · ${AppStrings.hasDraft}' : ''}',
                     ),
                     onTap: () => context.push('/ingredients/${i.id}'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          i.isAvailable
-                              ? AppStrings.available
-                              : AppStrings.unavailable,
-                        ),
-                        Switch(
-                          value: i.isAvailable,
-                          onChanged: busy ? null : (v) => _setAvailable(i, v),
-                        ),
-                      ],
+                    trailing: AvailabilityControls(
+                      availableNow: i.isAvailableAt(now),
+                      stoppedUntil: pendingUntil(
+                        isAvailable: i.isAvailable,
+                        unavailableUntil: i.unavailableUntil,
+                        now: now,
+                      ),
+                      onSet: busy ? null : (v) => _setAvailable(i, v),
+                      onStopForDay: busy ? null : () => _stopForDay(i),
                     ),
                   ),
                 ),

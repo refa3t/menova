@@ -65,7 +65,7 @@ class CartLineView {
         }
         final extras = s.extras(p.defaults);
         final unavailable = extras.keys.any(
-          (id) => menu.ingredients[id]?.isAvailable != true,
+          (id) => !menu.ingredientAvailable(id),
         );
         return CartLineView(
           line: line,

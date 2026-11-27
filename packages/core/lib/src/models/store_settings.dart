@@ -73,11 +73,27 @@ class DeliverySettings {
   };
 }
 
+/// End of the business day when the owner has not set one: 4 AM, for a
+/// restaurant open past midnight. An interim default; the owner sets the
+/// real hour in the admin settings (`settings/store.dayEndHour`).
+const defaultDayEndHour = 4;
+
+/// The next [hour]:00 strictly after [now], in [now]'s time zone: today at
+/// that hour if still ahead, else tomorrow.
+DateTime nextDayEndAt(DateTime now, int hour) {
+  DateTime at(int day) => now.isUtc
+      ? DateTime.utc(now.year, now.month, day, hour)
+      : DateTime(now.year, now.month, day, hour);
+  final today = at(now.day);
+  return today.isAfter(now) ? today : at(now.day + 1);
+}
+
 /// Store-wide settings (Firestore `settings/store`), one document.
 class StoreSettings {
   const StoreSettings({
     required this.location,
     required this.delivery,
+    this.dayEndHour = defaultDayEndHour,
     this.temp = false,
   });
 
@@ -85,18 +101,33 @@ class StoreSettings {
   final LatLng location;
   final DeliverySettings delivery;
 
+  /// Local hour (0..23) the business day ends: a record stopped «لنهاية
+  /// اليوم» comes back by itself at its next occurrence.
+  final int dayEndHour;
+
+  /// When a record stopped now «لنهاية اليوم» comes back.
+  DateTime nextDayEnd(DateTime now) => nextDayEndAt(now, dayEndHour);
+
   /// TEMP data marker (development only).
   final bool temp;
 
-  factory StoreSettings.fromJson(Json j) => StoreSettings(
-    location: LatLng.fromJson(req(j, 'location')),
-    delivery: DeliverySettings.fromJson(req(j, 'delivery')),
-    temp: opt<bool>(j, 'temp') ?? false,
-  );
+  factory StoreSettings.fromJson(Json j) {
+    final hour = opt<num>(j, 'dayEndHour')?.toInt() ?? defaultDayEndHour;
+    if (hour < 0 || hour > 23) {
+      throw const FormatException('dayEndHour must be 0..23');
+    }
+    return StoreSettings(
+      location: LatLng.fromJson(req(j, 'location')),
+      delivery: DeliverySettings.fromJson(req(j, 'delivery')),
+      dayEndHour: hour,
+      temp: opt<bool>(j, 'temp') ?? false,
+    );
+  }
 
   Json toJson() => {
     'location': location.toJson(),
     'delivery': delivery.toJson(),
+    'dayEndHour': dayEndHour,
     if (temp) 'temp': true,
   };
 }

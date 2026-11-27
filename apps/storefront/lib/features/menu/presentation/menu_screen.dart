@@ -54,7 +54,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
       body: menu.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) =>
-            MenuErrorView(onRetry: () => ref.invalidate(menuProvider)),
+            MenuErrorView(onRetry: () => reloadMenu(ref.invalidate)),
         data: (menu) {
           if (!identical(_precached, menu)) {
             _precached = menu;

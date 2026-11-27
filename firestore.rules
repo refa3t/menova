@@ -67,6 +67,15 @@ service cloud.firestore {
     function maxOptionDelta() { return 20000; }   // 200 EGP
     function maxExtraPrice() { return 20000; }    // 200 EGP
 
+    // Stop until the end of the day: a product or ingredient may be stopped until a
+    // time (epoch milliseconds), after which it is available again by
+    // itself. Absent (or null) means none.
+    function untilOk(d) {
+      return !('unavailableUntil' in d)
+          || d.unavailableUntil == null
+          || (d.unavailableUntil is int && d.unavailableUntil > 0);
+    }
+
     // Audit log (P3-07): written once by an admin, read by the owner, never
     // changed or deleted.
     match /auditLog/{entryId} {
@@ -141,7 +150,7 @@ service cloud.firestore {
         return d.keys().hasOnly(['id', 'categoryId', 'name', 'names',
                  'description', 'basePrice', 'imageAssetId', 'defaults',
                  'isAvailable', 'sizeDeltas', 'optionDeltas', 'displayOrder',
-                 'groupId', 'lastAuditId', 'temp'])
+                 'groupId', 'unavailableUntil', 'lastAuditId', 'temp'])
             && d.id == id
             && d.categoryId is string && d.categoryId.size() > 0
             && d.name is string && d.name.size() > 0 && d.name.size() <= 80
@@ -152,6 +161,7 @@ service cloud.firestore {
             && d.imageAssetId is string
             && d.defaults is list && d.defaults.size() <= 20
             && d.isAvailable is bool
+            && untilOk(d)
             && d.sizeDeltas is map
             && sizePricesOk(d.basePrice, d.sizeDeltas.values())
             && d.optionDeltas is map
@@ -197,7 +207,7 @@ service cloud.firestore {
       allow update: if isAdmin()
           && request.resource.data.keys().hasOnly(['id', 'name', 'names',
                'assetId', 'extraPrice', 'isAvailable', 'sizeMultipliers',
-               'lastAuditId', 'temp'])
+               'unavailableUntil', 'lastAuditId', 'temp'])
           && request.resource.data.id == ingredientId
           && request.resource.data.name is string
           && request.resource.data.name.size() > 0
@@ -208,6 +218,7 @@ service cloud.firestore {
           && request.resource.data.extraPrice > 0
           && request.resource.data.extraPrice <= maxExtraPrice()
           && request.resource.data.isAvailable is bool
+          && untilOk(request.resource.data)
           && request.resource.data.sizeMultipliers is map
           && audited('ingredients/' + ingredientId,
                      request.resource.data.lastAuditId);
@@ -259,7 +270,12 @@ service cloud.firestore {
       allow update: if isOwner()
           && settingId == 'store'
           && request.resource.data.keys().hasOnly(
-               ['location', 'delivery', 'lastAuditId', 'temp'])
+               ['location', 'delivery', 'dayEndHour', 'lastAuditId', 'temp'])
+          // End of the business day (local hour) for stops until day end.
+          && (!('dayEndHour' in request.resource.data)
+              || (request.resource.data.dayEndHour is int
+                  && request.resource.data.dayEndHour >= 0
+                  && request.resource.data.dayEndHour <= 23))
           && request.resource.data.location.lat is number
           && request.resource.data.location.lat >= -90
           && request.resource.data.location.lat <= 90

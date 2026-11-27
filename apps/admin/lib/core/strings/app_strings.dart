@@ -133,6 +133,25 @@ abstract final class AppStrings {
       'تم حفظ $saved، وتعذّر حفظ $failed. تحقق من صلاحيتك والاتصال';
   static const bulkNothing = 'كل المحدد على هذه الحالة بالفعل';
 
+  // Stop until the end of the business day.
+  static const stopForDay = 'إيقاف لنهاية اليوم';
+  static const moreActions = 'خيارات أخرى';
+
+  /// A local time as people read it: «4:00 ص», «11:30 م».
+  static String clockTime(DateTime t) {
+    final h = t.hour % 12 == 0 ? 12 : t.hour % 12;
+    final m = t.minute.toString().padLeft(2, '0');
+    return '$h:$m ${t.hour < 12 ? 'ص' : 'م'}';
+  }
+
+  /// «موقوف حتى 4:00 ص» ([until] in the device's local time).
+  static String stoppedUntil(DateTime until) =>
+      'موقوف حتى ${clockTime(until.toLocal())}';
+  static String confirmStopForDay(int n, DateTime until) =>
+      'إيقاف $n حتى ${clockTime(until.toLocal())}؟ تعود متاحة وحدها بعدها.';
+  static String stoppedForDay(DateTime until) =>
+      'تم الإيقاف حتى ${clockTime(until.toLocal())}';
+
   /// Prices of each size, compact: «130 / 180 / 230 ج.م».
   static String prices(List<int> piasters) =>
       '${piasters.map(egp).join(' / ')} ج.م';
@@ -214,6 +233,12 @@ abstract final class AppStrings {
   static const deliveryNote =
       'الرسوم = كل كيلو بدأ × سعر الكيلو، ولا تقل عن الحد الأدنى. تُطبَّق على الطلبات الجديدة فوراً.';
   static const invalidNumber = 'رقم غير صحيح';
+  static const dayEndHour = 'نهاية يوم العمل';
+  static const dayEndNote =
+      'المنتج أو المكوّن الموقوف «لنهاية اليوم» يعود متاحاً وحده في هذه الساعة (بتوقيت الجهاز). اختر ساعة بعد إغلاق المطعم، مثلاً 4:00 ص إن كان يعمل بعد منتصف الليل.';
+
+  /// An hour of the day as people read it: «4:00 ص».
+  static String hourLabel(int hour) => clockTime(DateTime(2000, 1, 1, hour));
 
   // Catalog check (P3-06).
   static const catalogCheck = 'فحص المنيو';
@@ -271,6 +296,8 @@ abstract final class AppStrings {
     'optionDeltas' => 'أسعار الخيارات',
     'defaults' => 'المكونات الافتراضية',
     'isAvailable' => 'التوفر',
+    'unavailableUntil' => 'موقوف حتى',
+    'dayEndHour' => dayEndHour,
     'displayOrder' => 'ترتيب العرض',
     'groupId' => 'القسم الفرعي',
     'extraPrice' => 'سعر الإضافة',
@@ -289,6 +316,10 @@ abstract final class AppStrings {
     ('names', final Map m) => m.values.join(' / '),
     ('defaults', final List l) => '${l.length}',
     ('isAvailable', final bool b) => b ? available : unavailable,
+    ('unavailableUntil', final int ms) => clockTime(
+      DateTime.fromMillisecondsSinceEpoch(ms),
+    ),
+    ('dayEndHour', final int h) => hourLabel(h),
     _ => '$v',
   };
 

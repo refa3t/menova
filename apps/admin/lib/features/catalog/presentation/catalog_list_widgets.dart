@@ -6,6 +6,7 @@ import '../../../core/strings/app_strings.dart';
 import '../../auth/domain/admin_access.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../data/audited_writer.dart';
+import '../data/catalog_providers.dart';
 import '../domain/catalog_list.dart';
 
 /// A small square image of a record: the asset's original secure_url sized
@@ -90,6 +91,7 @@ class BulkAvailabilityBar extends StatelessWidget {
     required this.onSelectAllShown,
     required this.onClear,
     required this.onSet,
+    this.onStopForDay,
     this.progress,
   });
 
@@ -97,6 +99,9 @@ class BulkAvailabilityBar extends StatelessWidget {
   final VoidCallback? onSelectAllShown;
   final VoidCallback onClear;
   final ValueChanged<bool> onSet;
+
+  /// Stops the selected until the end of the business day.
+  final VoidCallback? onStopForDay;
 
   /// (done, total) while saving; the buttons are locked meanwhile.
   final (int, int)? progress;
@@ -130,6 +135,12 @@ class BulkAvailabilityBar extends StatelessWidget {
                   icon: const Icon(Icons.pause_circle_outline),
                   label: const Text(AppStrings.stopSelected),
                 ),
+                if (onStopForDay != null)
+                  FilledButton.tonalIcon(
+                    onPressed: busy ? null : onStopForDay,
+                    icon: const Icon(Icons.bedtime_outlined),
+                    label: const Text(AppStrings.stopForDay),
+                  ),
                 FilledButton.icon(
                   onPressed: busy ? null : () => onSet(true),
                   icon: const Icon(Icons.play_circle_outline),
@@ -150,15 +161,155 @@ class BulkAvailabilityBar extends StatelessWidget {
   }
 }
 
+/// A row's availability: its state («متاح», «غير متاح» or «موقوف حتى
+/// 4:00 ص»), the stop/start switch and a menu with «إيقاف لنهاية اليوم».
+class AvailabilityControls extends StatelessWidget {
+  const AvailabilityControls({
+    super.key,
+    required this.availableNow,
+    required this.stoppedUntil,
+    required this.onSet,
+    required this.onStopForDay,
+  });
+
+  /// Availability at the time the list is drawn (`isAvailableAt`).
+  final bool availableNow;
+
+  /// When the record comes back by itself, if it is stopped until a time.
+  final DateTime? stoppedUntil;
+
+  /// Null while a bulk save runs.
+  final ValueChanged<bool>? onSet;
+  final VoidCallback? onStopForDay;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(
+        stoppedUntil != null
+            ? AppStrings.stoppedUntil(stoppedUntil!)
+            : availableNow
+            ? AppStrings.available
+            : AppStrings.unavailable,
+      ),
+      Switch(value: availableNow, onChanged: onSet),
+      PopupMenuButton<void>(
+        tooltip: AppStrings.moreActions,
+        enabled: onStopForDay != null,
+        itemBuilder: (_) => [
+          PopupMenuItem<void>(
+            onTap: onStopForDay,
+            child: const Text(AppStrings.stopForDay),
+          ),
+        ],
+      ),
+    ],
+  );
+}
+
+/// The availability switch of the edit screens. A record stopped until a
+/// time shows it («موقوف حتى 4:00 ص») with the switch off; using the switch
+/// ends that stop.
+class AvailabilitySwitchTile extends StatelessWidget {
+  const AvailabilitySwitchTile({
+    super.key,
+    required this.isAvailable,
+    required this.until,
+    required this.onChanged,
+  });
+
+  final bool isAvailable;
+  final int? until;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final stopped = pendingUntil(
+      isAvailable: isAvailable,
+      unavailableUntil: until,
+      now: now,
+    );
+    final on = availableAt(
+      isAvailable: isAvailable,
+      unavailableUntil: until,
+      now: now,
+    );
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(
+        stopped != null
+            ? AppStrings.stoppedUntil(stopped)
+            : on
+            ? AppStrings.available
+            : AppStrings.unavailable,
+      ),
+      value: on,
+      onChanged: onChanged,
+    );
+  }
+}
+
+/// When a record stopped now «لنهاية اليوم» comes back (epoch
+/// milliseconds): the next end of the business day the owner set in
+/// `settings/store` (the interim default if unset or unreadable), in the
+/// device's local time.
+Future<int> stopForDayUntil(WidgetRef ref) async {
+  var hour = defaultDayEndHour;
+  // Listened while read: a provider nobody listens to is paused.
+  final sub = ref.listenManual(storeSettingsProvider, (_, _) {});
+  try {
+    hour = (await ref.read(storeSettingsProvider.future))?.dayEndHour ?? hour;
+  } on Object {
+    // Keep the default: stopping must still work.
+  } finally {
+    sub.close();
+  }
+  return dayEndUntil(DateTime.now(), hour);
+}
+
+/// Saves one row's availability [change] (audited), reporting a failure.
+/// Nothing happens when [change] is null (already in that state).
+Future<void> saveAvailabilityChange({
+  required BuildContext context,
+  required WidgetRef ref,
+  required AuditedChange? change,
+  String? doneMessage,
+}) async {
+  final who = ref.read(adminAccessProvider).value;
+  if (who is! Granted || change == null) return;
+  final messenger = ScaffoldMessenger.of(context);
+  try {
+    await ref
+        .read(auditedWriterProvider)
+        .write(
+          who: who,
+          action: change.action,
+          path: change.path,
+          before: change.before,
+          after: change.after,
+        );
+    if (doneMessage != null) {
+      messenger.showSnackBar(SnackBar(content: Text(doneMessage)));
+    }
+  } on Object {
+    messenger.showSnackBar(
+      const SnackBar(content: Text(AppStrings.saveFailed)),
+    );
+  }
+}
+
 /// Asks to confirm, then saves [changes] (each audited in its batch) and
 /// reports the result. [onProgress] follows the save; returns true when
-/// every change was saved.
+/// every change was saved. [confirmText] replaces the stop/start question.
 Future<bool> runBulkAvailability({
   required BuildContext context,
   required WidgetRef ref,
   required bool value,
   required List<AuditedChange> changes,
   required void Function(int done, int total) onProgress,
+  String? confirmText,
 }) async {
   final messenger = ScaffoldMessenger.of(context);
   if (changes.isEmpty) {
@@ -173,9 +324,10 @@ Future<bool> runBulkAvailability({
     context: context,
     builder: (c) => AlertDialog(
       content: Text(
-        value
-            ? AppStrings.confirmStart(changes.length)
-            : AppStrings.confirmStop(changes.length),
+        confirmText ??
+            (value
+                ? AppStrings.confirmStart(changes.length)
+                : AppStrings.confirmStop(changes.length)),
       ),
       actions: [
         TextButton(
