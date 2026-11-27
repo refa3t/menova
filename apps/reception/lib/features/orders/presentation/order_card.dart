@@ -10,6 +10,9 @@ import '../domain/order_verification.dart';
 /// Kitchen order card (P1-F03, FR-OR-03): size and options, kept defaults,
 /// added extras, and removed defaults as "بدون X" in a distinct colour, plus
 /// notes and pickup or delivery details. Reads only frozen order data.
+///
+/// On the board it starts compact (header, warnings, item titles, total and
+/// actions) and [onToggleExpanded] opens the full details.
 class OrderCard extends StatelessWidget {
   const OrderCard({
     super.key,
@@ -18,7 +21,19 @@ class OrderCard extends StatelessWidget {
     this.verification,
     this.deliveryCheck,
     this.actions,
+    this.timer,
+    this.expanded = true,
+    this.onToggleExpanded,
   });
+
+  /// Wait-time badge shown in the header; null to hide it.
+  final Widget? timer;
+
+  /// Full details when true; the compact view otherwise.
+  final bool expanded;
+
+  /// Shows a details toggle when set.
+  final VoidCallback? onToggleExpanded;
 
   /// Re-measured delivery distance and fee; null for pickup or while it
   /// loads.
@@ -63,14 +78,21 @@ class OrderCard extends StatelessWidget {
                   style: theme.textTheme.titleLarge,
                 ),
                 const Spacer(),
-                _Chip(AppStrings.orderStatus(order.status)),
-                const SizedBox(width: 6),
-                _Chip(AppStrings.paymentStatus(order.paymentStatus)),
+                ?timer,
                 IconButton(
                   tooltip: AppStrings.print,
                   onPressed: () => context.push('/ticket/${order.id}'),
                   icon: const Icon(Icons.print_outlined),
                 ),
+              ],
+            ),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: [
+                _Chip(AppStrings.orderStatus(order.status)),
+                _Chip(AppStrings.paymentStatus(order.paymentStatus)),
+                _Chip(AppStrings.fulfillment(c.fulfillment)),
               ],
             ),
             if (verification case final v? when !v.matches)
@@ -111,37 +133,59 @@ class OrderCard extends StatelessWidget {
                 ),
               ),
             const SizedBox(height: 4),
-            Text(
-              '${AppStrings.fulfillment(c.fulfillment)} · ${c.name} · ${c.phone}',
-            ),
-            if (c.address != null) Text(c.address!),
-            if (c.distanceMeters != null)
-              Text(AppStrings.distance(c.distanceMeters!)),
-            if (c.location case final at?)
+            if (!expanded) ...[
+              Text(c.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+              const Divider(height: 16),
+              for (final item in order.items)
+                Text(
+                  '${item.qty} × ${item.productName}',
+                  style: theme.textTheme.titleSmall,
+                ),
+            ] else ...[
+              Text(
+                '${AppStrings.fulfillment(c.fulfillment)} · ${c.name} · ${c.phone}',
+              ),
+              if (c.address != null) Text(c.address!),
+              if (c.distanceMeters != null)
+                Text(AppStrings.distance(c.distanceMeters!)),
+              if (c.location case final at?)
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton.icon(
+                    onPressed: () => launchUrl(
+                      Uri.parse(
+                        'https://www.google.com/maps/search/?api=1&query=${at.lat},${at.lng}',
+                      ),
+                      webOnlyWindowName: '_blank',
+                    ),
+                    icon: const Icon(Icons.map_outlined),
+                    label: const Text(AppStrings.openMap),
+                  ),
+                ),
+              const Divider(height: 24),
+              for (final item in order.items) _Item(item: item),
+              if (order.notes.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  '${AppStrings.orderNotes}: ${order.notes}',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ],
+            ],
+            if (onToggleExpanded != null)
               Align(
                 alignment: AlignmentDirectional.centerStart,
                 child: TextButton.icon(
-                  onPressed: () => launchUrl(
-                    Uri.parse(
-                      'https://www.google.com/maps/search/?api=1&query=${at.lat},${at.lng}',
-                    ),
-                    webOnlyWindowName: '_blank',
+                  onPressed: onToggleExpanded,
+                  style: TextButton.styleFrom(minimumSize: const Size(44, 44)),
+                  icon: Icon(expanded ? Icons.expand_less : Icons.expand_more),
+                  label: Text(
+                    expanded ? AppStrings.hideDetails : AppStrings.showDetails,
                   ),
-                  icon: const Icon(Icons.map_outlined),
-                  label: const Text(AppStrings.openMap),
                 ),
               ),
             const Divider(height: 24),
-            for (final item in order.items) _Item(item: item),
-            if (order.notes.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                '${AppStrings.orderNotes}: ${order.notes}',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ],
-            const Divider(height: 24),
-            if (order.deliveryFee > 0 || order.offer != null) ...[
+            if (expanded && (order.deliveryFee > 0 || order.offer != null)) ...[
               _Amount(AppStrings.subtotal, order.itemsTotal),
               if (order.offer case final o?)
                 _Amount(
