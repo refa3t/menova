@@ -7,6 +7,7 @@ import '../core/strings/app_strings.dart';
 import '../features/auth/domain/staff_access.dart';
 import '../features/auth/presentation/auth_providers.dart';
 import '../features/auth/presentation/login_screen.dart';
+import '../features/history/presentation/history_screen.dart';
 import '../features/orders/presentation/orders_screen.dart';
 import '../features/orders/presentation/ticket_screen.dart';
 
@@ -29,11 +30,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         StaffAccess.signedOut => at == '/login' ? null : '/login',
         StaffAccess.denied => at == '/denied' ? null : '/denied',
         StaffAccess.granted =>
-          at == '/' || at.startsWith('/ticket/') ? null : '/',
+          at == '/' || at == '/history' || at.startsWith('/ticket/')
+              ? null
+              : '/',
       };
     },
     routes: [
       GoRoute(path: '/', builder: (context, state) => const OrdersScreen()),
+      GoRoute(
+        path: '/history',
+        builder: (context, state) => const HistoryScreen(),
+      ),
       GoRoute(
         path: '/ticket/:id',
         builder: (context, state) =>
