@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../core/strings/app_strings.dart';
 import '../core/theme/app_theme.dart';
+import '../core/widgets/admin_app_bar.dart';
 import '../core/widgets/brand_mark.dart';
 import '../core/widgets/credit_line.dart';
 import '../features/auth/domain/admin_access.dart';
@@ -25,7 +26,8 @@ AdminArea? areaAt(String location) {
 /// The frame around every section: the navigation (fixed at the side on
 /// wide screens, a sliding panel on phones and tablets) with only the
 /// sections the role manages, the signed-in user, sign out and the
-/// developer credit. Each section keeps its own page bar.
+/// developer credit. Each section keeps its own page bar ([AdminAppBar]);
+/// on narrow screens that bar carries the menu button, so there is one bar.
 class AdminShell extends ConsumerWidget {
   const AdminShell({
     super.key,
@@ -64,7 +66,7 @@ class AdminShell extends ConsumerWidget {
               ),
             ),
             const VerticalDivider(width: 1, color: AppColors.border),
-            Expanded(child: child),
+            Expanded(child: AdminNavScope(openNav: null, child: child)),
           ],
         ),
       );
@@ -115,62 +117,10 @@ class AdminShell extends ConsumerWidget {
       },
     );
 
+    // No bar of its own: each page's bar carries the menu button.
     return Material(
       color: AppColors.page,
-      child: Column(
-        children: [
-          _CompactBar(onMenu: openNav),
-          // The bar above already keeps clear of the status bar.
-          Expanded(
-            child: MediaQuery.removePadding(
-              context: context,
-              removeTop: true,
-              child: child,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// The phone and tablet top bar: the menu button and the brand.
-class _CompactBar extends StatelessWidget {
-  const _CompactBar({required this.onMenu});
-
-  final VoidCallback onMenu;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.card,
-      child: SafeArea(
-        bottom: false,
-        child: Container(
-          height: 56,
-          padding: const EdgeInsetsDirectional.only(start: 4, end: 16),
-          decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: AppColors.border)),
-          ),
-          child: Row(
-            children: [
-              IconButton(
-                tooltip: AppStrings.openNav,
-                icon: const Icon(Icons.menu),
-                onPressed: onMenu,
-              ),
-              const SizedBox(width: 4),
-              const Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: AlignmentDirectional.centerStart,
-                  child: BrandMark(compact: true),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      child: AdminNavScope(openNav: openNav, child: child),
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/strings/app_strings.dart';
+import '../../../core/widgets/admin_app_bar.dart';
 import '../../auth/domain/admin_access.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../catalog/data/audited_writer.dart';
@@ -193,9 +194,9 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text(AppStrings.images),
-          bottom: const TabBar(
+        appBar: const AdminAppBar(
+          title: Text(AppStrings.images),
+          bottom: TabBar(
             tabs: [
               Tab(text: AppStrings.productPhotos),
               Tab(text: AppStrings.ingredientImages),

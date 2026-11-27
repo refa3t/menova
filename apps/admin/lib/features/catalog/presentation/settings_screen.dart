@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/strings/app_strings.dart';
+import '../../../core/widgets/admin_app_bar.dart';
 import '../../auth/domain/admin_access.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../data/audited_writer.dart';
@@ -119,7 +120,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
     );
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.settings)),
+      appBar: const AdminAppBar(title: Text(AppStrings.settings)),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),

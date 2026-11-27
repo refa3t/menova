@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/strings/app_strings.dart';
+import '../../../core/widgets/admin_app_bar.dart';
 import '../../auth/domain/admin_access.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../catalog/data/audited_writer.dart';
@@ -140,7 +141,7 @@ class OffersScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.offers)),
+      appBar: const AdminAppBar(title: Text(AppStrings.offers)),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800),

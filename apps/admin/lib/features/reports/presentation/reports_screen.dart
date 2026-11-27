@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/strings/app_strings.dart';
+import '../../../core/widgets/admin_app_bar.dart';
 import '../data/sales_report_provider.dart';
 import '../domain/sales_report.dart';
 
@@ -34,7 +35,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     void reload() => ref.invalidate(salesReportProvider(_days));
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: AdminAppBar(
         title: const Text(AppStrings.reports),
         actions: [
           IconButton(

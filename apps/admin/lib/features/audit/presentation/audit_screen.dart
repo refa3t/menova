@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/strings/app_strings.dart';
+import '../../../core/widgets/admin_app_bar.dart';
 import '../domain/audit_entry.dart';
 
 /// The latest admin changes, newest first (P3-07). Read-only: the rules
@@ -37,7 +38,7 @@ class AuditScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final entries = ref.watch(auditProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.auditLog)),
+      appBar: const AdminAppBar(title: Text(AppStrings.auditLog)),
       body: entries.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => const Center(child: Text(AppStrings.loadError)),

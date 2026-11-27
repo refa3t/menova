@@ -6,6 +6,7 @@ import '../../../app/area_icons.dart';
 import '../../../app/area_routes.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/admin_app_bar.dart';
 import '../../auth/domain/admin_access.dart';
 import '../../auth/presentation/auth_providers.dart';
 
@@ -26,6 +27,7 @@ class HomeScreen extends ConsumerWidget {
     ];
     final theme = Theme.of(context);
     return Scaffold(
+      appBar: AdminAppBar.home(context),
       body: LayoutBuilder(
         builder: (context, box) {
           final gutter = AppLayout.gutter(box.maxWidth);

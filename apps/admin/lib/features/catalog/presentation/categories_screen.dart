@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/strings/app_strings.dart';
+import '../../../core/widgets/admin_app_bar.dart';
 import '../../auth/domain/admin_access.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../data/audited_writer.dart';
@@ -44,7 +45,7 @@ class CategoriesScreen extends ConsumerWidget {
     final defs = ref.watch(definitionsProvider);
     final contents = ref.watch(categoryContentProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.categories)),
+      appBar: const AdminAppBar(title: Text(AppStrings.categories)),
       body: contents.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => const Center(child: Text(AppStrings.loadError)),

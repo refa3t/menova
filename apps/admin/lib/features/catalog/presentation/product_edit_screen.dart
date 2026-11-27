@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/strings/app_strings.dart';
+import '../../../core/widgets/admin_app_bar.dart';
 import '../../auth/domain/admin_access.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../drafts/data/drafts_providers.dart';
@@ -283,7 +284,7 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
     const gap = SizedBox(height: 12);
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: AdminAppBar(
         title: Text(
           _original == null ? AppStrings.newProduct : AppStrings.editProduct,
         ),
