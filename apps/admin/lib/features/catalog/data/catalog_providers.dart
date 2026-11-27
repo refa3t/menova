@@ -3,6 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:core/core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../drafts/data/drafts_providers.dart';
+import '../../drafts/domain/draft.dart';
+
 /// The developer's category definitions (bundled, read-only for the admin).
 final definitionsProvider = Provider<Map<String, CategoryDefinition>>(
   (ref) => loadBundledDefinitions().definitions,
@@ -51,6 +54,14 @@ final categoryContentProvider = StreamProvider<List<CategoryContent>>(
             [for (final d in s.docs) CategoryContent.fromJson(d.data())]
               ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder)),
       ),
+);
+
+/// Targets (`products/{id}`, `ingredients/{id}`) with a pending draft, live.
+final draftTargetsProvider = Provider<Set<String>>(
+  (ref) => {
+    for (final d in ref.watch(draftsProvider).value ?? const <Draft>[])
+      d.target,
+  },
 );
 
 /// The store location and delivery pricing, live.

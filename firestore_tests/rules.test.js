@@ -360,6 +360,51 @@ test('admins edit existing ingredients, audited; no create or delete', async () 
   await assertFails(manager.doc('ingredients/i1').delete());
 });
 
+// Bulk availability from the admin lists: one batch, each record with its
+// own audit entry (AuditedWriter.writeAll, maxChangesPerBatch = 10). The
+// rules read each entry, and a batch may read at most 20 documents, so 20
+// records pass and 21 do not.
+async function bulkSave(db, uid, collection, action, records) {
+  const batch = db.batch();
+  for (const data of records) {
+    const audit = db.collection('auditLog').doc();
+    batch.set(audit, {
+      action, target: `${collection}/${data.id}`, by: uid,
+      at: serverTimestamp(), before: null, after: data,
+    });
+    batch.set(db.doc(`${collection}/${data.id}`), { ...data, lastAuditId: audit.id });
+  }
+  return batch.commit();
+}
+
+test('bulk availability: a batch of audited saves passes, one entry each', async () => {
+  const manager = staff('menu_manager', 'mgr1');
+  const products = (n, tag) =>
+    Array.from({ length: n }, (_, i) => product(`${tag}${i}`, { isAvailable: false }));
+  await assertSucceeds(bulkSave(manager, 'mgr1', 'products', 'saveProduct', products(10, 'a')));
+  await assertSucceeds(bulkSave(manager, 'mgr1', 'products', 'saveProduct', products(20, 'b')));
+  await assertFails(bulkSave(manager, 'mgr1', 'products', 'saveProduct', products(21, 'c')));
+  // One record without its own entry fails the whole batch.
+  const audit = manager.collection('auditLog').doc();
+  const batch = manager.batch();
+  batch.set(audit, {
+    action: 'saveProduct', target: 'products/d0', by: 'mgr1',
+    at: serverTimestamp(), before: null, after: product('d0'),
+  });
+  batch.set(manager.doc('products/d0'), { ...product('d0'), lastAuditId: audit.id });
+  batch.set(manager.doc('products/d1'), { ...product('d1'), lastAuditId: audit.id });
+  await assertFails(batch.commit());
+
+  const ingredients = Array.from({ length: 10 }, (_, i) => ({
+    id: `i${i}`, name: 'TEMP', names: { ar: 'TEMP' }, assetId: 'ing_i1',
+    extraPrice: 1500, isAvailable: false, sizeMultipliers: {},
+  }));
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    for (const ing of ingredients) await ctx.firestore().doc(`ingredients/${ing.id}`).set(ing);
+  });
+  await assertSucceeds(bulkSave(manager, 'mgr1', 'ingredients', 'saveIngredient', ingredients));
+});
+
 // P3-04: admins replace ingredient images and product photos, audited.
 function asset(id, kind, version, overrides = {}) {
   return {

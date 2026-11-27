@@ -108,6 +108,34 @@ abstract final class AppStrings {
   static const allCategories = 'كل الأقسام';
   static const available = 'متاح';
   static const unavailable = 'غير متاح';
+
+  // Faster lists: filters and bulk availability.
+  static const statusAll = 'كل الحالات';
+  static const statusAvailable = 'المتاحة';
+  static const statusStopped = 'الموقوفة';
+  static const statusDrafted = 'له مسودة';
+  static const hasDraft = 'مسودة';
+  static const noImage = 'بلا صورة';
+  static const selectAllShown = 'تحديد كل المعروض';
+  static const clearSelection = 'إلغاء التحديد';
+  static const stopSelected = 'إيقاف المحدد';
+  static const startSelected = 'تشغيل المحدد';
+  static const confirm = 'تأكيد';
+  static const noMatches = 'لا نتائج بهذه الفلاتر';
+  static String selectedCount(int n) => 'تم تحديد $n';
+  static String confirmStop(int n) =>
+      'إيقاف $n؟ لن يستطيع العملاء طلبها حتى تشغيلها مرة أخرى.';
+  static String confirmStart(int n) => 'تشغيل $n وإتاحتها للعملاء؟';
+  static String bulkProgress(int done, int total) =>
+      'جارٍ الحفظ $done من $total';
+  static String bulkDone(int n) => 'تم حفظ $n';
+  static String bulkPartial(int saved, int failed) =>
+      'تم حفظ $saved، وتعذّر حفظ $failed. تحقق من صلاحيتك والاتصال';
+  static const bulkNothing = 'كل المحدد على هذه الحالة بالفعل';
+
+  /// Prices of each size, compact: «130 / 180 / 230 ج.م».
+  static String prices(List<int> piasters) =>
+      '${piasters.map(egp).join(' / ')} ج.م';
   static const nameAr = 'الاسم بالعربي';
   static const nameEn = 'الاسم بالإنجليزي';
   static const description = 'الوصف';
