@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/strings/app_strings.dart';
+import '../../../core/widgets/admin_app_bar.dart';
 import '../../auth/domain/admin_access.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../catalog/data/audited_writer.dart';
@@ -127,7 +128,7 @@ class _DraftsScreenState extends ConsumerState<DraftsScreen> {
     ref.watch(productsProvider);
     ref.watch(ingredientsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.drafts)),
+      appBar: const AdminAppBar(title: Text(AppStrings.drafts)),
       body: drafts.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => const Center(child: Text(AppStrings.loadError)),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/strings/app_strings.dart';
+import '../../../core/widgets/admin_app_bar.dart';
 import '../../auth/domain/admin_access.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../data/audited_writer.dart';
@@ -81,7 +82,7 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
     final assets = ref.watch(assetsProvider).value ?? const {};
     final drafts = ref.watch(draftTargetsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.products)),
+      appBar: const AdminAppBar(title: Text(AppStrings.products)),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push(
           '/products/new${_category == null ? '' : '?category=$_category'}',

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/strings/app_strings.dart';
+import '../../../core/widgets/admin_app_bar.dart';
 import '../../auth/domain/admin_access.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../data/staff_repository.dart';
@@ -78,7 +79,7 @@ class StaffScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final members = ref.watch(staffMembersProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.staff)),
+      appBar: const AdminAppBar(title: Text(AppStrings.staff)),
       floatingActionButton: members.hasValue
           ? FloatingActionButton.extended(
               onPressed: () => _add(context, ref, members.value!),

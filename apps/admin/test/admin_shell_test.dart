@@ -6,6 +6,7 @@ import 'package:admin/app/area_routes.dart';
 import 'package:admin/app/router.dart';
 import 'package:admin/core/strings/app_strings.dart';
 import 'package:admin/core/theme/app_theme.dart';
+import 'package:admin/core/widgets/admin_app_bar.dart';
 import 'package:admin/features/audit/domain/audit_entry.dart';
 import 'package:admin/features/audit/presentation/audit_screen.dart';
 import 'package:admin/features/auth/domain/admin_access.dart';
@@ -68,7 +69,10 @@ void main() {
         AdminShell(
           location: '/products/p1',
           onSignOut: () {},
-          child: const Scaffold(body: Text('page')),
+          child: const Scaffold(
+            appBar: AdminAppBar(title: Text('title')),
+            body: Text('page'),
+          ),
         ),
       ),
     );
@@ -86,6 +90,8 @@ void main() {
     // A product page highlights its section.
     expect(_entry(tester, AppStrings.area(AdminArea.products)).selected, true);
     expect(_entry(tester, AppStrings.home).selected, isFalse);
+    // The side panel is the navigation: no menu button in the page's bar.
+    expect(find.byTooltip(AppStrings.openNav), findsNothing);
     // The user, sign out and the developer credit.
     expect(find.text('manager@example.com'), findsOneWidget);
     expect(find.text(AppStrings.role(AdminRole.menuManager)), findsOneWidget);
@@ -119,15 +125,25 @@ void main() {
         AdminShell(
           location: '/offers',
           onSignOut: () => signedOut = true,
-          child: const Scaffold(body: Text('page')),
+          child: const Scaffold(
+            appBar: AdminAppBar(title: Text('page')),
+            body: SizedBox(),
+          ),
         ),
       ),
     );
     await tester.pumpAndSettle();
-    // Closed: only the bar and the page.
+    // Closed: one bar (the page's, carrying the menu) and the page.
     expect(find.text(AppStrings.area(AdminArea.products)), findsNothing);
+    expect(find.byType(AppBar), findsOneWidget);
+    expect(find.text('page'), findsOneWidget);
     final menu = find.byTooltip(AppStrings.openNav);
+    expect(
+      find.descendant(of: find.byType(AppBar), matching: menu),
+      findsOneWidget,
+    );
     expect(tester.getSize(menu).height, greaterThanOrEqualTo(44));
+    expect(tester.getSize(menu).width, greaterThanOrEqualTo(44));
 
     await tester.tap(menu);
     await tester.pumpAndSettle();
@@ -287,7 +303,36 @@ void main() {
         // An overflow or a layout error fails the test on its own.
         expect(find.byType(AdminShell), findsOneWidget, reason: path);
         expect(tester.takeException(), isNull, reason: path);
+        // One bar per page; on narrow screens it opens the navigation.
+        // Beside the side panel the home page has no bar, as before.
+        final wide = width >= AppLayout.sideNav;
+        expect(
+          find.byType(AppBar),
+          wide && path == '/' ? findsNothing : findsOneWidget,
+          reason: path,
+        );
+        expect(
+          find.byTooltip(AppStrings.openNav),
+          wide ? findsNothing : findsOneWidget,
+          reason: path,
+        );
       }
+
+      // A page opened from its list goes back to it, which has the menu.
+      router.go('/products');
+      await tester.pumpAndSettle();
+      router.push('/products/${margherita.id}');
+      await tester.pumpAndSettle();
+      expect(find.byType(AppBar), findsOneWidget);
+      expect(find.byType(BackButton), findsOneWidget);
+      expect(find.byTooltip(AppStrings.openNav), findsNothing);
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      expect(find.text(AppStrings.products), findsWidgets);
+      expect(
+        find.byTooltip(AppStrings.openNav),
+        width < AppLayout.sideNav ? findsOneWidget : findsNothing,
+      );
     });
   }
 }

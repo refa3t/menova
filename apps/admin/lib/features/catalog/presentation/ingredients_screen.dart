@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/strings/app_strings.dart';
+import '../../../core/widgets/admin_app_bar.dart';
 import '../../auth/domain/admin_access.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../data/audited_writer.dart';
@@ -77,7 +78,7 @@ class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
     final assets = ref.watch(assetsProvider).value ?? const {};
     final drafts = ref.watch(draftTargetsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.ingredients)),
+      appBar: const AdminAppBar(title: Text(AppStrings.ingredients)),
       body: ingredients.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => const Center(child: Text(AppStrings.loadError)),
