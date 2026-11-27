@@ -7,6 +7,7 @@ import '../core/strings/app_strings.dart';
 import '../features/auth/domain/admin_access.dart';
 import '../features/auth/presentation/auth_providers.dart';
 import '../features/auth/presentation/login_screen.dart';
+import '../features/auth/presentation/verify_email_screen.dart';
 import '../features/assets/presentation/assets_screen.dart';
 import '../features/audit/presentation/audit_screen.dart';
 import '../features/catalog/presentation/catalog_check_screen.dart';
@@ -22,6 +23,7 @@ import '../features/offers/data/offers_providers.dart';
 import '../features/offers/presentation/offer_edit_screen.dart';
 import '../features/offers/presentation/offers_screen.dart';
 import '../features/reports/presentation/reports_screen.dart';
+import '../features/staff/presentation/staff_screen.dart';
 import 'area_routes.dart';
 
 /// Only the owner and menu managers get in (P3-01); everyone else is sent to
@@ -42,10 +44,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       return switch (access) {
         SignedOut() => at == '/login' ? null : '/login',
         Denied() => at == '/denied' ? null : '/denied',
+        NeedsVerification() => at == '/verify' ? null : '/verify',
         Granted(:final role) =>
           at == '/splash' ||
                   at == '/login' ||
                   at == '/denied' ||
+                  at == '/verify' ||
                   !mayOpen(role, at)
               ? '/'
               : null,
@@ -58,6 +62,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ProductsScreen(),
       ),
       GoRoute(path: '/audit', builder: (context, state) => const AuditScreen()),
+      GoRoute(path: '/staff', builder: (context, state) => const StaffScreen()),
       GoRoute(
         path: '/reports',
         builder: (context, state) => const ReportsScreen(),
@@ -135,6 +140,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/denied', builder: (context, state) => const _Denied()),
+      GoRoute(
+        path: '/verify',
+        builder: (context, state) => VerifyEmailScreen(
+          email: switch (ref.read(adminAccessProvider).value) {
+            NeedsVerification(:final email) => email,
+            _ => null,
+          },
+        ),
+      ),
     ],
   );
 });

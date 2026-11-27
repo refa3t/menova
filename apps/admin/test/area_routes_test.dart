@@ -14,6 +14,7 @@ void main() {
     expect(mayOpen(AdminRole.menuManager, '/reports'), isFalse);
     expect(mayOpen(AdminRole.menuManager, '/settings'), isFalse);
     expect(mayOpen(AdminRole.menuManager, '/audit'), isFalse);
+    expect(mayOpen(AdminRole.menuManager, '/staff'), isFalse);
   });
 
   test('every section has its route', () {

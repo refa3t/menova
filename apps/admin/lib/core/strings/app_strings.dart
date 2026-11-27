@@ -19,6 +19,20 @@ abstract final class AppStrings {
   static const yourRole = 'دورك';
   static const comingSoon = 'قريباً';
 
+  // Email verification for staff records (P3-01).
+  static const verifyTitle = 'أكّد بريدك الإلكتروني';
+  static String verifyBody(String? email) =>
+      'لك دور في فريق المطعم على البريد ${email ?? ''}، '
+      'ولا يعمل قبل تأكيد البريد. أرسل رسالة التأكيد، وافتح الرابط فيها، '
+      'ثم اضغط «تحقق مرة أخرى».';
+  static const sendVerification = 'أرسل رسالة التأكيد';
+  static const checkAgain = 'تحقق مرة أخرى';
+  static const verifySent =
+      'أُرسلت رسالة التأكيد. افحص بريدك (والرسائل غير المرغوبة).';
+  static const notVerifiedYet =
+      'لم يتأكد البريد بعد. افتح الرابط في الرسالة ثم حاول مرة أخرى.';
+  static const verifyFailed = 'تعذّر الإتمام، حاول بعد قليل';
+
   static String role(AdminRole r) => switch (r) {
     AdminRole.owner => 'المالك',
     AdminRole.menuManager => 'مدير المنيو',
@@ -35,6 +49,31 @@ abstract final class AppStrings {
     AdminArea.settings => 'إعدادات المطعم والتوصيل',
     AdminArea.reports => 'التقارير والمبيعات',
     AdminArea.audit => 'سجل التعديلات',
+    AdminArea.staff => 'الموظفين',
+  };
+
+  // Staff (P3-01).
+  static const staff = 'الموظفين';
+  static const staffNote =
+      'أضف موظفاً ببريده واختر دوره. يعمل الدور بعد أن يسجّل الموظف دخوله '
+      'ويؤكد بريده. المالك والموظفون المضافون بسكربت المطور '
+      '(set_staff_role) لا يظهرون هنا ويُدارون بالسكربت.';
+  static const staffEmpty = 'لا يوجد موظفون مضافون من اللوحة بعد';
+  static const addStaff = 'أضف موظفاً';
+  static const staffRole = 'الدور';
+  static const invalidEmail = 'اكتب بريداً صحيحاً';
+  static const removeStaff = 'إزالة';
+  static const staffAlreadyAdded =
+      'هذا البريد مضاف بالفعل، غيّر دوره من القائمة';
+  static String removeStaffConfirm(String email) =>
+      'إزالة $email من الفريق؟ يفقد صلاحيته فوراً.';
+  static String staffAddedBy(String? email) =>
+      email == null ? '' : 'أضافه: $email';
+  static String staffRoleName(String role) => switch (role) {
+    'reception' => 'الاستقبال',
+    'kitchen' => 'المطبخ',
+    'menu_manager' => 'مدير المنيو',
+    _ => role,
   };
 
   // Products (P3-02).

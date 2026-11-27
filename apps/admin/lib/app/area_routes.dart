@@ -12,6 +12,7 @@ const areaRoutes = {
   AdminArea.settings: '/settings',
   AdminArea.reports: '/reports',
   AdminArea.audit: '/audit',
+  AdminArea.staff: '/staff',
 };
 
 /// Whether [role] may open [location]: a section's pages only for the roles

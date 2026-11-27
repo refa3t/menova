@@ -7,19 +7,43 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // A staff role comes from the custom claim `role` (tools/bin/
+    // set_staff_role.dart), or from the owner's staff record
+    // staff/{lowercased email} (admin panel), which counts only once the
+    // account's email is verified: otherwise anyone could register a staff
+    // member's email first. The owner role is a claim only; a staff record
+    // never grants it (and cannot hold it, see /staff below).
+    function staffDocPath() {
+      return /databases/$(database)/documents/staff/$(request.auth.token.email.lower());
+    }
+
+    function staffDocRole() {
+      return request.auth.token.get('email_verified', false) == true
+          && request.auth.token.get('email', null) is string
+          && exists(staffDocPath())
+          ? get(staffDocPath()).data.role
+          : null;
+    }
+
+    function hasRole(roles) {
+      return request.auth != null
+          && (request.auth.token.get('role', null) in roles
+              || (staffDocRole() in roles && staffDocRole() != 'owner'));
+    }
+
     function isStaff() {
-      return request.auth != null
-          && request.auth.token.role in ['reception', 'kitchen', 'owner'];
+      return hasRole(['reception', 'kitchen', 'owner']);
     }
 
-    // Admin panel roles (phase 3, custom claim `role`).
+    // Admin panel roles (phase 3).
     function isAdmin() {
-      return request.auth != null
-          && request.auth.token.role in ['owner', 'menu_manager'];
+      return hasRole(['owner', 'menu_manager']);
     }
 
+    // The owner: custom claim only.
     function isOwner() {
-      return request.auth != null && request.auth.token.role == 'owner';
+      return request.auth != null
+          && request.auth.token.get('role', null) == 'owner';
     }
 
     // Every admin write carries the id of the audit entry written in the same
@@ -57,6 +81,33 @@ service cloud.firestore {
           && request.resource.data.at == request.time;
       allow read: if isOwner();
       allow update, delete: if false;
+    }
+
+    // Staff records (P3-01): the owner grants reception, kitchen or
+    // menu_manager by email from the admin panel; never owner. Each write
+    // is audited in the same batch. A removal is audited by the entry
+    // 'remove_' + the record's lastAuditId (unique per version), since a
+    // deleted document carries no field. Staff read their own record (the
+    // login screens ask them to verify their email first).
+    match /staff/{email} {
+      allow get: if isOwner()
+          || (request.auth != null
+              && request.auth.token.get('email', null) is string
+              && request.auth.token.email.lower() == email);
+      allow list: if isOwner();
+      allow create, update: if isOwner()
+          && email == email.lower()
+          && email.matches('^[^@/ ]+@[^@/ ]+[.][^@/ ]+$')
+          && request.resource.data.keys().hasOnly(
+               ['role', 'addedBy', 'addedByEmail', 'addedAt', 'lastAuditId'])
+          && request.resource.data.keys().hasAll(
+               ['role', 'addedBy', 'addedAt', 'lastAuditId'])
+          && request.resource.data.role in ['reception', 'kitchen', 'menu_manager']
+          && request.resource.data.addedBy == request.auth.uid
+          && request.resource.data.addedAt == request.time
+          && audited('staff/' + email, request.resource.data.lastAuditId);
+      allow delete: if isOwner()
+          && audited('staff/' + email, 'remove_' + resource.data.lastAuditId);
     }
 
     // Public menu (CLAUDE.md 5.4).

@@ -7,6 +7,7 @@ import '../core/strings/app_strings.dart';
 import '../features/auth/domain/staff_access.dart';
 import '../features/auth/presentation/auth_providers.dart';
 import '../features/auth/presentation/login_screen.dart';
+import '../features/auth/presentation/verify_email_screen.dart';
 import '../features/orders/presentation/orders_screen.dart';
 import '../features/orders/presentation/ticket_screen.dart';
 
@@ -28,6 +29,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       return switch (access) {
         StaffAccess.signedOut => at == '/login' ? null : '/login',
         StaffAccess.denied => at == '/denied' ? null : '/denied',
+        StaffAccess.needsVerification => at == '/verify' ? null : '/verify',
         StaffAccess.granted =>
           at == '/' || at.startsWith('/ticket/') ? null : '/',
       };
@@ -46,6 +48,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/denied', builder: (context, state) => const _Denied()),
+      GoRoute(
+        path: '/verify',
+        builder: (context, state) => const VerifyEmailScreen(),
+      ),
     ],
   );
 });
