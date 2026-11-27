@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:category_definitions/category_definitions.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:core/core.dart';
@@ -63,6 +65,26 @@ final draftTargetsProvider = Provider<Set<String>>(
       d.target,
   },
 );
+
+/// The time the lists decide availability for, given [next] (epoch
+/// milliseconds): the earliest «stopped until» still ahead among what they
+/// show, or null. One timer refreshes it then, so a row stopped until a
+/// time turns available by itself; no polling.
+final availabilityNowProvider = Provider.autoDispose.family<DateTime, int?>((
+  ref,
+  next,
+) {
+  final now = DateTime.now();
+  if (next != null) {
+    var wait = Duration(milliseconds: next - now.millisecondsSinceEpoch);
+    if (wait.isNegative) wait = Duration.zero;
+    // Browsers fire overlong timers at once: wait in steps.
+    if (wait > const Duration(hours: 12)) wait = const Duration(hours: 12);
+    final timer = Timer(wait, ref.invalidateSelf);
+    ref.onDispose(timer.cancel);
+  }
+  return now;
+});
 
 /// The store location and delivery pricing, live.
 final storeSettingsProvider = StreamProvider<StoreSettings?>(

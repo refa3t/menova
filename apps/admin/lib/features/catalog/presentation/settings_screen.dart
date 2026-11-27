@@ -25,6 +25,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final _minFee = TextEditingController();
   final _maxKm = TextEditingController();
   StoreSettings? _original;
+  int _dayEndHour = defaultDayEndHour;
   bool _saving = false;
   String? _error;
 
@@ -44,6 +45,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _perKm.text = AppStrings.egp(s.delivery.perKm);
     _minFee.text = AppStrings.egp(s.delivery.minFee);
     _maxKm.text = '${s.delivery.maxDistanceMeters / 1000}';
+    _dayEndHour = s.dayEndHour;
   }
 
   Future<void> _save() async {
@@ -73,6 +75,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         minFee: minFee,
         maxDistanceMeters: (maxKm * 1000).round(),
       ),
+      dayEndHour: _dayEndHour,
     );
     setState(() {
       _error = null;
@@ -148,6 +151,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               field(_perKm, AppStrings.perKm),
               field(_minFee, AppStrings.minFee),
               field(_maxKm, AppStrings.maxKm),
+              const SizedBox(height: 8),
+              Text(
+                AppStrings.dayEndHour,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                AppStrings.dayEndNote,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<int>(
+                initialValue: _dayEndHour,
+                decoration: const InputDecoration(
+                  labelText: AppStrings.dayEndHour,
+                ),
+                items: [
+                  for (var h = 0; h < 24; h++)
+                    DropdownMenuItem(
+                      value: h,
+                      child: Text(AppStrings.hourLabel(h)),
+                    ),
+                ],
+                onChanged: (h) {
+                  if (h != null) setState(() => _dayEndHour = h);
+                },
+              ),
+              const SizedBox(height: 12),
               if (_error != null)
                 Text(
                   _error!,

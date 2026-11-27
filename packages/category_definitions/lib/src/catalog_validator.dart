@@ -116,6 +116,10 @@ List<DefinitionIssue> validateProduct(
     issue('groupId', 'unknown group "$group"');
   }
   if (p.displayOrder < 0) issue('displayOrder', 'must be >= 0');
+  // Optional stop until a time (epoch milliseconds), as the rules accept.
+  if (p.unavailableUntil case final u? when u <= 0) {
+    issue('unavailableUntil', 'must be above zero');
+  }
   return issues;
 }
 
@@ -145,6 +149,9 @@ List<DefinitionIssue> validateIngredient(
   }
   if (ingredientAssets != null && !ingredientAssets.contains(i.assetId)) {
     issue('assetId', 'unknown ingredient image "${i.assetId}"');
+  }
+  if (i.unavailableUntil case final u? when u <= 0) {
+    issue('unavailableUntil', 'must be above zero');
   }
   return issues;
 }

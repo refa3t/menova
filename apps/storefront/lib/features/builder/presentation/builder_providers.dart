@@ -25,14 +25,18 @@ class BuilderController extends Notifier<BuilderState> {
       for (final p in c.products) {
         if (p.id == key.productId) {
           final unavailable = {
-            for (final i in menu.ingredients.values)
-              if (!i.isAvailable) i.id,
+            for (final id in menu.ingredients.keys)
+              if (!menu.ingredientAvailable(id)) id,
           };
-          // Editing a cart line restores what was built (AC-18).
+          // The menu is seen again when a stopped record comes back: keep
+          // what the guest is building. Editing a cart line restores what
+          // was built (AC-18).
+          final building = stateOrNull?.selection;
           final line = key.lineId == null
               ? null
               : ref.read(cartProvider).line(key.lineId!);
-          return line == null
+          final saved = building ?? line?.selection;
+          return saved == null
               ? BuilderState.open(
                   definition: c.definition,
                   product: p,
@@ -41,7 +45,7 @@ class BuilderController extends Notifier<BuilderState> {
               : BuilderState.restore(
                   definition: c.definition,
                   product: p,
-                  selection: line.selection,
+                  selection: saved,
                   unavailableIngredientIds: unavailable,
                 );
         }

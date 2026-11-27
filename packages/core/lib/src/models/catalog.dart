@@ -1,6 +1,31 @@
 import 'json.dart';
 import 'money.dart';
 
+/// Whether a record is available at [now]: switched on, and not stopped
+/// until a time still ahead. The one place availability is decided
+/// (products and ingredients both use it).
+bool availableAt({
+  required bool isAvailable,
+  required int? unavailableUntil,
+  required DateTime now,
+}) =>
+    isAvailable &&
+    (unavailableUntil == null ||
+        now.millisecondsSinceEpoch >= unavailableUntil);
+
+/// The earliest of [untils] still ahead of [now] (epoch milliseconds), or
+/// null: when the next record stopped until a time comes back by itself.
+int? earliestPendingUntil(Iterable<int?> untils, DateTime now) {
+  int? best;
+  final at = now.millisecondsSinceEpoch;
+  for (final u in untils) {
+    if (u != null && u > at && (best == null || u < best)) best = u;
+  }
+  return best;
+}
+
+int? _epochMs(Json j, String key) => opt<num>(j, key)?.toInt();
+
 /// Admin-owned visibility of a developer-defined category.
 class CategoryContent {
   const CategoryContent({
@@ -51,6 +76,7 @@ class Product {
     this.optionDeltas = const {},
     this.displayOrder = 0,
     this.groupId,
+    this.unavailableUntil,
   });
 
   final String id;
@@ -78,6 +104,17 @@ class Product {
   /// Menu group within the category (a definition `productGroups` id).
   final String? groupId;
 
+  /// Stopped until this time (epoch milliseconds, «إيقاف لنهاية اليوم»):
+  /// unavailable before it, available again by itself after. Null = none.
+  final int? unavailableUntil;
+
+  /// See [availableAt].
+  bool isAvailableAt(DateTime now) => availableAt(
+    isAvailable: isAvailable,
+    unavailableUntil: unavailableUntil,
+    now: now,
+  );
+
   factory Product.fromJson(Json j) => Product(
     id: req(j, 'id'),
     categoryId: req(j, 'categoryId'),
@@ -92,6 +129,7 @@ class Product {
     optionDeltas: mapOf(j, 'optionDeltas', toInt),
     displayOrder: opt(j, 'displayOrder') ?? 0,
     groupId: opt(j, 'groupId'),
+    unavailableUntil: _epochMs(j, 'unavailableUntil'),
   );
 
   Json toJson() => {
@@ -108,6 +146,7 @@ class Product {
     'optionDeltas': optionDeltas,
     'displayOrder': displayOrder,
     if (groupId != null) 'groupId': groupId,
+    if (unavailableUntil != null) 'unavailableUntil': unavailableUntil,
   };
 
   @override
@@ -125,7 +164,8 @@ class Product {
       mapEq(other.sizeDeltas, sizeDeltas) &&
       mapEq(other.optionDeltas, optionDeltas) &&
       other.displayOrder == displayOrder &&
-      other.groupId == groupId;
+      other.groupId == groupId &&
+      other.unavailableUntil == unavailableUntil;
 
   @override
   int get hashCode => Object.hash(
@@ -142,6 +182,7 @@ class Product {
     mapHash(optionDeltas),
     displayOrder,
     groupId,
+    unavailableUntil,
   );
 }
 
@@ -199,6 +240,7 @@ class Ingredient {
     required this.extraPrice,
     required this.isAvailable,
     this.sizeMultipliers = const {},
+    this.unavailableUntil,
   });
 
   final String id;
@@ -214,6 +256,16 @@ class Ingredient {
   /// Extra-price multiplier per size id; missing sizes default to 1.
   final Map<String, double> sizeMultipliers;
 
+  /// Stopped until this time (epoch milliseconds), as on [Product].
+  final int? unavailableUntil;
+
+  /// See [availableAt].
+  bool isAvailableAt(DateTime now) => availableAt(
+    isAvailable: isAvailable,
+    unavailableUntil: unavailableUntil,
+    now: now,
+  );
+
   double multiplierFor(String? sizeId) =>
       sizeId == null ? 1 : sizeMultipliers[sizeId] ?? 1;
 
@@ -225,6 +277,7 @@ class Ingredient {
     extraPrice: req(j, 'extraPrice'),
     isAvailable: req(j, 'isAvailable'),
     sizeMultipliers: mapOf(j, 'sizeMultipliers', toDouble),
+    unavailableUntil: _epochMs(j, 'unavailableUntil'),
   );
 
   Json toJson() => {
@@ -235,6 +288,7 @@ class Ingredient {
     'extraPrice': extraPrice,
     'isAvailable': isAvailable,
     'sizeMultipliers': sizeMultipliers,
+    if (unavailableUntil != null) 'unavailableUntil': unavailableUntil,
   };
 
   @override
@@ -246,7 +300,8 @@ class Ingredient {
       other.assetId == assetId &&
       other.extraPrice == extraPrice &&
       other.isAvailable == isAvailable &&
-      mapEq(other.sizeMultipliers, sizeMultipliers);
+      mapEq(other.sizeMultipliers, sizeMultipliers) &&
+      other.unavailableUntil == unavailableUntil;
 
   @override
   int get hashCode => Object.hash(
@@ -257,6 +312,7 @@ class Ingredient {
     extraPrice,
     isAvailable,
     mapHash(sizeMultipliers),
+    unavailableUntil,
   );
 }
 

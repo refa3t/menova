@@ -775,3 +775,63 @@ test('removing a staff record revokes access, audited', async () => {
   await assertSucceeds(removeStaff(owner, 'own1', 'rec@x.com', `remove_${lastAuditId}`));
   await assertFails(readOrder(rec));
 });
+
+// Stop until the end of the business day: an optional unavailableUntil
+// (epoch ms) on products and ingredients, and dayEndHour in the settings.
+const UNTIL = Date.UTC(2026, 10, 28, 2); // 4 AM in Cairo
+
+test('a product is stopped until a time and started again, audited', async () => {
+  const m = staff('menu_manager', 'mgr1');
+  // Set, then clear (the whole document is replaced without the key).
+  await assertSucceeds(saveProduct(m, 'mgr1', 'p9', product('p9', { unavailableUntil: UNTIL })));
+  await assertSucceeds(saveProduct(m, 'mgr1', 'p9', product('p9')));
+  await assertSucceeds(saveProduct(m, 'mgr1', 'p9', product('p9', { unavailableUntil: null })));
+  // Bad values.
+  for (const bad of [0, -1, 1.5, '2026-11-28', true, { at: UNTIL }]) {
+    await assertFails(saveProduct(m, 'mgr1', 'p9', product('p9', { unavailableUntil: bad })));
+  }
+  // Without its audit entry.
+  await assertFails(m.doc('products/p9').set({
+    ...product('p9', { unavailableUntil: UNTIL }), lastAuditId: 'nope',
+  }));
+  await assertFails(m.doc('products/p9').update({ unavailableUntil: UNTIL }));
+});
+
+test('an ingredient is stopped until a time and started again, audited', async () => {
+  const ing = {
+    id: 'i1', name: 'TEMP', names: { ar: 'TEMP' }, assetId: 'ing_i1',
+    extraPrice: 1500, isAvailable: true, sizeMultipliers: {},
+  };
+  const m = staff('menu_manager', 'mgr1');
+  await assertSucceeds(saveIngredient(m, 'mgr1', 'i1', { ...ing, unavailableUntil: UNTIL }));
+  await assertSucceeds(saveIngredient(m, 'mgr1', 'i1', ing));
+  await assertSucceeds(saveIngredient(m, 'mgr1', 'i1', { ...ing, unavailableUntil: null }));
+  for (const bad of [0, -1, 1.5, 'tomorrow', false]) {
+    await assertFails(saveIngredient(m, 'mgr1', 'i1', { ...ing, unavailableUntil: bad }));
+  }
+  await assertFails(m.doc('ingredients/i1').set({
+    ...ing, unavailableUntil: UNTIL, lastAuditId: 'nope',
+  }));
+  await assertFails(m.doc('ingredients/i1').update({ unavailableUntil: UNTIL }));
+});
+
+test('the owner sets the end of the business day hour, audited', async () => {
+  const store = {
+    location: { lat: 30.46, lng: 31.18 },
+    delivery: { perKm: 700, minFee: 3000, maxDistanceMeters: 12000 },
+  };
+  const owner = staff('owner', 'own1');
+  for (const hour of [0, 4, 23]) {
+    await assertSucceeds(auditedSet(owner, 'own1', 'settings/store', { ...store, dayEndHour: hour }));
+  }
+  // Absent still passes (the interim default applies).
+  await assertSucceeds(auditedSet(owner, 'own1', 'settings/store', store));
+  for (const bad of [-1, 24, 4.5, '4', null]) {
+    await assertFails(auditedSet(owner, 'own1', 'settings/store', { ...store, dayEndHour: bad }));
+  }
+  await assertFails(auditedSet(staff('menu_manager', 'mgr1'), 'mgr1', 'settings/store',
+    { ...store, dayEndHour: 3 }));
+  await assertFails(owner.doc('settings/store').set({
+    ...store, dayEndHour: 3, lastAuditId: 'nope',
+  }));
+});

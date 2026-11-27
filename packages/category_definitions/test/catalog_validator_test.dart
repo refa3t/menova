@@ -217,6 +217,20 @@ void main() {
         'assetId',
       ]);
     });
+
+    test('a stop until a time is accepted, a bad one refused', () {
+      List<String> until(int u) =>
+          ing(Ingredient.fromJson({...ok.toJson(), 'unavailableUntil': u}));
+      expect(until(1764302400000), isEmpty);
+      expect(until(0), ['unavailableUntil']);
+    });
+  });
+
+  test('a product stopped until a time is valid, a bad time refused', () {
+    List<String> until(int u) =>
+        check(Product.fromJson({...product().toJson(), 'unavailableUntil': u}));
+    expect(until(1764302400000), isEmpty);
+    expect(until(-5), ['unavailableUntil']);
   });
 
   group('asset files (P3-04)', () {

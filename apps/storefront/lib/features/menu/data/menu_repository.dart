@@ -13,9 +13,14 @@ class MenuRepository {
 
   final FirebaseFirestore _db;
 
-  /// Loads the menu. [fromServer] skips the cache (used to re-price the
-  /// cart right before an order is sent).
-  Future<Menu> load({bool fromServer = false}) async {
+  /// Loads the menu as it stands now. [fromServer] skips the cache (used to
+  /// re-price the cart right before an order is sent, so availability is
+  /// decided at submit time).
+  Future<Menu> load({bool fromServer = false}) async =>
+      (await loadSource(fromServer: fromServer)).at(DateTime.now());
+
+  /// Loads the raw collections; [MenuSource.at] decides availability.
+  Future<MenuSource> loadSource({bool fromServer = false}) async {
     final options = GetOptions(
       source: fromServer ? Source.server : Source.serverAndCache,
     );
@@ -30,7 +35,7 @@ class MenuRepository {
       T Function(Map<String, dynamic>) f,
     ) => [for (final d in s.docs) f(d.data())];
 
-    return Menu.assemble(
+    return MenuSource(
       definitions: loadBundledDefinitions(
         placementStrategies: placementStrategies.keys.toSet(),
         animationSteps: animationStepKeys,

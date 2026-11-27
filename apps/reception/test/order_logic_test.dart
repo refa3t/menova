@@ -20,34 +20,37 @@ const def = CategoryDefinition(
   assetSpecs: {},
 );
 
-PricingData data({int base = 10000}) => PricingData(
-  definitions: const {'c': def},
-  products: {
-    'p': Product(
-      id: 'p',
-      categoryId: 'c',
-      name: 'p',
-      description: '',
-      basePrice: base,
-      imageAssetId: 'i',
-      isAvailable: true,
-      defaults: const [
-        ProductIngredient(ingredientId: 'cheese', qty: 1, removable: true),
-        ProductIngredient(ingredientId: 'olive', qty: 1, removable: true),
-      ],
-    ),
-  },
-  ingredients: {
-    for (final id in ['cheese', 'olive', 'pepper'])
-      id: Ingredient(
-        id: id,
-        name: id,
-        assetId: 'a',
-        extraPrice: 750,
-        isAvailable: true,
-      ),
-  },
-);
+PricingData data({int base = 10000, bool stopped = false, int? until}) =>
+    PricingData(
+      definitions: const {'c': def},
+      products: {
+        'p': Product(
+          id: 'p',
+          categoryId: 'c',
+          name: 'p',
+          description: '',
+          basePrice: base,
+          imageAssetId: 'i',
+          isAvailable: !stopped,
+          unavailableUntil: until,
+          defaults: const [
+            ProductIngredient(ingredientId: 'cheese', qty: 1, removable: true),
+            ProductIngredient(ingredientId: 'olive', qty: 1, removable: true),
+          ],
+        ),
+      },
+      ingredients: {
+        for (final id in ['cheese', 'olive', 'pepper'])
+          id: Ingredient(
+            id: id,
+            name: id,
+            assetId: 'a',
+            extraPrice: 750,
+            isAvailable: !stopped,
+            unavailableUntil: until,
+          ),
+      },
+    );
 
 void main() {
   // The fixture order: cheese 2 (1 extra) + pepper 1, olive removed,
@@ -56,6 +59,17 @@ void main() {
     final v = verifyOrder(order('o', OrderStatus.newOrder), data());
     expect(v.matches, isTrue);
     expect(v.computedTotal, 11500);
+  });
+
+  test('an item stopped after the order was placed is not flagged', () {
+    final until = DateTime.now()
+        .add(const Duration(hours: 6))
+        .millisecondsSinceEpoch;
+    for (final d in [data(stopped: true), data(until: until)]) {
+      final v = verifyOrder(order('o', OrderStatus.newOrder), d);
+      expect(v.matches, isTrue);
+      expect(v.computedTotal, 11500);
+    }
   });
 
   test('a tampered or outdated price is flagged with the computed total', () {

@@ -266,7 +266,7 @@ class CheckoutController extends Notifier<CheckoutState> {
   /// the cart shows them; the next confirm uses a new request id because
   /// the content (prices) changed.
   void acceptCorrections() {
-    ref.invalidate(menuProvider);
+    reloadMenu(ref.invalidate);
     ref.read(deliveryProvider.notifier).reprice();
     state = const CheckoutIdle();
   }

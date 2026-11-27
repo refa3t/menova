@@ -102,7 +102,7 @@ class ProductCard extends ConsumerWidget {
               ),
               const SizedBox(height: 10),
               FilledButton.icon(
-                onPressed: product.isAvailable
+                onPressed: product.isAvailableAt(menu.at)
                     ? () => _quickAdd(context, ref)
                     : null,
                 icon: const Icon(Icons.shopping_cart_outlined, size: 18),

@@ -12,6 +12,7 @@ import '../../drafts/data/drafts_providers.dart';
 import '../../drafts/domain/draft.dart';
 import '../../drafts/presentation/draft_note.dart';
 import '../data/catalog_providers.dart';
+import 'catalog_list_widgets.dart';
 
 /// Edits one ingredient (P3-03): names, extra price (one price wherever it
 /// is used), availability and its image, picked from the ingredient images.
@@ -40,6 +41,12 @@ class _IngredientEditScreenState extends ConsumerState<IngredientEditScreen> {
   Draft? _draft;
   String? _assetId;
   bool _available = true;
+
+  /// A stop until a time, shown as loaded. The save keeps the live one
+  /// (a draft applies on top of the live record and must not wipe or
+  /// revive it) unless the switch was used ([_untilCleared]).
+  int? _until;
+  bool _untilCleared = false;
   bool _saving = false;
   List<String> _issues = const [];
   String? _priceError;
@@ -70,6 +77,8 @@ class _IngredientEditScreenState extends ConsumerState<IngredientEditScreen> {
     _price.text = AppStrings.egp(i.extraPrice);
     _assetId = i.assetId;
     _available = i.isAvailable;
+    _until = i.unavailableUntil;
+    _untilCleared = draft?.changes.containsKey('unavailableUntil') ?? false;
   }
 
   Future<void> _save(Set<String> ingredientAssets) async {
@@ -85,6 +94,7 @@ class _IngredientEditScreenState extends ConsumerState<IngredientEditScreen> {
       assetId: _assetId ?? original.assetId,
       extraPrice: price ?? 0,
       isAvailable: _available,
+      unavailableUntil: _untilCleared ? null : _live?.unavailableUntil,
       sizeMultipliers: original.sizeMultipliers,
     );
     final found = validateIngredient(after, ingredientAssets: ingredientAssets);
@@ -192,13 +202,14 @@ class _IngredientEditScreenState extends ConsumerState<IngredientEditScreen> {
                 ),
               ),
               gap,
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(
-                  _available ? AppStrings.available : AppStrings.unavailable,
-                ),
-                value: _available,
-                onChanged: (v) => setState(() => _available = v),
+              AvailabilitySwitchTile(
+                isAvailable: _available,
+                until: _until,
+                onChanged: (v) => setState(() {
+                  _available = v;
+                  _until = null;
+                  _untilCleared = true;
+                }),
               ),
               gap,
               Text(

@@ -64,9 +64,7 @@ abstract final class OrderBuilder {
           throw OrderBuildException(line.lineId);
         }
         final extras = s.extras(p.defaults);
-        if (extras.keys.any(
-          (id) => menu.ingredients[id]?.isAvailable != true,
-        )) {
+        if (extras.keys.any((id) => !menu.ingredientAvailable(id))) {
           throw OrderBuildException(line.lineId);
         }
         final ids = {
