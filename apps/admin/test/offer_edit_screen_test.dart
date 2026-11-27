@@ -2,6 +2,7 @@ import 'package:admin/core/strings/app_strings.dart';
 import 'package:admin/features/auth/domain/admin_access.dart';
 import 'package:admin/features/auth/presentation/auth_providers.dart';
 import 'package:admin/features/catalog/data/audited_writer.dart';
+import 'package:admin/features/catalog/domain/catalog_list.dart';
 import 'package:admin/features/offers/data/offers_providers.dart';
 import 'package:admin/features/offers/presentation/offer_edit_screen.dart';
 import 'package:core/core.dart';
@@ -24,6 +25,19 @@ class RecordingWriter implements AuditedWriter {
     Json? before,
     String? alsoDelete,
   }) async => writes.add((action, path, after));
+
+  @override
+  Future<List<String>> writeAll({
+    required Granted who,
+    required List<AuditedChange> changes,
+    void Function(int done, int total)? onProgress,
+  }) async {
+    for (final c in changes) {
+      writes.add((c.action, c.path, c.after));
+    }
+    onProgress?.call(changes.length, changes.length);
+    return const [];
+  }
 }
 
 void main() {
