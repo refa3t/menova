@@ -13,6 +13,20 @@ abstract final class AppStrings {
   static const loginInvalid = 'البريد أو كلمة المرور غير صحيحة';
   static const loginTooMany = 'محاولات كثيرة، حاول بعد قليل';
   static const loginFailed = 'تعذّر تسجيل الدخول';
+
+  // Email verification for staff records (P3-01).
+  static const verifyTitle = 'أكّد بريدك الإلكتروني';
+  static String verifyBody(String? email) =>
+      'لك دور في فريق المطعم على البريد ${email ?? ''}، '
+      'ولا يعمل قبل تأكيد البريد. أرسل رسالة التأكيد، وافتح الرابط فيها، '
+      'ثم اضغط «تحقق مرة أخرى».';
+  static const sendVerification = 'أرسل رسالة التأكيد';
+  static const checkAgain = 'تحقق مرة أخرى';
+  static const verifySent =
+      'أُرسلت رسالة التأكيد. افحص بريدك (والرسائل غير المرغوبة).';
+  static const notVerifiedYet =
+      'لم يتأكد البريد بعد. افتح الرابط في الرسالة ثم حاول مرة أخرى.';
+  static const verifyFailed = 'تعذّر الإتمام، حاول بعد قليل';
   static const ordersLoadError = 'تعذّر تحميل الطلبات';
   static const enableSound = 'تفعيل التنبيه الصوتي';
   static const soundOn = 'التنبيه مفعّل';

@@ -620,3 +620,113 @@ test('publishing a draft is an audited save that drops the draft', async () => {
   const left = await m.collection('drafts').get();
   assert.equal(left.size, 0);
 });
+
+// P3-01: staff records. The owner grants reception, kitchen or menu_manager
+// by email (staff/{lowercased email}), audited; a record counts only for a
+// signed-in account whose email is verified, and never grants owner.
+const person = (uid, email, verified = true) =>
+  env.authenticatedContext(uid, { email, email_verified: verified }).firestore();
+
+async function saveStaff(db, uid, email, role, overrides = {}) {
+  const audit = db.collection('auditLog').doc();
+  const batch = db.batch();
+  batch.set(audit, {
+    action: 'saveStaff', target: `staff/${email}`, by: uid,
+    at: serverTimestamp(), before: null, after: { role },
+  });
+  batch.set(db.doc(`staff/${email}`), {
+    role, addedBy: uid, addedAt: serverTimestamp(), lastAuditId: audit.id,
+    ...overrides,
+  });
+  return batch.commit();
+}
+
+async function removeStaff(db, uid, email, auditId) {
+  const batch = db.batch();
+  batch.set(db.doc(`auditLog/${auditId}`), {
+    action: 'removeStaff', target: `staff/${email}`, by: uid,
+    at: serverTimestamp(), before: null, after: {},
+  });
+  batch.delete(db.doc(`staff/${email}`));
+  return batch.commit();
+}
+
+const readOrder = (db) => db.doc('orders/o1').get();
+
+test('a verified staff record grants its role; an unverified one does not', async () => {
+  const owner = staff('owner', 'own1');
+  await assertSucceeds(saveStaff(owner, 'own1', 'rec@x.com', 'reception'));
+  await assertSucceeds(saveStaff(owner, 'own1', 'mgr@x.com', 'menu_manager'));
+  // Reception: reads and updates orders.
+  await assertSucceeds(readOrder(person('r1', 'rec@x.com')));
+  await assertSucceeds(readOrder(person('r1', 'REC@x.com')), 'email case');
+  await assertSucceeds(person('r1', 'rec@x.com').doc('orders/o1').update({
+    status: 'accepted', history: [{ ...entry('status', 'accepted'), by: 'r1' }],
+  }));
+  await assertFails(readOrder(person('r2', 'rec@x.com', false)), 'unverified');
+  await assertFails(readOrder(person('r3', 'other@x.com')), 'no record');
+  await assertFails(readOrder(env.authenticatedContext('r4').firestore()), 'no email');
+  // Menu manager: admin writes, but not the orders or owner areas.
+  const mgr = person('m1', 'mgr@x.com');
+  await assertSucceeds(saveProduct(mgr, 'm1', 'p9', product('p9')));
+  await assertFails(saveProduct(person('m2', 'mgr@x.com', false), 'm2', 'p8', product('p8')));
+  await assertFails(readOrder(mgr), 'menu manager is not reception');
+  await assertFails(mgr.collection('auditLog').get(), 'owner only');
+  // Each reads their own record (even unverified: the login screen asks
+  // them to verify), nobody else's; only the owner lists them.
+  await assertSucceeds(person('r2', 'rec@x.com', false).doc('staff/rec@x.com').get());
+  await assertFails(person('r1', 'rec@x.com').doc('staff/mgr@x.com').get());
+  await assertFails(person('r1', 'rec@x.com').collection('staff').get());
+  await assertSucceeds(owner.collection('staff').get());
+});
+
+test('only the owner writes staff records, audited and in shape', async () => {
+  const owner = staff('owner', 'own1');
+  await assertSucceeds(saveStaff(owner, 'own1', 'mgr@x.com', 'menu_manager'));
+  // Not the owner: a menu manager (record or claim), reception, a guest.
+  await assertFails(saveStaff(person('m1', 'mgr@x.com'), 'm1', 'new@x.com', 'reception'));
+  await assertFails(saveStaff(staff('menu_manager', 'mgr9'), 'mgr9', 'new@x.com', 'reception'));
+  await assertFails(saveStaff(staff('reception', 'rec1'), 'rec1', 'new@x.com', 'kitchen'));
+  await assertFails(saveStaff(guest(), 'guest1', 'new@x.com', 'kitchen'));
+  // Nobody changes their own record.
+  await assertFails(saveStaff(person('m1', 'mgr@x.com'), 'm1', 'mgr@x.com', 'reception'));
+  // Bad shape: unknown role, no audit, someone else as adder, upper case id,
+  // not an email, extra field.
+  await assertFails(saveStaff(owner, 'own1', 'new@x.com', 'admin'));
+  await assertFails(owner.doc('staff/new@x.com').set({
+    role: 'kitchen', addedBy: 'own1', addedAt: serverTimestamp(), lastAuditId: 'nope',
+  }));
+  await assertFails(saveStaff(owner, 'own1', 'new@x.com', 'kitchen', { addedBy: 'mgr1' }));
+  await assertFails(saveStaff(owner, 'own1', 'New@x.com', 'kitchen'));
+  await assertFails(saveStaff(owner, 'own1', 'not-an-email', 'kitchen'));
+  await assertFails(saveStaff(owner, 'own1', 'new@x.com', 'kitchen', { extra: 1 }));
+  // Changing a role is the same audited write.
+  await assertSucceeds(saveStaff(owner, 'own1', 'mgr@x.com', 'kitchen'));
+});
+
+test('the owner role can never come from a staff record', async () => {
+  const owner = staff('owner', 'own1');
+  await assertFails(saveStaff(owner, 'own1', 'boss@x.com', 'owner'));
+  // Even one written past the rules (console) grants nothing.
+  await env.withSecurityRulesDisabled((ctx) =>
+    ctx.firestore().doc('staff/boss@x.com').set({ role: 'owner' }));
+  const boss = person('b1', 'boss@x.com');
+  await assertFails(readOrder(boss));
+  await assertFails(boss.collection('auditLog').get());
+  await assertFails(saveStaff(boss, 'b1', 'new@x.com', 'reception'));
+  await assertFails(saveProduct(boss, 'b1', 'p9', product('p9')));
+});
+
+test('removing a staff record revokes access, audited', async () => {
+  const owner = staff('owner', 'own1');
+  await saveStaff(owner, 'own1', 'rec@x.com', 'reception');
+  const rec = person('r1', 'rec@x.com');
+  await assertSucceeds(readOrder(rec));
+  const { lastAuditId } = (await owner.doc('staff/rec@x.com').get()).data();
+  // Not the owner, no audit entry, or the wrong one.
+  await assertFails(removeStaff(rec, 'r1', 'rec@x.com', `remove_${lastAuditId}`));
+  await assertFails(owner.doc('staff/rec@x.com').delete());
+  await assertFails(removeStaff(owner, 'own1', 'rec@x.com', 'remove_other'));
+  await assertSucceeds(removeStaff(owner, 'own1', 'rec@x.com', `remove_${lastAuditId}`));
+  await assertFails(readOrder(rec));
+});

@@ -3,6 +3,10 @@
 // Pass `none` to remove the role. The user must sign in again (or wait for
 // the token to refresh) for it to apply.
 //
+// The owner can also grant reception, kitchen or menu_manager from the admin
+// panel («الموظفين»: a staff/{email} record that counts once the email is
+// verified). The owner role itself is granted only here.
+//
 // Usage (from tools/): dart run bin/set_staff_role.dart <email> <role|none>
 import 'dart:convert';
 import 'dart:io';
