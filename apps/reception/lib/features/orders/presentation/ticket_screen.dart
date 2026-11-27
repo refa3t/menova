@@ -1,10 +1,29 @@
+import 'package:cloud_firestore/cloud_firestore.dart' show FirebaseFirestore;
+import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:web/web.dart' as web;
 
 import '../../../core/strings/app_strings.dart';
 import 'kitchen_ticket.dart';
-import 'orders_screen.dart';
+
+/// One order by id, any status (a completed or cancelled one too, from
+/// the history), live. Null while missing or unreadable.
+final ticketOrderProvider = StreamProvider.autoDispose.family<Order?, String>(
+  (ref, id) => FirebaseFirestore.instance
+      .collection('orders')
+      .doc(id)
+      .snapshots()
+      .map((d) {
+        final data = d.data();
+        if (data == null) return null;
+        try {
+          return Order.fromJson(data);
+        } on Object {
+          return null;
+        }
+      }),
+);
 
 /// Shows one ticket alone on a white page and opens the browser's print
 /// dialog once it is laid out.
@@ -22,8 +41,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final orders = ref.watch(activeOrdersProvider).value ?? const [];
-    final order = orders.where((o) => o.id == widget.orderId).firstOrNull;
+    final order = ref.watch(ticketOrderProvider(widget.orderId)).value;
     if (order != null && !_printed) {
       _printed = true;
       // Give images and fonts a moment, then print.
