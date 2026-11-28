@@ -71,7 +71,7 @@ class CartScreen extends ConsumerWidget {
                       ),
                       if (!canCheckout)
                         Padding(
-                          padding: EdgeInsets.only(top: 6),
+                          padding: const EdgeInsets.only(top: 6),
                           child: Text(AppStrings.cartHasUnavailable),
                         ),
                       const SizedBox(height: 8),

@@ -145,13 +145,13 @@ void main() {
           builder: (context) => step.build(
             context,
             const AnimFrame(t: 1, elapsed: Duration.zero),
-            AnimStepInput(
-              product: const ColoredBox(color: Color(0xFFFFCC88)),
+            const AnimStepInput(
+              product: ColoredBox(color: Color(0xFFFFCC88)),
               contents: pieces,
               productRect: rect,
               params: {'folds': 2, 'lines': cone, 'opening': wrap},
               // The finished wrap needs the outside (role `back`).
-              images: const {
+              images: {
                 'back': ['back.webp'],
               },
             ),

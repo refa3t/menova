@@ -74,16 +74,16 @@ ThemeData buildAppTheme() {
         side: const BorderSide(color: AppColors.border),
       ),
     ),
-    chipTheme: ChipThemeData(
+    chipTheme: const ChipThemeData(
       shape: pill,
-      side: const BorderSide(color: AppColors.border),
+      side: BorderSide(color: AppColors.border),
       backgroundColor: AppColors.card,
       selectedColor: AppColors.primary,
       secondarySelectedColor: AppColors.primary,
-      labelStyle: const TextStyle(color: AppColors.text),
-      secondaryLabelStyle: const TextStyle(color: Colors.white),
+      labelStyle: TextStyle(color: AppColors.text),
+      secondaryLabelStyle: TextStyle(color: Colors.white),
       checkmarkColor: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,

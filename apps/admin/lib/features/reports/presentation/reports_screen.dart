@@ -183,8 +183,8 @@ class _ReportBody extends StatelessWidget {
           },
         ),
         if (t.orders == 0)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 32),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 32),
             child: Text(AppStrings.noSales, textAlign: TextAlign.center),
           )
         else ...[

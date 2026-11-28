@@ -40,7 +40,7 @@ class _NotesFieldState extends State<NotesField> {
       decoration: InputDecoration(
         labelText: AppStrings.notes,
         hintText: AppStrings.notesHint,
-        border: OutlineInputBorder(),
+        border: const OutlineInputBorder(),
       ),
     );
   }

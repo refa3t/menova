@@ -2,3 +2,12 @@ analyzer:
   exclude:
     - build/**
 include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    # const widgets are built once and reused: less work on every rebuild.
+    prefer_const_constructors: true
+    prefer_const_literals_to_create_immutables: true
+    prefer_const_declarations: true
+    # Use debugPrint or a logger in shipped code, not print.
+    avoid_print: true

@@ -259,7 +259,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               AppStrings.fulfillment,
               style: Theme.of(context).textTheme.titleSmall,
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             // Pickup and delivery (owner decision, OWNER_INPUTS 4).
             SegmentedButton<Fulfillment>(
               segments: [
@@ -343,7 +343,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             children: [
               if (checkout is CheckoutPending)
                 Padding(
-                  padding: EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
                     AppStrings.pendingSend,
                     textAlign: TextAlign.center,

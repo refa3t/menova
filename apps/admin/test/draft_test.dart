@@ -38,11 +38,11 @@ void main() {
   });
 
   test('publishing applies the draft on top of the live record', () {
-    final draft = Draft(
+    const draft = Draft(
       target: 'products/p1',
       kind: DraftKind.product,
-      changes: const {'basePrice': 14000},
-      base: const {'basePrice': 13000},
+      changes: {'basePrice': 14000},
+      base: {'basePrice': 13000},
     );
     expect(draft.id, 'products__p1');
     expect(draft.recordId, 'p1');
